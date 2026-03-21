@@ -11,7 +11,7 @@ f = st.sidebar.slider("Frequency (Hz)", 0.0, 60.0, 50.0)
 phase_deg = st.sidebar.slider("Phase Angle (degrees)", -180, 180, 0)
 
 # The time scrubber allows manual animation
-t_snapshot = st.sidebar.slider("Scrub Time (seconds)", 0.0, 0.04, 0.0, 0.01)
+t_snapshot = st.sidebar.slider("Scrub Time (seconds)", 0.0, 0.04, 0.0, 0.001)
 
 # Mathematical calculations
 omega = 2 * np.pi * f
