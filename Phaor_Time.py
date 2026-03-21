@@ -16,7 +16,7 @@ t_snapshot = st.sidebar.slider("Scrub Time (seconds)", 0.0, 0.04, 0.0, 0.01)
 # Mathematical calculations
 omega = 2 * np.pi * f
 phase_rad = np.deg2rad(phase_deg)
-t = np.linspace(0, 2, 500)
+t = np.linspace(0, 0.04, 500)
 v_t = V_m * np.sin(omega * t + phase_rad)
 
 # Calculate the exact angle of the phasor at the chosen time snapshot
