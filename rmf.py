@@ -39,9 +39,9 @@ fig = plt.figure(figsize=(14, 6))
 # Left Plot: Time Domain Waveforms
 ax1 = plt.subplot(121)
 t_arr = np.linspace(0, 2*np.pi, 360)
-ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr), color='red', label='Phase A ($i_a$)')
-ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(120)), color='blue', label='Phase B ($i_b$)')
-ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(240)), color='green', label='Phase C ($i_c$)')
+ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr), color='red', label=r'Phase A ($i_a$)')
+ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(120)), color='blue', label=r'Phase B ($i_b$)')
+ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(240)), color='green', label=r'Phase C ($i_c$)')
 
 # Draw a vertical line to show the current 'time' snapshot
 ax1.axvline(x=omega_t_deg, color='black', linestyle='--', linewidth=2, label='Current Snapshot')
@@ -56,13 +56,13 @@ ax1.legend(loc='upper right')
 # Right Plot: Spatial Vectors (Polar Plot)
 ax2 = plt.subplot(122, projection='polar')
 
-# Plot the individual phase vectors
-ax2.plot([0, np.angle(Ba)], [0, np.abs(Ba)], color='red', linewidth=3, alpha=0.6, label='$\vec{B}_a$')
-ax2.plot([0, np.angle(Bb)], [0, np.abs(Bb)], color='blue', linewidth=3, alpha=0.6, label='$\vec{B}_b$')
-ax2.plot([0, np.angle(Bc)], [0, np.abs(Bc)], color='green', linewidth=3, alpha=0.6, label='$\vec{B}_c$')
+# Plot the individual phase vectors (Notice the 'r' before the string)
+ax2.plot([0, np.angle(Ba)], [0, np.abs(Ba)], color='red', linewidth=3, alpha=0.6, label=r'$\vec{B}_a$')
+ax2.plot([0, np.angle(Bb)], [0, np.abs(Bb)], color='blue', linewidth=3, alpha=0.6, label=r'$\vec{B}_b$')
+ax2.plot([0, np.angle(Bc)], [0, np.abs(Bc)], color='green', linewidth=3, alpha=0.6, label=r'$\vec{B}_c$')
 
 # Plot the resultant rotating vector
-ax2.plot([0, np.angle(B_net)], [0, np.abs(B_net)], color='black', linewidth=4, label='Net Field ($\vec{B}_{net}$)')
+ax2.plot([0, np.angle(B_net)], [0, np.abs(B_net)], color='black', linewidth=4, label=r'Net Field ($\vec{B}_{net}$)')
 ax2.plot(np.angle(B_net), np.abs(B_net), marker='o', markersize=8, color='black')
 
 # Formatting the polar plot
