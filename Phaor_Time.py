@@ -7,7 +7,7 @@ st.title("AC Fundamentals: Phasor & Time Domain")
 # Sidebar controls for the student to interact with
 st.sidebar.header("Signal Parameters")
 V_m = st.sidebar.slider("Amplitude (Voltage)", 1.0, 10.0, 5.0)
-f = st.sidebar.slider("Frequency (Hz)", 0.1, 2.0, 1.0)
+f = st.sidebar.slider("Frequency (Hz)", 0.0, 60.0, 50.0)
 phase_deg = st.sidebar.slider("Phase Angle (degrees)", -180, 180, 0)
 
 # The time scrubber allows manual animation
