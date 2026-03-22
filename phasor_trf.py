@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide")
 st.title("Transformer Phasor Diagram: Step-by-Step")
-st.markdown("Constructing the practical transformer phasor diagram with a lagging load.")
+st.markdown("Constructing the practical transformer phasor diagram with series voltage drops.")
 
 # The slider drives the state machine
 step = st.slider("Select Construction Step", 1, 7, 1)
@@ -11,12 +11,12 @@ step = st.slider("Select Construction Step", 1, 7, 1)
 # --- Explanatory Text for Each Step ---
 step_texts = {
     1: "**Step 1: The Mutual Flux.** We begin with the core flux (Φ) as our horizontal reference at 0°.",
-    2: "**Step 2: Induced EMFs.** Faraday's Law dictates that induced voltages (E₁ and E₂) lag the flux that created them by 90°.",
-    3: "**Step 3: No-Load Current.** Even unloaded, the primary draws current (I₀) to magnetize the core (Iₘ) and supply core losses (I꜀).",
-    4: "**Step 4: Secondary Load Current.** A lagging (inductive) load is connected. The secondary current (I₂) lags behind the secondary voltage (E₂).",
-    5: "**Step 5: Load Balancing Current.** To counteract the demagnetizing effect of I₂, the primary instantly draws a balancing current (I₁') exactly 180° opposite to I₂.",
-    6: "**Step 6: Total Primary Current.** The total current drawn from the supply (I₁) is the vector sum of the no-load current (I₀) and the balancing current (I₁').",
-    7: "**Step 7: Terminal Voltages.** We add the voltage drops (IR and IX). The supply voltage (V₁) must overcome the opposing EMF (-E₁) plus primary drops. The terminal voltage (V₂) is E₂ minus secondary drops."
+    2: "**Step 2: Induced EMFs.** Faraday's Law dictates that induced voltages ($E_1$ and $E_2$) lag the flux that created them by 90°.",
+    3: "**Step 3: No-Load Current.** Even unloaded, the primary draws current ($I_0$) to magnetize the core ($I_m$) and supply core losses ($I_c$).",
+    4: "**Step 4: Secondary Load Current.** A lagging (inductive) load is connected. The secondary current ($I_2$) lags behind the secondary voltage.",
+    5: "**Step 5: Load Balancing Current.** To counteract the demagnetizing effect of $I_2$, the primary instantly draws a balancing current ($I_1'$) exactly 180° opposite to $I_2$.",
+    6: "**Step 6: Total Primary Current.** The total current drawn from the supply ($I_1$) is the vector sum of the no-load current ($I_0$) and the balancing current ($I_1'$).",
+    7: "**Step 7: Series Voltage Drops.** We add the resistive ($IR$) and reactive ($IX$) drops. Secondary: $V_2 = E_2 - I_2R_2 - I_2X_2$. Primary: $V_1 = (-E_1) + I_1R_1 + I_1X_1$."
 }
 
 st.info(step_texts[step])
@@ -29,19 +29,21 @@ ax.spines['left'].set_position('zero')
 ax.spines['bottom'].set_position('zero')
 ax.spines['right'].set_color('none')
 ax.spines['top'].set_color('none')
-ax.set_xlim(-2, 2)
-ax.set_ylim(-2, 2)
-ax.set_xticks([]) # Hide tick marks for a cleaner look
+
+# Expanded limits to ensure the series drops fit perfectly on the page
+ax.set_xlim(-2.5, 2.5)
+ax.set_ylim(-2.5, 2.5)
+ax.set_xticks([]) 
 ax.set_yticks([])
 
-# Helper function to draw crisp arrows
-def draw_vector(x, y, color, label, label_offset=(0.1, 0.1), width=2):
-    ax.annotate('', xy=(x, y), xytext=(0, 0),
-                arrowprops=dict(facecolor=color, edgecolor=color, width=width, headwidth=10, shrinkA=0, shrinkB=0))
+# Helper function to draw crisp arrows from any start point
+def draw_vector(x_end, y_end, color, label, label_offset=(0.1, 0.1), width=2, x_start=0, y_start=0):
+    ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
+                arrowprops=dict(facecolor=color, edgecolor=color, width=width, headwidth=9, shrinkA=0, shrinkB=0))
     # Draw invisible line for the legend
     ax.plot([], [], color=color, label=label, linewidth=width+1)
     # Put text label near the tip
-    ax.text(x + label_offset[0], y + label_offset[1], label, fontsize=14, color=color, fontweight='bold')
+    ax.text(x_end + label_offset[0], y_end + label_offset[1], label, fontsize=13, color=color, fontweight='bold')
 
 # Helper function to draw dashed lines for vector addition
 def draw_parallelogram(x1, y1, x2, y2, color='gray'):
@@ -55,12 +57,25 @@ e2_x, e2_y = 0, -1.0
 im_x, im_y = 0.4, 0
 ic_x, ic_y = 0, 0.3
 i0_x, i0_y = im_x + ic_x, im_y + ic_y
-i2_x, i2_y = -0.5, -0.86 # Lagging E2
-i1p_x, i1p_y = -i2_x, -i2_y # 180 degrees from I2
+i2_x, i2_y = -0.5, -0.86 
+i1p_x, i1p_y = -i2_x, -i2_y 
 i1_x, i1_y = i0_x + i1p_x, i0_y + i1p_y
 neg_e1_x, neg_e1_y = -e1_x, -e1_y
-v1_x, v1_y = 0.3, 1.7 # Offset from -E1
-v2_x, v2_y = 0.1, -0.8 # Offset from E2
+
+# -- Calculating the Drop Triangles --
+# Primary drops (I1 R1 is parallel to I1, I1 X1 is perpendicular)
+i1r1_dx, i1r1_dy = 0.24, 0.32
+i1x1_dx, i1x1_dy = -0.40, 0.30
+p_drop1_x, p_drop1_y = neg_e1_x + i1r1_dx, neg_e1_y + i1r1_dy
+v1_x, v1_y = p_drop1_x + i1x1_dx, p_drop1_y + i1x1_dy
+
+# Secondary drops (I2 R2 is parallel to I2, I2 X2 is perpendicular)
+# V2 + I2R2 + I2X2 = E2
+i2r2_dx, i2r2_dy = -0.15, -0.26
+i2x2_dx, i2x2_dy = 0.34, -0.20
+v2_x, v2_y = e2_x - i2r2_dx - i2x2_dx, e2_y - i2r2_dy - i2x2_dy
+s_drop1_x, s_drop1_y = v2_x + i2r2_dx, v2_y + i2r2_dy
+
 
 # --- Draw vectors based on the selected step ---
 if step >= 1:
@@ -68,7 +83,7 @@ if step >= 1:
 
 if step >= 2:
     draw_vector(e1_x, e1_y, 'dodgerblue', r'$E_1$', (0.05, -0.1))
-    draw_vector(e2_x, e2_y, 'dodgerblue', r'$E_2$', (0.05, -0.1))
+    draw_vector(e2_x, e2_y, 'dodgerblue', r'$E_2$', (0.05, -0.2))
 
 if step >= 3:
     draw_vector(im_x, im_y, 'gray', r'$I_m$', (0, -0.15))
@@ -77,11 +92,10 @@ if step >= 3:
     draw_vector(i0_x, i0_y, 'purple', r'$I_0$', (0.05, 0.05))
 
 if step >= 4:
-    draw_vector(i2_x, i2_y, 'crimson', r'$I_2$', (-0.1, -0.15))
+    draw_vector(i2_x, i2_y, 'crimson', r'$I_2$', (-0.1, -0.2))
 
 if step >= 5:
     draw_vector(i1p_x, i1p_y, 'crimson', r'$I_1^\prime$', (0.05, 0.05))
-    # Draw dashed line connecting I2 and I1' to prove 180 degrees
     ax.plot([i2_x, i1p_x], [i2_y, i1p_y], color='crimson', linestyle=':', alpha=0.5)
 
 if step >= 6:
@@ -89,12 +103,17 @@ if step >= 6:
     draw_vector(i1_x, i1_y, 'red', r'$I_1$', (0.05, 0.05), width=3)
 
 if step >= 7:
-    draw_vector(neg_e1_x, neg_e1_y, 'dodgerblue', r'$-E_1$', (-0.2, 0.05))
-    draw_vector(v1_x, v1_y, 'forestgreen', r'$V_1$', (0.05, 0.05), width=3)
-    draw_vector(v2_x, v2_y, 'forestgreen', r'$V_2$', (0.05, -0.1), width=3)
-    # Draw simplified voltage drop lines
-    ax.plot([neg_e1_x, v1_x], [neg_e1_y, v1_y], color='gray', linestyle='--')
-    ax.plot([e2_x, v2_x], [e2_y, v2_y], color='gray', linestyle='--')
+    # Primary Side Additions
+    draw_vector(neg_e1_x, neg_e1_y, 'dodgerblue', r'$-E_1$', (0.05, -0.1))
+    draw_vector(p_drop1_x, p_drop1_y, 'darkorange', r'$I_1 R_1$', (0.05, -0.1), width=1.5, x_start=neg_e1_x, y_start=neg_e1_y)
+    draw_vector(v1_x, v1_y, 'darkorange', r'$I_1 X_1$', (-0.2, 0.1), width=1.5, x_start=p_drop1_x, y_start=p_drop1_y)
+    draw_vector(v1_x, v1_y, 'forestgreen', r'$V_1$', (-0.3, 0.1), width=3)
+    
+    # Secondary Side Additions
+    draw_vector(v2_x, v2_y, 'forestgreen', r'$V_2$', (-0.3, 0.05), width=3)
+    draw_vector(s_drop1_x, s_drop1_y, 'darkorange', r'$I_2 R_2$', (-0.45, 0.05), width=1.5, x_start=v2_x, y_start=v2_y)
+    draw_vector(e2_x, e2_y, 'darkorange', r'$I_2 X_2$', (0.05, 0.05), width=1.5, x_start=s_drop1_x, y_start=s_drop1_y)
 
-ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.0))
+# Move legend completely outside the plot area so it doesn't cover the new V1 vectors
+ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0))
 st.pyplot(fig)
