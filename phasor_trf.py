@@ -110,8 +110,8 @@ if step >= 2:
     draw_angle_arc(V2, I2, 0.7, 'crimson', r'$\phi_2$')
 
 if step >= 3:
-    draw_vector(V2 + I2R2, 'darkorange', r'$I_2R_2$', (0.05, -0.15), width=0.8, c_start=V2)
-    draw_vector(E2, 'darkorange', r'$I_2X_2$', (0.05, 0.05), width=0.8, c_start=V2+I2R2)
+    draw_vector(V2 + I2R2, 'darkorange', r'$I_2r_2$', (0.05, -0.15), width=0.8, c_start=V2)
+    draw_vector(E2, 'darkorange', r'$I_2x_2$', (0.05, 0.05), width=0.8, c_start=V2+I2R2)
     draw_vector(E2, 'dodgerblue', r'$E_2$', (-0.2, 0.05), width=1.0)
 
 if step >= 4:
