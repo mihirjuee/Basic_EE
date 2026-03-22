@@ -6,7 +6,29 @@ st.set_page_config(layout="wide")
 st.title("Transformer Phasor Diagram: Lagging power factor load")
 st.markdown("Constructing the diagram with the secondary terminal voltage as the horizontal reference.")
 
-step = st.slider("Select Construction Step", 1, 8, 1)
+# 1. Initialize the counter in Streamlit's memory
+if 'step_counter' not in st.session_state:
+    st.session_state.step_counter = 1
+
+# 2. Create side-by-side buttons
+col1, col2, col3 = st.columns([1, 2, 1])
+
+with col1:
+    if st.button("⬅️ Previous Step", use_container_width=True):
+        if st.session_state.step_counter > 1:
+            st.session_state.step_counter -= 1
+
+with col3:
+    if st.button("Next Step ➡️", use_container_width=True):
+        if st.session_state.step_counter < 8:
+            st.session_state.step_counter += 1
+
+with col2:
+    # Display the current step in the middle
+    st.markdown(f"<h3 style='text-align: center;'>Current Step: {st.session_state.step_counter}</h3>", unsafe_allow_html=True)
+
+# 3. Assign the memory variable to your existing 'step' variable so the rest of the code works perfectly
+step = st.session_state.step_counter
 
 step_texts = {
     1: "**Step 1: The Reference.** We define the secondary terminal voltage ($V_2$) as our perfectly horizontal reference at 0°.",
