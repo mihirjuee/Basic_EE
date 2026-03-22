@@ -136,7 +136,7 @@ if step >= 7:
 
 if step >= 8:
     draw_vector(neg_E1 + I1r1, 'darkorange', r'$I_1R_1$', (0.05, 0.05), width=0.8, c_start=neg_E1)
-    draw_vector(V1, 'darkorange', r'$I_1x_1$', (0.05, 0.05), width=0.8, c_start=neg_E1+I1R1)
+    draw_vector(V1, 'darkorange', r'$I_1x_1$', (0.05, 0.05), width=0.8, c_start=neg_E1+I1r1)
     draw_vector(V1, 'forestgreen', r'$V_1$', (0.05, 0.05), width=1.5)
     draw_angle_arc(V1, I1, 1.2, 'forestgreen', r'$\phi_1$')
 
