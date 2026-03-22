@@ -120,7 +120,7 @@ if step >= 4:
     draw_angle_arc(E2, Phi, 0.4, 'black', r'$90^\circ$')
 
 if step >= 5:
-    draw_vector(I1_prime, 'crimson', r'$I_2^\prime$', (-0.2, 0.05), width=1.0)
+    draw_vector(I2_prime, 'crimson', r'$I_2^\prime$', (-0.2, 0.05), width=1.0)
     ax.plot([I2.real, I1_prime.real], [I2.imag, I1_prime.imag], color='crimson', linestyle=':', alpha=0.4, linewidth=1)
 
 if step >= 6:
