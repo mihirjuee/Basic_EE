@@ -81,9 +81,9 @@ V2 = 1.5 + 0j
 phi2 = np.deg2rad(30) 
 I2 = 1.0 * np.exp(-j * phi2) 
 
-I2R2 = 0.4 * I2             
-I2X2 = 0.5 * I2 * np.exp(j * np.deg2rad(90)) 
-E2 = V2 + I2R2 + I2X2
+I2r2 = 0.4 * I2             
+I2x2 = 0.5 * I2 * np.exp(j * np.deg2rad(90)) 
+E2 = V2 + I2r2 + I2x2
 E1 = E2 * 1.1 
 
 Phi_dir = E2 / np.abs(E2) * np.exp(j * np.deg2rad(90))
@@ -96,9 +96,9 @@ I0 = Im + Ic
 I1 = I2_prime + I0
 
 neg_E1 = -E1
-I1R1 = I1 * 0.3
-I1X1 = I1 * np.exp(j * np.deg2rad(90)) * 0.4
-V1 = neg_E1 + I1R1 + I1X1
+I1r1 = I1 * 0.3
+I1x1 = I1 * np.exp(j * np.deg2rad(90)) * 0.4
+V1 = neg_E1 + I1r1 + I1x1
 
 
 # --- Drawing Logic ---
@@ -121,22 +121,22 @@ if step >= 4:
 
 if step >= 5:
     draw_vector(I2_prime, 'crimson', r'$I_2^\prime$', (-0.2, 0.05), width=1.0)
-    ax.plot([I2.real, I1_prime.real], [I2.imag, I1_prime.imag], color='crimson', linestyle=':', alpha=0.4, linewidth=1)
+    ax.plot([I2.real, I2_prime.real], [I2.imag, I2_prime.imag], color='crimson', linestyle=':', alpha=0.4, linewidth=1)
 
 if step >= 6:
     draw_vector(Im, 'gray', r'$I_m$', (0.05, 0.05), width=0.8)
     draw_vector(Ic, 'gray', r'$I_c$', (-0.2, -0.1), width=0.8)
     draw_parallelogram(Im, Ic)
     draw_vector(I0, 'purple', r'$I_0$', (-0.2, 0.05), width=1.0)
-    draw_parallelogram(I1_prime, I0)
+    draw_parallelogram(I2_prime, I0)
     draw_vector(I1, 'red', r'$I_1$', (-0.2, 0.05), width=1.5)
 
 if step >= 7:
     draw_vector(neg_E1, 'dodgerblue', r'$-E_1$', (0.05, -0.15), width=1.0)
 
 if step >= 8:
-    draw_vector(neg_E1 + I1R1, 'darkorange', r'$I_1R_1$', (0.05, 0.05), width=0.8, c_start=neg_E1)
-    draw_vector(V1, 'darkorange', r'$I_1X_1$', (0.05, 0.05), width=0.8, c_start=neg_E1+I1R1)
+    draw_vector(neg_E1 + I1r1, 'darkorange', r'$I_1R_1$', (0.05, 0.05), width=0.8, c_start=neg_E1)
+    draw_vector(V1, 'darkorange', r'$I_1x_1$', (0.05, 0.05), width=0.8, c_start=neg_E1+I1R1)
     draw_vector(V1, 'forestgreen', r'$V_1$', (0.05, 0.05), width=1.5)
     draw_angle_arc(V1, I1, 1.2, 'forestgreen', r'$\phi_1$')
 
