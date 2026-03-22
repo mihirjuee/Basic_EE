@@ -14,7 +14,7 @@ step_texts = {
     2: "**Step 2: Induced EMFs.** Faraday's Law dictates that induced voltages ($E_1$ and $E_2$) lag the flux that created them by 90°.",
     3: "**Step 3: No-Load Current.** Even unloaded, the primary draws current ($I_0$) to magnetize the core ($I_m$) and supply core losses ($I_c$).",
     4: "**Step 4: Secondary Load Current.** A lagging (inductive) load is connected. The secondary current ($I_2$) lags behind the secondary voltage.",
-    5: "**Step 5: Load Balancing Current.** To counteract the demagnetizing effect of $I_2$, the primary instantly draws a balancing current ($I_1'$) exactly 180° opposite to $I_2$.",
+    5: "**Step 5: Load Balancing Current.** To counteract the demagnetizing effect of $I_2$, the primary instantly draws a balancing current ($I_2'$) exactly 180° opposite to $I_2$.",
     6: "**Step 6: Total Primary Current.** The total current drawn from the supply ($I_1$) is the vector sum of the no-load current ($I_0$) and the balancing current ($I_1'$).",
     7: "**Step 7: Secondary Voltage Drops.** We account for the resistive ($I_2R_2$) and reactive ($I_2X_2$) drops in the secondary winding. The terminal voltage is $V_2 = E_2 - I_2R_2 - I_2X_2$.",
     8: "**Step 8: Primary Voltage Drops.** Finally, we map the supply voltage. It must overcome the opposing induced EMF ($-E_1$) plus the primary winding drops. Therefore, $V_1 = (-E_1) + I_1R_1 + I_1X_1$."
