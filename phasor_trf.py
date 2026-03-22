@@ -90,7 +90,7 @@ if step >= 4:
     draw_vector(i2_x, i2_y, 'crimson', r'$I_2$', (-0.1, -0.2))
 
 if step >= 5:
-    draw_vector(i1p_x, i1p_y, 'crimson', r'$I_1^\prime$', (0.05, 0.05))
+    draw_vector(i1p_x, i1p_y, 'crimson', r'$I_2^\prime$', (0.05, 0.05))
     ax.plot([i2_x, i1p_x], [i2_y, i1p_y], color='crimson', linestyle=':', alpha=0.5)
 
 if step >= 6:
