@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide")
-st.title("Transformer Phasor Diagram: V₂ Reference")
+st.title("Transformer Phasor Diagram: Lagging power factor load")
 st.markdown("Constructing the diagram with the secondary terminal voltage as the horizontal reference.")
 
 step = st.slider("Select Construction Step", 1, 8, 1)
