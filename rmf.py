@@ -25,9 +25,9 @@ def generate_rmf_plot(omega_t_deg):
     Im = 1.0 
 
     # 1. Time Domain Currents
-    ia = Im * np.cos(omega_t)
-    ib = Im * np.cos(omega_t - np.deg2rad(120))
-    ic = Im * np.cos(omega_t - np.deg2rad(240))
+    ia = Im * np.sin(omega_t)
+    ib = Im * np.sin(omega_t - np.deg2rad(120))
+    ic = Im * np.sin(omega_t - np.deg2rad(240))
 
     # 2. Space Domain Orientations
     dir_a = np.exp(1j * 0)                  
