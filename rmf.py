@@ -110,5 +110,5 @@ else:
 
 st.markdown("""
 ### The Takeaway
-Notice how the red, blue, and green spatial vectors pulse in and out along their fixed axes, but their sum (the black vector) maintains a perfectly constant length of **1.5** and sweeps smoothly in a circle.
+Notice how the red, yellow, and blue spatial vectors pulse in and out along their fixed axes, but their sum (the black vector) maintains a perfectly constant length of **1.5** and sweeps smoothly in a circle.
 """)
