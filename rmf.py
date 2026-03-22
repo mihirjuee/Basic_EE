@@ -25,9 +25,9 @@ def generate_rmf_plot(omega_t_deg):
     Im = 1.0 
 
     # 1. Time Domain Currents
-    ia = Im * np.sin(omega_t)
-    ib = Im * np.sin(omega_t - np.deg2rad(120))
-    ic = Im * np.sin(omega_t - np.deg2rad(240))
+    ia = Im * np.cos(omega_t)
+    ib = Im * np.cos(omega_t - np.deg2rad(120))
+    ic = Im * np.cos(omega_t - np.deg2rad(240))
 
     # 2. Space Domain Orientations
     dir_a = np.exp(1j * 0)                  
@@ -48,9 +48,9 @@ def generate_rmf_plot(omega_t_deg):
     # Left Plot: Time Domain Waveforms
     ax1 = plt.subplot(121)
     t_arr = np.linspace(0, 2*np.pi, 360)
-    ax1.plot(np.rad2deg(t_arr), Im * np.sin(t_arr), color='red', label=r'Phase A ($i_a$)')
-    ax1.plot(np.rad2deg(t_arr), Im * np.sin(t_arr - np.deg2rad(120)), color='blue', label=r'Phase B ($i_b$)')
-    ax1.plot(np.rad2deg(t_arr), Im * np.sin(t_arr - np.deg2rad(240)), color='green', label=r'Phase C ($i_c$)')
+    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr), color='red', label=r'Phase A ($i_a$)')
+    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(120)), color='blue', label=r'Phase B ($i_b$)')
+    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(240)), color='green', label=r'Phase C ($i_c$)')
     ax1.axvline(x=omega_t_deg, color='black', linestyle='--', linewidth=2, label='Current Snapshot')
 
     ax1.set_title("3-Phase Currents (Time Domain)", fontsize=14)
