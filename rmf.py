@@ -49,8 +49,8 @@ def generate_rmf_plot(omega_t_deg):
     ax1 = plt.subplot(121)
     t_arr = np.linspace(0, 2*np.pi, 360)
     ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr), color='red', label=r'Phase A ($i_a$)')
-    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(120)), color='blue', label=r'Phase B ($i_b$)')
-    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(240)), color='green', label=r'Phase C ($i_c$)')
+    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(120)), color='yellow', label=r'Phase B ($i_b$)')
+    ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr - np.deg2rad(240)), color='blue', label=r'Phase C ($i_c$)')
     ax1.axvline(x=omega_t_deg, color='black', linestyle='--', linewidth=2, label='Current Snapshot')
 
     ax1.set_title("3-Phase Currents (Time Domain)", fontsize=14)
@@ -77,10 +77,10 @@ def generate_rmf_plot(omega_t_deg):
                  arrowprops=dict(facecolor='red', edgecolor='red', alpha=0.6, lw=3, **arrow_style))
                  
     ax2.annotate('', xy=(np.angle(Bb), np.abs(Bb)), xytext=(0, 0),
-                 arrowprops=dict(facecolor='blue', edgecolor='blue', alpha=0.6, lw=3, **arrow_style))
+                 arrowprops=dict(facecolor='blue', edgecolor='yellow', alpha=0.6, lw=3, **arrow_style))
                  
     ax2.annotate('', xy=(np.angle(Bc), np.abs(Bc)), xytext=(0, 0),
-                 arrowprops=dict(facecolor='green', edgecolor='green', alpha=0.6, lw=3, **arrow_style))
+                 arrowprops=dict(facecolor='green', edgecolor='blue', alpha=0.6, lw=3, **arrow_style))
 
     # Net Vector Arrow (Black, slightly thicker)
     ax2.annotate('', xy=(np.angle(B_net), np.abs(B_net)), xytext=(0, 0),
