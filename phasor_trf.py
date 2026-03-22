@@ -89,11 +89,11 @@ E1 = E2 * 1.1
 Phi_dir = E2 / np.abs(E2) * np.exp(j * np.deg2rad(90))
 Phi = Phi_dir * 2.0
 
-I1_prime = -I2 * 1.2
+I2_prime = -I2 *(1/1.1)
 Im = Phi_dir * 0.6
 Ic = Phi_dir * np.exp(j * np.deg2rad(90)) * 0.4
 I0 = Im + Ic
-I1 = I1_prime + I0
+I1 = I2_prime + I0
 
 neg_E1 = -E1
 I1R1 = I1 * 0.3
