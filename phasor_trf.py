@@ -14,7 +14,7 @@ step_texts = {
     3: "**Step 3: Secondary Drops & EMF.** $E_2 = V_2 + I_2R_2 + I_2X_2$. The resistive drop is parallel to $I_2$, and the reactive drop is perpendicular.",
     4: "**Step 4: Mutual Flux.** Induced EMF lags the core flux by 90°. Therefore, we draw the mutual flux ($\Phi$) 90° ahead of $E_2$. We also draw primary $E_1$.",
     5: "**Step 5: Balancing Current.** The primary balancing current ($I_1^\prime$) is drawn exactly 180° opposite to $I_2$.",
-    6: "**Step 6: No-Load & Total Current.** $I_0$ is built around $\Phi$. The total primary current is $I_1 = I_1^\prime + I_0$.",
+    6: "**Step 6: No-Load & Total Current.** $I_0$ is built around $\Phi$. The total primary current is $I_1 = I_2^\prime + I_0$.",
     7: "**Step 7: Primary EMF.** We map $-E_1$, which is exactly 180° opposite to the induced EMF $E_1$.",
     8: "**Step 8: Primary Voltage Drops.** The supply voltage $V_1 = (-E_1) + I_1R_1 + I_1X_1$. The angle between $V_1$ and $I_1$ is the primary power factor angle $\phi_1$."
 }
