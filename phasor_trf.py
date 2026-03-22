@@ -1,7 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-st.set_page_config(layout="width")
+st.set_page_config(layout="wide")
 st.title("Transformer Phasor Diagram: Step-by-Step")
 st.markdown("Constructing the practical transformer phasor diagram with series voltage drops.")
 
