@@ -1,4 +1,4 @@
-  import streamlit as st
+import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -45,6 +45,7 @@ def generate_rmf_plot(omega_t_deg):
     # --- Plotting ---
     fig = plt.figure(figsize=(14, 6))
 
+    # Left Plot: Time Domain Waveforms
     ax1 = plt.subplot(121)
     t_arr = np.linspace(0, 2*np.pi, 360)
     ax1.plot(np.rad2deg(t_arr), Im * np.cos(t_arr), color='red', label=r'Phase A ($i_a$)')
@@ -59,12 +60,32 @@ def generate_rmf_plot(omega_t_deg):
     ax1.grid(True, alpha=0.5)
     ax1.legend(loc='upper right')
 
+    # Right Plot: Spatial Vectors (Polar Plot)
     ax2 = plt.subplot(122, projection='polar')
-    ax2.plot([0, np.angle(Ba)], [0, np.abs(Ba)], color='red', linewidth=3, alpha=0.6, label=r'$\vec{B}_a$')
-    ax2.plot([0, np.angle(Bb)], [0, np.abs(Bb)], color='blue', linewidth=3, alpha=0.6, label=r'$\vec{B}_b$')
-    ax2.plot([0, np.angle(Bc)], [0, np.abs(Bc)], color='green', linewidth=3, alpha=0.6, label=r'$\vec{B}_c$')
-    ax2.plot([0, np.angle(B_net)], [0, np.abs(B_net)], color='black', linewidth=4, label=r'Net Field ($\vec{B}_{net}$)')
-    ax2.plot(np.angle(B_net), np.abs(B_net), marker='o', markersize=8, color='black')
+
+    # 1. Create invisible dummy lines for the legend to read
+    ax2.plot([], [], color='red', linewidth=3, alpha=0.6, label=r'$\vec{B}_a$')
+    ax2.plot([], [], color='blue', linewidth=3, alpha=0.6, label=r'$\vec{B}_b$')
+    ax2.plot([], [], color='green', linewidth=3, alpha=0.6, label=r'$\vec{B}_c$')
+    ax2.plot([], [], color='black', linewidth=4, label=r'Net Field ($\vec{B}_{net}$)')
+
+    # 2. Define standard arrow styling (solid filled arrowhead, scaled up slightly)
+    arrow_style = dict(arrowstyle='-|>', mutation_scale=20, shrinkA=0, shrinkB=0)
+
+    # 3. Draw the actual arrows using annotate
+    ax2.annotate('', xy=(np.angle(Ba), np.abs(Ba)), xytext=(0, 0),
+                 arrowprops=dict(facecolor='red', edgecolor='red', alpha=0.6, lw=3, **arrow_style))
+                 
+    ax2.annotate('', xy=(np.angle(Bb), np.abs(Bb)), xytext=(0, 0),
+                 arrowprops=dict(facecolor='blue', edgecolor='blue', alpha=0.6, lw=3, **arrow_style))
+                 
+    ax2.annotate('', xy=(np.angle(Bc), np.abs(Bc)), xytext=(0, 0),
+                 arrowprops=dict(facecolor='green', edgecolor='green', alpha=0.6, lw=3, **arrow_style))
+
+    # Net Vector Arrow (Black, slightly thicker)
+    ax2.annotate('', xy=(np.angle(B_net), np.abs(B_net)), xytext=(0, 0),
+                 arrowprops=dict(facecolor='black', edgecolor='black', lw=4, **arrow_style))
+
 
     ax2.set_title(f"Resultant Spatial Vector\nMagnitude: {np.abs(B_net):.2f} (Constant at 1.5x Peak)", fontsize=14, pad=20)
     ax2.set_ylim(0, 1.8)
