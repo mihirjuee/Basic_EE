@@ -13,7 +13,7 @@ if 'theta_step' not in st.session_state:
     st.session_state.theta_step = 0.0
 
 # --- Sidebar Controls ---
-st.sidebar.header("Signal Parameters (Static Wave)")
+st.sidebar.header("Signal Parameters")
 V_m = st.sidebar.slider("Amplitude (V_m)", 1.0, 10.0, 5.0)
 phase_deg = st.sidebar.slider("Initial Phase (φ)", -180, 180, 0)
 
@@ -22,12 +22,9 @@ st.sidebar.header("Motion Controls")
 speed = st.sidebar.slider("Playback Speed", 1, 20, 5)
 
 # Manual Slider - Linked to session state
-# This allows the user to scrub manually or watch it move
 manual_theta = st.sidebar.slider("Manual Angle Scrub", 0.0, 360.0, 
                                   float(st.session_state.theta_step % 360), 
                                   step=1.0)
-
-# Sync manual slider back to state if changed
 st.session_state.theta_step = manual_theta
 
 # Play/Pause Buttons
@@ -42,15 +39,12 @@ phase_rad = np.deg2rad(phase_deg)
 current_theta_deg = st.session_state.theta_step % 360
 current_theta_rad = np.deg2rad(current_theta_deg)
 
-# 1. FIXED WAVEFORM (The path the tracer follows)
+# 1. FIXED WAVEFORM 
 degrees_axis = np.linspace(0, 360, 500)
-# v(theta) = Vm * sin(theta + phase)
 v_waveform = V_m * np.sin(np.deg2rad(degrees_axis) + phase_rad)
 
 # 2. MOVING TRACER & VECTOR
-# The tracer's height on the fixed wave
 v_instant = V_m * np.sin(current_theta_rad + phase_rad)
-# The phasor's actual angle in the polar plot
 total_vector_angle = current_theta_rad + phase_rad
 
 # --- Visualization ---
@@ -63,7 +57,6 @@ with plot_placeholder.container():
     # --- Plot 1: The Vector (Phasor) ---
     ax1.remove()
     ax1 = fig.add_subplot(121, projection='polar')
-    # Draw moving arrow
     ax1.annotate('', xy=(total_vector_angle, V_m), xytext=(0, 0),
                  arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', 
                                  width=3, headwidth=10))
@@ -71,7 +64,10 @@ with plot_placeholder.container():
     ax1.set_title(f"Rotating Vector: {current_theta_deg:.1f}°", pad=20)
 
     # --- Plot 2: The Tracer (Time Domain) ---
-    # Draw the static waveform (alpha makes it look like a background path)
+    # The Magnitude Zero Axis (Solid black line)
+    ax2.axhline(0, color='black', linewidth=1.5, alpha=0.8)
+    
+    # Draw the static waveform 
     ax2.plot(degrees_axis, v_waveform, color='crimson', linewidth=2, alpha=0.4, label='Signal Path')
     
     # Draw the moving tracer (The Dot)
