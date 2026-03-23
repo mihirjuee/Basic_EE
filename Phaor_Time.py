@@ -41,19 +41,22 @@ ax1.set_title(f"Phasor Position at t = {t_snapshot:.2f}s", pad=20)
 
 # Plot 2: Cartesian plot representing the Time Domain
 ax2 = plt.subplot(122)
-ax2.plot(t, v_t, color='crimson', label='$v(t)$')
-# Draw a vertical line to show where we are in time
-ax2.axvline(x=t_snapshot, color='dodgerblue', linestyle='--', alpha=0.7)
-# Mark the exact point on the wave
-ax2.plot(t_snapshot, V_m * np.sin(current_angle), marker='o', markersize=8, color='dodgerblue')
+ax2.plot(degrees, v_theta, color='crimson', label='$v(\\theta)$', linewidth=2)
 
-ax2.set_ylim(-10.5, 10.5)
-ax2.set_title("Time Domain Waveform")
-ax2.set_xlabel("Time (s)")
+# Highlight the current position based on the scrubber
+current_v = V_m * np.sin(current_theta_rad + phase_rad)
+ax2.axvline(x=current_theta_deg, color='dodgerblue', linestyle='--', alpha=0.7)
+ax2.plot(current_theta_deg, current_v, marker='o', markersize=8, color='dodgerblue')
+
+# Formatting the X-axis for Degrees
+ax2.set_xlim(0, 360)
+ax2.set_xticks([0, 90, 180, 270, 360])
+ax2.set_xticklabels(['0°', '90°', '180°', '270°', '360°'])
+
+ax2.set_title("Waveform in Degree Domain")
+ax2.set_xlabel("Angle (Degrees)")
 ax2.set_ylabel("Voltage (V)")
-ax2.axhline(0, color='black', linewidth=0.5)
 ax2.grid(True, linestyle=':', alpha=0.6)
-ax2.legend()
 
 # Render the plot in Streamlit
 st.pyplot(fig)
