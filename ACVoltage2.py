@@ -2,80 +2,92 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 
-st.set_page_config(page_title="AC Generator Physics", layout="wide")
+st.set_page_config(page_title="Realistic AC Physics", layout="wide")
 
-st.title("AC Generator: Velocity Vector Analysis")
-st.markdown("This simulation illustrates how the **velocity components** of the coil determine induced e.m.f.")
+st.title("Realistic 3D Generator & Vector Decomposition")
+st.markdown("Observe how the velocity vector $\\vec{v}$ decomposes. Only the component **perpendicular** to the flux induces voltage.")
 
 # --- Sidebar ---
-theta_deg = st.sidebar.slider("Rotation Angle (θ)", 0, 360, 45, 1)
+theta_deg = st.sidebar.slider("Rotation Angle (θ)", 0, 360, 45, 5)
 theta_rad = np.radians(theta_deg)
 
-# --- 1. 3D Generator Model (Physical View) ---
-fig_3d = go.Figure()
+# --- 1. Realistic 3D Model ---
+fig = go.Figure()
 
-# Magnets & Flux (Simplified for focus)
-fig_3d.add_trace(go.Scatter3d(x=[-2.5, 2.5], y=[0, 0], z=[0, 0], mode='lines', 
-                             line=dict(color='gray', width=1, dash='dot'), showlegend=False))
+# A. Create Curved Pole Shoes (N and S)
+def draw_curved_pole(x_offset, color, label):
+    phi = np.linspace(-np.pi/3, np.pi/3, 20)
+    z_curved = 2 * np.sin(phi)
+    y_curved = np.linspace(-2, 2, 10)
+    Y, Phi = np.meshgrid(y_curved, phi)
+    Z = 2 * np.sin(Phi)
+    X = 2.5 * np.sign(x_offset) + 0.5 * np.cos(Phi) * np.sign(-x_offset)
+    
+    fig.add_trace(go.Surface(x=X, y=Y, z=Z, colorscale=[[0, color], [1, color]], 
+                             showscale=False, opacity=0.8, name=label))
 
-# Coil position
-r = 1.5
-x_pos, z_pos = r * np.cos(theta_rad), r * np.sin(theta_rad)
+draw_curved_pole(-1, 'red', 'North Pole')
+draw_curved_pole(1, 'blue', 'South Pole')
 
-# Draw Coil Side (Arm a-b)
-fig_3d.add_trace(go.Scatter3d(
-    x=[x_pos, x_pos], y=[-1, 1], z=[z_pos, z_pos],
-    mode='lines+markers', line=dict(color='gold', width=10), name='Arm a-b'
-))
+# B. Armature Core (The Cylinder)
+u = np.linspace(0, 2*np.pi, 30)
+v_cyl = np.linspace(-1.8, 1.8, 10)
+U, V_cyl = np.meshgrid(u, v_cyl)
+X_cyl = 1.1 * np.cos(U)
+Z_cyl = 1.1 * np.sin(U)
+fig.add_trace(go.Surface(x=X_cyl, y=V_cyl, z=Z_cyl, colorscale=[[0, 'gray'], [1, 'gray']], 
+                         showscale=False, opacity=0.3, name='Iron Core'))
 
-# Tangential Velocity Vector (v) in 3D
-v_len = 1.2
-vx, vz = -v_len * np.sin(theta_rad), v_len * np.cos(theta_rad)
-fig_3d.add_trace(go.Cone(x=[x_pos], y=[0], z=[z_pos], u=[vx], v=[0], w=[vz], 
-                         sizemode="absolute", sizeref=0.5, showscale=False, colorscale=[[0, 'black'], [1, 'black']]))
+# C. Calculation of Conductor Position & Vectors
+r = 1.2
+# Point A (Conductor)
+ax, az = r * np.cos(theta_rad), r * np.sin(theta_rad)
 
-fig_3d.update_layout(scene=dict(xaxis_range=[-3,3], yaxis_range=[-2,2], zaxis_range=[-3,3]), height=500, margin=dict(t=0, b=0))
+# Velocity Vector (v) - Tangential to circle
+v_mag = 1.5
+# Direction is perpendicular to radius: (-sin, cos)
+vx, vz = -v_mag * np.sin(theta_rad), v_mag * np.cos(theta_rad)
 
-# --- 2. 2D Vector Analysis (The Math from your Image) ---
-fig_2d = go.Figure()
+# D. Draw Conductor (Arm a-b)
+fig.add_trace(go.Scatter3d(x=[ax, ax], y=[-1.8, 1.8], z=[az, az],
+                         mode='lines+markers', line=dict(color='gold', width=12), name='Conductor a-b'))
 
-# Draw Flux Lines (Background)
-for i in np.linspace(-2, 2, 5):
-    fig_2d.add_trace(go.Scatter(x=[i, i], y=[-2, 2], mode='lines', line=dict(color='lightblue', dash='dash'), showlegend=False))
+# E. 3D Vector Decomposition (As per your diagram)
+# Main Velocity v (Black)
+fig.add_trace(go.Scatter3d(x=[ax, ax+vx], y=[0, 0], z=[az, az+vz],
+                         mode='lines', line=dict(color='black', width=6), name='Total Velocity v'))
 
-# Draw Coil Radius (r)
-fig_2d.add_trace(go.Scatter(x=[0, x_pos], y=[0, z_pos], mode='lines+text', 
-                            text=["", "A"], textposition="top right", line=dict(color='black', width=2), name="Radius (r)"))
+# Perpendicular Component (Red) - v sin(theta) - cuts vertical flux
+fig.add_trace(go.Scatter3d(x=[ax, ax+vx], y=[0, 0], z=[az, az],
+                         mode='lines', line=dict(color='crimson', width=8), name='v sin(θ) (Induced Component)'))
 
-# Main Velocity Vector (v) - Tangential
-fig_2d.add_trace(go.Scatter(x=[x_pos, x_pos + vx], y=[z_pos, z_pos + vz], 
-                            mode='lines+markers', line=dict(color='black', width=4), marker=dict(symbol="arrow", size=10), name="Total Velocity (v)"))
+# Parallel Component (Green) - v cos(theta)
+fig.add_trace(go.Scatter3d(x=[ax+vx, ax+vx], y=[0, 0], z=[az, az+vz],
+                         mode='lines', line=dict(color='green', width=4), name='v cos(θ) (Parallel)'))
 
-# Component: v sin(theta) - Perpendicular to Flux
-fig_2d.add_trace(go.Scatter(x=[x_pos, x_pos + vx], y=[z_pos, z_pos], 
-                            mode='lines', line=dict(color='crimson', width=3), name="v sin(θ) [Cutting Flux]"))
+# Flux Lines (Top to Bottom as in your image)
+for x_f in np.linspace(-1.5, 1.5, 6):
+    fig.add_trace(go.Scatter3d(x=[x_f, x_f], y=[0, 0], z=[2, -2],
+                             mode='lines', line=dict(color='rgba(100,100,100,0.2)', width=1), showlegend=False))
 
-# Component: v cos(theta) - Parallel to Flux
-fig_2d.add_trace(go.Scatter(x=[x_pos + vx, x_pos + vx], y=[z_pos, z_pos + vz], 
-                            mode='lines', line=dict(color='green', width=3), name="v cos(θ) [Parallel]"))
+# Layout
+fig.update_layout(scene=dict(xaxis_range=[-3,3], yaxis_range=[-3,3], zaxis_range=[-3,3], aspectmode='cube'),
+                  margin=dict(l=0,r=0,b=0,t=0), height=700)
 
-fig_2d.update_layout(xaxis_range=[-3,3], yaxis_range=[-3,3], height=500, title="Velocity Vector Breakdown", showlegend=True)
+st.plotly_chart(fig, use_container_width=True)
 
-# --- Layout ---
+# --- Physics Summary ---
+st.markdown("### The Mathematical Breakdown")
 col1, col2 = st.columns(2)
+
 with col1:
-    st.plotly_chart(fig_3d, use_container_width=True)
+    st.latex(r"e = B \cdot l \cdot v \cdot \sin(\theta)")
+    st.write("The **Red Vector** represents the rate at which the conductor crosses the flux lines.")
+
 with col2:
-    st.plotly_chart(fig_2d, use_container_width=True)
-
-# --- Analysis Text ---
-st.markdown("---")
-col_a, col_b, col_c = st.columns(3)
-col_a.metric("Angle (θ)", f"{theta_deg}°")
-col_b.metric("Flux Cutting Component", f"{np.sin(theta_rad):.2f} v")
-col_c.metric("Parallel Component", f"{np.cos(theta_rad):.2f} v")
-
-st.info(f"""
-**Physics Insight:** At {theta_deg}°, the component of velocity cutting the flux lines is **{np.sin(theta_rad):.2f}v**. 
-Because Induced EMF $e = B \cdot l \cdot (v \sin\theta)$, the voltage output is directly proportional to the red line in the diagram.
-""")
+    current_val = np.sin(theta_rad)
+    st.metric("Relative induced e.m.f", f"{current_val:.2f} units")
+    if abs(current_val) < 0.1:
+        st.error("Neutral Plane: Velocity is parallel to flux. No cutting.")
+    elif abs(current_val) > 0.9:
+        st.success("Peak Position: Velocity is perpendicular to flux. Maximum cutting.")
