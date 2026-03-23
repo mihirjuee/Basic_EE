@@ -11,7 +11,7 @@ f = st.sidebar.slider("Frequency (Hz)", 0.0, 60.0, 50.0)
 phase_deg = st.sidebar.slider("Phase Angle (degrees)", -180, 180, 0)
 
 # The time scrubber allows manual animation
-t_snapshot = st.sidebar.slider("Scrub Time (seconds)", 0.0, 0.02, 0.0, 0.001)
+t_snapshot = st.sidebar.slider("Scrub Time (seconds)", 0.0, 0.02, 0.0, 0.01)
 
 # Mathematical calculations
 omega = 2 * np.pi * f
@@ -27,7 +27,15 @@ fig = plt.figure(figsize=(12, 5))
 
 # Plot 1: Polar plot representing the rotating Phasor
 ax1 = plt.subplot(121, projection='polar')
-ax1.plot([0, current_angle], [0, V_m], marker='o', color='dodgerblue', linewidth=3)
+
+# Use annotate to draw an arrow from (0,0) to (angle, radius)
+ax1.annotate('', xy=(current_angle, V_m), xytext=(0, 0),
+             arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', 
+                             shrink=0, width=2, headwidth=8))
+
+# Add a point at the tip for extra emphasis
+ax1.plot(current_angle, V_m, marker='o', color='dodgerblue', markersize=4)
+
 ax1.set_ylim(0, 10)
 ax1.set_title(f"Phasor Position at t = {t_snapshot:.2f}s", pad=20)
 
