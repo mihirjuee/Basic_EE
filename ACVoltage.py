@@ -2,98 +2,131 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 
-st.set_page_config(page_title="Magnetic Flux Visualization", layout="wide")
-st.title("Interactive 3D Magnetic Field Visualization")
-st.markdown("North to South magnetic flux simulation.")
+# --- Page Config ---
+st.set_page_config(page_title="3D AC Generator Pro", layout="wide")
 
-# Create the 3D scene
-fig = go.Figure()
+st.title("3D AC Generator: Physical Model & Waveform")
+st.markdown("Rotate the coil to see how the physical position relates to the induced sine wave.")
 
-# --- 1. Draw North and South Poles (Prisms) ---
+# --- Sidebar Controls ---
+st.sidebar.header("Controls")
+theta_deg = st.sidebar.slider("Rotation Angle (θ)", 0, 360, 0, 5)
+theta_rad = np.radians(theta_deg)
 
-def draw_magnet_pole(x_center, y_center, z_center, size, color, label, text_color):
-    """Adds a simplified rectangular prism representation of a magnet pole."""
-    # Define vertices for a unit cube and scale/shift them
-    v = np.array([
-        [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
-        [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]
-    ]) - 0.5  # Center at origin
+# --- 1. 3D Generator Model ---
+fig_3d = go.Figure()
+
+def add_block_magnet(x_center, color, label):
+    """Draws a solid 3D block for the magnet poles"""
+    dx, dy, dz = 0.6, 2.0, 2.0
+    x = [x_center - dx, x_center + dx]
+    y = [-dy, dy]
+    z = [-dz, dz]
     
-    v = v * size + np.array([x_center, y_center, z_center])
-    
-    # Trace the wireframe edges
-    edges = [
-        [0, 1], [1, 2], [2, 3], [3, 0], # bottom
-        [4, 5], [5, 6], [6, 7], [7, 4], # top
-        [0, 4], [1, 5], [2, 6], [3, 7]  # vertical connectors
-    ]
-    
-    for edge in edges:
-        fig.add_trace(go.Scatter3d(
-            x=[v[edge[0], 0], v[edge[1], 0]],
-            y=[v[edge[0], 1], v[edge[1], 1]],
-            z=[v[edge[0], 2], v[edge[1], 2]],
-            mode='lines',
-            line=dict(color=color, width=3),
-            showlegend=False,
-            hoverinfo='skip'
-        ))
-
-    # Add Label
-    fig.add_trace(go.Scatter3d(
-        x=[x_center], y=[y_center], z=[z_center + size/2 + 0.3],
-        mode='text',
-        text=[label],
-        textfont=dict(size=24, color=text_color),
-        showlegend=False
+    fig_3d.add_trace(go.Mesh3d(
+        x=[x[0], x[0], x[1], x[1], x[0], x[0], x[1], x[1]],
+        y=[y[0], y[1], y[1], y[0], y[0], y[1], y[1], y[0]],
+        z=[z[0], z[0], z[0], z[0], z[1], z[1], z[1], z[1]],
+        i=[7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2],
+        j=[3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3],
+        k=[0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6],
+        color=color, opacity=0.5, name=label
+    ))
+    # Pole Labels
+    fig_3d.add_trace(go.Scatter3d(
+        x=[x_center], y=[0], z=[2.5],
+        mode='text', text=[label[0]], 
+        textfont=dict(size=24, color=color), showlegend=False
     ))
 
-# Draw the Red North Pole at X = -3
-draw_magnet_pole(x_center=-3, y_center=0, z_center=0, size=2, color='red', label='N', text_color='red')
+# Add Magnets
+add_block_magnet(-2.8, 'red', 'North')
+add_block_magnet(2.8, 'blue', 'South')
 
-# Draw the Blue South Pole at X = +3
-draw_magnet_pole(x_center=3, y_center=0, z_center=0, size=2, color='blue', label='S', text_color='blue')
-
-# --- 2. Draw Magnetic Flux Lines (N to S) ---
-
-# Define the region of space where flux will be shown
-y_lines = np.linspace(-1.0, 1.0, 5)
-z_lines = np.linspace(-1.0, 1.0, 5)
-
-for y_l in y_lines:
-    for z_l in z_lines:
-        # Drawing the main line from North to South face
-        fig.add_trace(go.Scatter3d(
-            x=[-2, 2], y=[y_l, y_l], z=[z_l, z_l],
-            mode='lines',
-            line=dict(color='gray', width=1.5, dash='dash'),
-            showlegend=False,
-            hoverinfo='skip'
+# Magnetic Flux Lines (N to S)
+for zl in np.linspace(-1.2, 1.2, 4):
+    for yl in np.linspace(-1.2, 1.2, 4):
+        # Dashed lines
+        fig_3d.add_trace(go.Scatter3d(
+            x=[-2.2, 2.2], y=[yl, yl], z=[zl, zl],
+            mode='lines', line=dict(color='gray', width=1, dash='dot'),
+            showlegend=False
         ))
-        
-        # Adding a central cone as a directional arrowhead
-        fig.add_trace(go.Cone(
-            x=[0], y=[y_l], z=[z_l],
-            u=[1], v=[0], w=[0], # Vector direction (along +X)
-            sizemode="absolute", sizeref=0.2,
-            colorscale=[[0, 'black'], [1, 'black']], showscale=False,
-            anchor="center"
+        # Directional Arrow (Cone)
+        fig_3d.add_trace(go.Cone(
+            x=[0], y=[yl], z=[zl], u=[1], v=[0], w=[0],
+            sizemode="absolute", sizeref=0.3, showscale=False, colorscale=[[0, 'black'], [1, 'black']]
         ))
 
-# --- Layout Configuration ---
-fig.update_layout(
-    scene=dict(
-        xaxis=dict(title='X (N-S Axis)', range=[-5, 5], showbackground=False),
-        yaxis=dict(title='Y (Width)', range=[-3, 3], showbackground=False),
-        zaxis=dict(title='Z (Height)', range=[-3, 3], showbackground=False),
-        camera=dict(
-            eye=dict(x=1.8, y=1.2, z=0.8) # Viewing angle
-        ),
-        aspectmode='cube'
-    ),
-    margin=dict(l=0, r=0, b=0, t=0),
-    height=700
+# Coil Geometry (Corrected Rotation around Y-axis)
+r, L = 1.3, 1.8
+# Start position: Vertical (Neutral Plane)
+x1, z1 = r * np.sin(theta_rad), r * np.cos(theta_rad)
+x2, z2 = -r * np.sin(theta_rad), -r * np.cos(theta_rad)
+
+# Active Arms (a-b and c-d)
+fig_3d.add_trace(go.Scatter3d(
+    x=[x1, x1], y=[-L, L], z=[z1, z1],
+    mode='lines+markers+text', line=dict(color='gold', width=12),
+    text=['b', 'a'], textposition="top center", name='Active Arm a-b'
+))
+fig_3d.add_trace(go.Scatter3d(
+    x=[x2, x2], y=[-L, L], z=[z2, z2],
+    mode='lines+markers+text', line=dict(color='gold', width=12),
+    text=['c', 'd'], textposition="bottom center", name='Active Arm c-d'
+))
+
+# Overhangs (End-turns)
+fig_3d.add_trace(go.Scatter3d(
+    x=[x1, x2], y=[L, L], z=[z1, z2],
+    mode='lines', line=dict(color='black', width=5), name='End-turn'
+))
+fig_3d.add_trace(go.Scatter3d(
+    x=[x1, x2], y=[-L, -L], z=[z1, z2],
+    mode='lines', line=dict(color='black', width=5), showlegend=False
+))
+
+# Shaft/Axis
+fig_3d.add_trace(go.Scatter3d(
+    x=[0, 0], y=[-2.5, 2.5], z=[0, 0],
+    mode='lines', line=dict(color='black', width=4, dash='dashdot'), name='Shaft'
+))
+
+fig_3d.update_layout(
+    scene=dict(xaxis_range=[-4, 4], yaxis_range=[-3, 3], zaxis_range=[-3, 3], aspectmode='cube'),
+    margin=dict(l=0, r=0, b=0, t=0), height=600
 )
 
-# Display in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+# --- 2. 2D Waveform Model ---
+# EMF is sin(theta) because theta=0 is vertical (no flux cutting)
+current_emf = np.sin(theta_rad)
+angles = np.linspace(0, 360, 200)
+waveform = np.sin(np.radians(angles))
+
+fig_2d = go.Figure()
+# Fixed Sine Path
+fig_2d.add_trace(go.Scatter(x=angles, y=waveform, line=dict(color='crimson', width=2, dash='dot'), name='Waveform'))
+# Moving Tracer
+fig_2d.add_trace(go.Scatter(x=[theta_deg], y=[current_emf], mode='markers', marker=dict(color='gold', size=15, line=dict(width=2, color='black')), name='Current EMF'))
+
+fig_2d.update_layout(
+    title="Output Voltage (e.m.f)",
+    xaxis=dict(title="Angle (Degrees)", tickvals=[0, 90, 180, 270, 360]),
+    yaxis=dict(title="Voltage", range=[-1.2, 1.2]),
+    template="plotly_white", height=400
+)
+
+# --- Layout Display ---
+col1, col2 = st.columns([3, 2])
+
+with col1:
+    st.plotly_chart(fig_3d, use_container_width=True)
+
+with col2:
+    st.plotly_chart(fig_2d, use_container_width=True)
+    st.metric("Instantaneous E.M.F.", f"{current_emf:.3f} V")
+    
+    if abs(current_emf) < 0.1:
+        st.info("The coil sides are moving **parallel** to the flux. Cutting rate = 0.")
+    elif abs(current_emf) > 0.9:
+        st.success("The coil sides are moving **perpendicular** to the flux. Cutting rate = Max.")
