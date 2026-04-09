@@ -1,83 +1,80 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import time
 
-st.set_page_config(page_title="EE Vector Lab", layout="wide")
+st.set_page_config(page_title="Continuous Phasor Lab", layout="wide")
 
+# Initialize the global angle if it doesn't exist
 if 'theta_step' not in st.session_state:
     st.session_state.theta_step = 0.0
 if 'running' not in st.session_state:
     st.session_state.running = False
 
-# --- SIDEBAR ---
-st.sidebar.header("Machine Parameters")
-V_m = st.sidebar.slider("Voltage ($V_m$)", 1.0, 10.0, 8.0)
-I_m = st.sidebar.slider("Current ($I_m$)", 1.0, 10.0, 6.0)
-phi_deg = st.sidebar.slider("Phase Shift (φ°)", -180, 180, -45)
-speed = st.sidebar.slider("Speed", 0.5, 10.0, 2.0)
+st.title("⚡ Continuous Phasor & Waveform Analysis")
 
-# --- ANIMATION FRAGMENT ---
-@st.fragment(run_every=0.01 if st.session_state.running else None)
-def render_phasor():
-    c1, c2, _ = st.columns([1, 1, 8])
-    if c1.button("▶️ Play", use_container_width=True):
+# --- Sidebar for Parameters (Static) ---
+st.sidebar.header("Machine Settings")
+V_m = st.sidebar.slider("Voltage Peak ($V_m$)", 1.0, 10.0, 8.0)
+I_m = st.sidebar.slider("Current Peak ($I_m$)", 1.0, 10.0, 6.0)
+phi_deg = st.sidebar.slider("Phase Angle (φ°)", -180, 180, -45)
+speed = st.sidebar.slider("Rotation Speed", 1.0, 10.0, 5.0)
+
+# --- The Animation Fragment ---
+@st.fragment
+def continuous_phasor_movement():
+    # 1. Local UI Controls (Must be inside to avoid Errors)
+    col1, col2, _ = st.columns([1, 1, 8])
+    play = col1.button("▶️ Play")
+    pause = col2.button("⏸️ Pause")
+
+    if play:
         st.session_state.running = True
-        st.rerun()
-    if c2.button("⏸️ Pause", use_container_width=True):
+    if pause:
         st.session_state.running = False
-        st.rerun()
 
-    if st.session_state.running:
+    # Create a persistent placeholder for the plots
+    plot_spot = st.empty()
+
+    # 2. The Loop for Smooth Motion
+    while st.session_state.running:
+        # Increment the angle
         st.session_state.theta_step = (st.session_state.theta_step + speed) % 360
+        
+        # Prepare Data
+        t_deg = st.session_state.theta_step
+        t_rad = np.deg2rad(t_deg)
+        p_rad = np.deg2rad(phi_deg)
+        
+        # Plotly is much faster than Matplotlib for this
+        fig = go.Figure()
+        
+        # Add Phasors (Vectors)
+        # Voltage Vector
+        fig.add_trace(go.Scatterpolar(r=[0, V_m], theta=[0, t_deg], mode='lines+markers', 
+                                     line=dict(color='red', width=4), name='V'))
+        # Current Vector
+        fig.add_trace(go.Scatterpolar(r=[0, I_m], theta=[0, t_deg + phi_deg], mode='lines+markers', 
+                                     line=dict(color='blue', width=4), name='I'))
 
-    t_deg = st.session_state.theta_step
-    # Angle for current is Voltage Angle + Phase Shift
-    i_deg = t_deg + phi_deg
+        fig.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+            showlegend=False, height=450, margin=dict(t=30, b=30)
+        )
 
-    fig = go.Figure()
+        # Update the placeholder instantly
+        plot_spot.plotly_chart(fig, use_container_width=True, key=f"phasor_{t_deg}")
+        
+        # Micro-sleep to control frame rate and allow UI responsiveness
+        time.sleep(0.01)
 
-    # 1. Voltage Vector (Red)
-    fig.add_trace(go.Scatterpolar(
-        r=[0, V_m], theta=[0, t_deg],
-        mode='lines', line=dict(color='red', width=4), name='V'
-    ))
-    
-    # 2. Current Vector (Blue)
-    fig.add_trace(go.Scatterpolar(
-        r=[0, I_m], theta=[0, i_deg],
-        mode='lines', line=dict(color='blue', width=4), name='I'
-    ))
+    # If not running, show the static state
+    if not st.session_state.running:
+        # (Same plotting logic as above but without the while loop)
+        st.info("Click Play to start the machine rotation.")
 
-    # 3. ADDING THE ARROWHEADS (Annotations)
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(range=[0, 10], visible=True),
-            angularaxis=dict(direction="counterclockwise")
-        ),
-        annotations=[
-            # Voltage Arrowhead
-            dict(
-                xref="paper", yref="paper", x=0.5, y=0.5, # Center of polar plot
-                axref="pixel", ayref="pixel",
-                ax=V_m * 20 * np.cos(np.deg2rad(t_deg)), # Scale vector to pixels
-                ay=-V_m * 20 * np.sin(np.deg2rad(t_deg)),
-                showarrow=True, arrowhead=3, arrowsize=2, arrowwidth=4, arrowcolor="red"
-            ),
-            # Current Arrowhead
-            dict(
-                xref="paper", yref="paper", x=0.5, y=0.5,
-                axref="pixel", ayref="pixel",
-                ax=I_m * 20 * np.cos(np.deg2rad(i_deg)),
-                ay=-I_m * 20 * np.sin(np.deg2rad(i_deg)),
-                showarrow=True, arrowhead=3, arrowsize=2, arrowwidth=4, arrowcolor="blue"
-            )
-        ],
-        showlegend=False, height=500, margin=dict(t=40, b=40)
-    )
-
-    st.plotly_chart(fig, use_container_width=True, key="phasor_chart", config={'displayModeBar': False})
-
-render_phasor()
+# Execute the fragment
+continuous_phasor_movement()
 
 st.markdown("---")
-st.write("🔗 **Community:** [Follow my Facebook Page](https://www.facebook.com/your-page) for more updates.")
+st.write("🔗 **Professor's Community:** [Follow my Facebook Page](https://www.facebook.com/your-page) for more interactive EE models.")
