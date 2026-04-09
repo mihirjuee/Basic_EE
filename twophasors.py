@@ -1,89 +1,119 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
-# --- 1. CONFIG & STATE ---
 st.set_page_config(page_title="AC V & I Analysis", layout="wide")
-
-if 'running' not in st.session_state:
-    st.session_state.running = False
-if 'theta_step' not in st.session_state:
-    st.session_state.theta_step = 0.0
-
 st.title("AC Fundamentals: Voltage vs. Current Analysis")
 
-# --- 2. SIDEBAR (STATIC INPUTS) ---
+# --- Session State for Animation ---
+if 'running' not in st.session_state:
+    st.session_state.running = False
+if 'theta_step' not in st.session_state:
+    st.session_state.theta_step = 0.0
+
+# --- Sidebar Controls ---
 st.sidebar.header("Signal Parameters")
 V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
 I_m = st.sidebar.slider("Current Amplitude ($I_m$)", 1.0, 10.0, 5.0)
-phase_diff_deg = st.sidebar.slider("Phase Shift (φ°)", -180, 180, -90)
+# Current relative to Voltage
+phase_diff_deg = st.sidebar.slider("Phase Shift (φ in degrees)", -180, 180, -90)
 
 st.sidebar.markdown("---")
 st.sidebar.header("Motion Controls")
 speed = st.sidebar.slider("Playback Speed", 1, 20, 5)
 
-# --- 3. THE ANIMATION FRAGMENT ---
-@st.fragment(run_every=0.01 if st.session_state.running else None)
-def render_animation():
-    # BUTTONS MUST BE INSIDE THE FRAGMENT
-    # We use a container to keep them together
-    with st.container():
-        ctrl_col1, ctrl_col2, _ = st.columns([1, 1, 8])
-        if ctrl_col1.button("▶️ Play", use_container_width=True):
-            st.session_state.running = True
-        if ctrl_col2.button("⏸️ Pause", use_container_width=True):
-            st.session_state.running = False
+# Manual Slider - Linked to session state
+manual_theta = st.sidebar.slider("Manual Angle Scrub (θ)", 0.0, 360.0, 
+                                  float(st.session_state.theta_step % 360), 
+                                  step=1.0)
+st.session_state.theta_step = manual_theta
 
-    # Logic to increment angle
-    if st.session_state.running:
-        st.session_state.theta_step = (st.session_state.theta_step + speed) % 360
+# Play/Pause Buttons
+col1, col2 = st.sidebar.columns(2)
+if col1.button("▶️ Play"):
+    st.session_state.running = True
+if col2.button("⏸️ Pause"):
+    st.session_state.running = False
 
-    # Math Logic
-    current_theta_deg = st.session_state.theta_step
-    current_theta_rad = np.deg2rad(current_theta_deg)
-    v_phase_rad = 0 
-    i_phase_rad = np.deg2rad(phase_diff_deg)
+# --- Mathematical Logic ---
+v_phase_rad = 0 
+i_phase_rad = np.deg2rad(phase_diff_deg)
 
-    degrees_axis = np.linspace(0, 360, 500)
-    rad_axis = np.deg2rad(degrees_axis)
-    
-    # Calculate Waves
-    v_waveform = V_m * np.sin(rad_axis + v_phase_rad)
-    i_waveform = I_m * np.sin(rad_axis + i_phase_rad)
-    v_inst = V_m * np.sin(current_theta_rad + v_phase_rad)
-    i_inst = I_m * np.sin(current_theta_rad + i_phase_rad)
+current_theta_deg = st.session_state.theta_step % 360
+current_theta_rad = np.deg2rad(current_theta_deg)
 
-    # Visualization
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), 
-                                   gridspec_kw={'width_ratios': [1, 1.5]})
+# 1. FIXED WAVEFORMS
+degrees_axis = np.linspace(0, 360, 500)
+rad_axis = np.deg2rad(degrees_axis)
+v_waveform = V_m * np.sin(rad_axis + v_phase_rad)
+i_waveform = I_m * np.sin(rad_axis + i_phase_rad)
 
-    # 1. Phasor Diagram
-    ax1.remove()
-    ax1 = fig.add_subplot(121, projection='polar')
-    ax1.annotate('', xy=(current_theta_rad + v_phase_rad, V_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='crimson', edgecolor='crimson', width=2))
-    ax1.annotate('', xy=(current_theta_rad + i_phase_rad, I_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', width=2))
-    ax1.set_ylim(0, 11)
-    ax1.set_title(f"$\theta = {current_theta_deg:.0f}^\circ$")
+# 2. MOVING TRACERS & VECTORS
+v_inst = V_m * np.sin(current_theta_rad + v_phase_rad)
+v_vec_angle = current_theta_rad + v_phase_rad
 
-    # 2. Time Domain
-    ax2.plot(degrees_axis, v_waveform, color='crimson', alpha=0.2)
-    ax2.plot(degrees_axis, i_waveform, color='dodgerblue', alpha=0.2)
-    ax2.plot(current_theta_deg, v_inst, 'o', color='crimson')
-    ax2.plot(current_theta_deg, i_inst, 'o', color='dodgerblue')
-    ax2.set_xlim(0, 360)
-    ax2.set_ylim(-11, 11)
-    ax2.grid(True, alpha=0.3)
+i_inst = I_m * np.sin(current_theta_rad + i_phase_rad)
+i_vec_angle = current_theta_rad + i_phase_rad
 
-    # CRITICAL: Ensures the app fits the display width
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+# --- Displaying the Equations ---
+st.markdown("### Instantaneous Equations")
+st.latex(rf"v(\theta) = {V_m} \sin(\theta + 0^\circ)")
+st.latex(rf"i(\theta) = {I_m} \sin(\theta + {phase_diff_deg}^\circ)")
 
-# Call the fragment
-render_animation()
+# --- Visualization ---
+plot_placeholder = st.empty()
 
-# --- 4. STATIC FOOTER ---
-st.markdown("---")
-st.write("🔗 [Visit my Facebook Page for Electrical Engineering Tutorials](https://www.facebook.com/your-page-link)")
+with plot_placeholder.container():
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6), 
+                                   gridspec_kw={'width_ratios': [1, 1.5]})
+
+    # --- Plot 1: Dual Phasors (The Vectors) ---
+    ax1.remove()
+    ax1 = fig.add_subplot(121, projection='polar')
+    
+    # Voltage Vector (Red Arrow)
+    ax1.annotate('', xy=(v_vec_angle, V_m), xytext=(0, 0),
+                 arrowprops=dict(facecolor='crimson', edgecolor='crimson', width=3, headwidth=10))
+    # Current Vector (Blue Arrow)
+    ax1.annotate('', xy=(i_vec_angle, I_m), xytext=(0, 0),
+                 arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', width=3, headwidth=10))
+    
+    ax1.set_ylim(0, 10)
+    ax1.set_title(f"Phasor Diagram\n$\theta = {current_theta_deg:.1f}^\circ$", pad=20)
+
+    # --- Plot 2: Waveform Tracers (The Sine Waves) ---
+    # Magnitude Zero Axis
+    ax2.axhline(0, color='black', linewidth=1.5, alpha=0.8)
+    
+    # Static Waveforms (Path)
+    ax2.plot(degrees_axis, v_waveform, color='crimson', alpha=0.3, label='Voltage $v(\\theta)$')
+    ax2.plot(degrees_axis, i_waveform, color='dodgerblue', alpha=0.3, label='Current $i(\\theta)$')
+    
+    # Moving Tracers (Dots)
+    ax2.plot(current_theta_deg, v_inst, 'o', color='crimson', markersize=10)
+    ax2.plot(current_theta_deg, i_inst, 'o', color='dodgerblue', markersize=10)
+    
+    # Vertical Tracker Line
+    ax2.axvline(x=current_theta_deg, color='gray', linestyle='--', alpha=0.3)
+    
+    # Formatting
+    ax2.set_xlim(0, 360)
+    ax2.set_ylim(-10.5, 10.5)
+    ax2.set_xticks([0, 90, 180, 270, 360])
+    ax2.set_xticklabels(['0°', '90°', '180°', '270°', '360°'])
+    ax2.set_xlabel("Angle (Degrees)")
+    ax2.set_ylabel("Amplitude")
+    ax2.set_title("Time Domain Comparison")
+    ax2.legend(loc='upper right')
+    ax2.grid(True, linestyle=':', alpha=0.5)
+
+    st.pyplot(fig)
+    plt.close(fig)
+
+# --- Animation Loop Logic ---
+if st.session_state.running:
+    st.session_state.theta_step += speed
+    time.sleep(0.01)
+    st.rerun()
+ MODIFY CODE TO AVOID WAITING TIME
