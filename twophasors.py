@@ -116,4 +116,3 @@ if st.session_state.running:
     st.session_state.theta_step += speed
     time.sleep(0.01)
     st.rerun()
- MODIFY CODE TO AVOID WAITING TIME
