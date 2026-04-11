@@ -74,25 +74,59 @@ fig = make_subplots(
     column_widths=[0.4, 0.6]
 )
 
-# Voltage vector
+# --- Voltage Vector (Arrow) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, V_m],
     theta=[0, theta_deg],
     mode='lines',
-    line=dict(color='crimson', width=4),
-    name='Voltage'
+    line=dict(color='crimson', width=2),
+    showlegend=False
 ), row=1, col=1)
 
-# Current vector
+fig.add_annotation(
+    x=theta_deg,
+    y=V_m,
+    ax=0,
+    ay=0,
+    xref='x1',
+    yref='y1',
+    axref='x1',
+    ayref='y1',
+    text="V",
+    showarrow=True,
+    arrowhead=3,
+    arrowsize=1.5,
+    arrowwidth=3,
+    arrowcolor='crimson'
+)
+
+# --- Current Vector (Arrow) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, I_m],
     theta=[0, theta_deg + phi_deg],
     mode='lines',
-    line=dict(color='dodgerblue', width=4),
-    name='Current'
+    line=dict(color='dodgerblue', width=2),
+    showlegend=False
 ), row=1, col=1)
 
-# Waveforms
+fig.add_annotation(
+    x=theta_deg + phi_deg,
+    y=I_m,
+    ax=0,
+    ay=0,
+    xref='x1',
+    yref='y1',
+    axref='x1',
+    ayref='y1',
+    text="I",
+    showarrow=True,
+    arrowhead=3,
+    arrowsize=1.5,
+    arrowwidth=3,
+    arrowcolor='dodgerblue'
+)
+
+# --- Waveforms ---
 fig.add_trace(go.Scatter(
     x=t_axis, y=v_wave,
     line=dict(color='crimson'),
@@ -107,7 +141,7 @@ fig.add_trace(go.Scatter(
     name='Current Wave'
 ), row=1, col=2)
 
-# Instantaneous points
+# --- Instantaneous Points ---
 fig.add_trace(go.Scatter(
     x=[theta_deg], y=[v_inst],
     mode='markers',
@@ -122,7 +156,7 @@ fig.add_trace(go.Scatter(
     name='I(t)'
 ), row=1, col=2)
 
-# Layout
+# --- Layout ---
 fig.update_layout(
     height=500,
     margin=dict(t=30, b=30),
@@ -132,11 +166,11 @@ fig.update_layout(
 fig.update_xaxes(title="Phase Angle (Degrees)", range=[0, 360], row=1, col=2)
 fig.update_yaxes(range=[-11, 11], row=1, col=2)
 
-# Display
+# --- Display ---
 st.plotly_chart(fig, use_container_width=True)
 
-# --- ANIMATION LOOP (FIXED) ---
+# --- ANIMATION LOOP ---
 if st.session_state.running:
     st.session_state.theta_step = (st.session_state.theta_step + speed * 0.5) % 360
-    time.sleep(0.05)   # 👈 controls smooth motion (IMPORTANT)
+    time.sleep(0.05)
     st.rerun()
