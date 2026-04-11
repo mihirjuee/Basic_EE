@@ -150,7 +150,7 @@ draw_angle_arc(ax2, Iab_delta, Ia_delta, 1.2, c_A, r'$30^\circ$')
 
 st.pyplot(fig)
 
-st.markdown("""
+#st.markdown("""
 ### Phase Color Key & Angles
 st.markdown("""
 <ul>
@@ -159,5 +159,5 @@ st.markdown("""
   <li><span style="color:#1D3557;"><b>Phase C</b></span>: Blue Vectors</li>
 </ul>
 """, unsafe_allow_html=True)
-* Notice how the 30° shift applies to the voltage in the Star system, but applies to the current in the Delta system!
+#* Notice how the 30° shift applies to the voltage in the Star system, but applies to the current in the Delta system!
 """)
