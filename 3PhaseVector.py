@@ -152,9 +152,8 @@ st.pyplot(fig)
 
 st.markdown("""
 ### Phase Color Key & Angles
-<hr style="border: 2px solid #E63946;">
 * **<span style="color:#E63946">Phase A</span>:** Red Vectors 
 * **<span style="color:#D4AC0D">Phase B</span>:** Yellow Vectors 
 * **<span style="color:#1D3557">Phase C</span>:** Blue Vectors
 * Notice how the 30° shift applies to the voltage in the Star system, but applies to the current in the Delta system!
-""")
+""", unsafe_allow_html=True)
