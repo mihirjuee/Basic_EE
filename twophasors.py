@@ -13,7 +13,6 @@ if 'theta_step' not in st.session_state:
 st.title("AC Fundamentals: Voltage vs. Current Analysis")
 
 # --- 2. SIDEBAR (STATIC PARAMETERS) ---
-# These are fine in the sidebar because they don't change during the animation loop
 st.sidebar.header("Signal Parameters")
 V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
 I_m = st.sidebar.slider("Current Amplitude ($I_m$)", 1.0, 10.0, 5.0)
@@ -24,21 +23,27 @@ st.sidebar.header("Motion Controls")
 speed = st.sidebar.slider("Playback Speed", 1, 20, 5)
 
 # --- 3. THE ANIMATION FRAGMENT ---
-# We use run_every to create the motion without st.rerun()
+# The 'run_every' must be a float/int to stay active. 
+# We use a small value when running and a very large value (or None) when paused.
 @st.fragment(run_every=0.01 if st.session_state.running else None)
 def render_animation():
-    # PLAY/PAUSE CONTROLS (Must be inside the fragment area to avoid the error)
+    # 1. CONTROLS
     cols = st.columns([1, 1, 8])
+    
+    # Use on_click or direct check to toggle state
     if cols[0].button("▶️ Play"):
         st.session_state.running = True
+        st.rerun() # Force immediate update to trigger run_every
+        
     if cols[1].button("⏸️ Pause"):
         st.session_state.running = False
+        st.rerun() # Force immediate update to stop run_every
 
-    # Logic to increment angle
+    # 2. LOGIC: Increment angle only if running
     if st.session_state.running:
         st.session_state.theta_step = (st.session_state.theta_step + speed) % 360
 
-    # Mathematical Logic
+    # 3. CALCULATIONS
     current_theta_deg = st.session_state.theta_step
     current_theta_rad = np.deg2rad(current_theta_deg)
     v_phase_rad = 0 
@@ -52,47 +57,37 @@ def render_animation():
 
     # Instantaneous Values
     v_inst = V_m * np.sin(current_theta_rad + v_phase_rad)
-    v_vec_angle = current_theta_rad + v_phase_rad
     i_inst = I_m * np.sin(current_theta_rad + i_phase_rad)
-    i_vec_angle = current_theta_rad + i_phase_rad
 
-    # Display Equations
     st.latex(rf"v(\theta) = {V_m} \sin(\theta + 0^\circ) \quad | \quad i(\theta) = {I_m} \sin(\theta + {phase_diff_deg}^\circ)")
 
-    # Plotting
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), 
-                                   gridspec_kw={'width_ratios': [1, 1.5]})
+    # 4. PLOTTING
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={'width_ratios': [1, 1.5]})
 
-    # Polar Plot (Phasors)
+    # Phasor Plot
     ax1.remove()
     ax1 = fig.add_subplot(121, projection='polar')
-    ax1.annotate('', xy=(v_vec_angle, V_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='crimson', edgecolor='crimson', width=3, headwidth=10))
-    ax1.annotate('', xy=(i_vec_angle, I_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', width=3, headwidth=10))
+    ax1.annotate('', xy=(current_theta_rad + v_phase_rad, V_m), xytext=(0, 0),
+                 arrowprops=dict(facecolor='crimson', edgecolor='crimson', width=3))
+    ax1.annotate('', xy=(current_theta_rad + i_phase_rad, I_m), xytext=(0, 0),
+                 arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', width=3))
     ax1.set_ylim(0, 10)
-    ax1.set_title(f"Phasor Diagram ($\theta = {current_theta_deg:.1f}^\circ$)")
+    ax1.set_title(f"Phasor Diagram ({current_theta_deg:.1f}°)")
 
-    # Time Domain Plot
-    ax2.axhline(0, color='black', linewidth=1, alpha=0.5)
+    # Waveform Plot
     ax2.plot(degrees_axis, v_waveform, color='crimson', alpha=0.3, label='Voltage')
     ax2.plot(degrees_axis, i_waveform, color='dodgerblue', alpha=0.3, label='Current')
-    ax2.plot(current_theta_deg, v_inst, 'o', color='crimson', markersize=10)
-    ax2.plot(current_theta_deg, i_inst, 'o', color='dodgerblue', markersize=10)
+    ax2.scatter(current_theta_deg, v_inst, color='crimson', s=100)
+    ax2.scatter(current_theta_deg, i_inst, color='dodgerblue', s=100)
     ax2.set_xlim(0, 360)
     ax2.set_ylim(-11, 11)
-    ax2.set_xticks([0, 90, 180, 270, 360])
-    ax2.set_xticklabels(['0°', '90°', '180°', '270°', '360°'])
-    ax2.grid(True, linestyle=':', alpha=0.5)
     ax2.legend()
 
     st.pyplot(fig)
     plt.close(fig)
 
-# --- 4. RUN THE APP ---
+# --- 4. RUN ---
 render_animation()
 
-# --- 5. FOOTER (STAYS COMPLETELY STILL) ---
 st.markdown("---")
-st.write("👨‍🏫 **Professor's Note:** Observe how the phase shift affects the leading/lagging relationship between the vectors.")
-st.markdown("[Follow my Facebook Page for more EE Tutorials](https://www.facebook.com/your-page-link)")
+st.write("👨‍🏫 **Professor's Note:** The phasors rotate counter-clockwise to represent time progression.")
