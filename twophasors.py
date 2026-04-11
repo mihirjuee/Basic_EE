@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import time
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="AC V & I Analysis", layout="wide")
@@ -24,7 +25,7 @@ phi_deg = st.sidebar.slider("Phase Shift (φ in degrees)", -180, 180, -90)
 speed = st.sidebar.slider("Playback Speed", 1, 20, 5)
 
 # --- CONTROL BUTTONS ---
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2, col3 = st.columns(3)
 
 if col1.button("▶️ Play"):
     st.session_state.running = True
@@ -131,10 +132,11 @@ fig.update_layout(
 fig.update_xaxes(title="Phase Angle (Degrees)", range=[0, 360], row=1, col=2)
 fig.update_yaxes(range=[-11, 11], row=1, col=2)
 
-# Display plot
+# Display
 st.plotly_chart(fig, use_container_width=True)
 
-# --- ANIMATION LOOP ---
+# --- ANIMATION LOOP (FIXED) ---
 if st.session_state.running:
-    st.session_state.theta_step = (st.session_state.theta_step + speed) % 360
+    st.session_state.theta_step = (st.session_state.theta_step + speed * 0.5) % 360
+    time.sleep(0.05)   # 👈 controls smooth motion (IMPORTANT)
     st.rerun()
