@@ -1,97 +1,78 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 
-# --- 1. GLOBAL STATE INITIALIZATION ---
+# --- 1. STATE MANAGEMENT ---
 if 'running' not in st.session_state:
     st.session_state.running = False
 if 'theta_step' not in st.session_state:
     st.session_state.theta_step = 0.0
 
-st.title("AC Fundamentals: Voltage vs. Current Analysis")
+st.title("⚡ AC Fundamentals: Instantaneous Analysis")
 
-# --- 2. SIDEBAR (STATIC PARAMETERS) ---
+# --- 2. SIDEBAR ---
 st.sidebar.header("Signal Parameters")
-V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
-I_m = st.sidebar.slider("Current Amplitude ($I_m$)", 1.0, 10.0, 5.0)
-phase_diff_deg = st.sidebar.slider("Phase Shift (φ in degrees)", -180, 180, -90)
+V_m = st.sidebar.slider("Voltage ($V_m$)", 1.0, 10.0, 8.0)
+I_m = st.sidebar.slider("Current ($I_m$)", 1.0, 10.0, 5.0)
+phi_deg = st.sidebar.slider("Phase Shift (φ°)", -180, 180, -90)
+speed = st.sidebar.slider("Speed", 1, 20, 5)
 
-st.sidebar.markdown("---")
-st.sidebar.header("Motion Controls")
-speed = st.sidebar.slider("Playback Speed", 1, 20, 5)
-
-# --- 3. THE ANIMATION FRAGMENT ---
-# IMPORTANT: run_every must update when st.session_state.running changes
-@st.fragment(run_every=0.05 if st.session_state.running else None)
+# --- 3. ANIMATION FRAGMENT ---
+@st.fragment(run_every=0.01 if st.session_state.running else None)
 def render_animation():
-    # PLAY/PAUSE CONTROLS
-    cols = st.columns([1, 1, 8])
-    
-    if cols[0].button("▶️ Play"):
+    # PLAY/PAUSE
+    btn_cols = st.columns([1, 1, 8])
+    if btn_cols[0].button("▶️ Play"):
         st.session_state.running = True
-        st.rerun()  # Forces the fragment to restart with run_every=0.05
-        
-    if cols[1].button("⏸️ Pause"):
+        st.rerun()
+    if btn_cols[1].button("⏸️ Pause"):
         st.session_state.running = False
-        st.rerun()  # Forces the fragment to stop the timer
+        st.rerun()
 
-    # Increment angle
     if st.session_state.running:
         st.session_state.theta_step = (st.session_state.theta_step + speed) % 360
 
-    # Math Logic
-    current_theta_deg = st.session_state.theta_step
-    current_theta_rad = np.deg2rad(current_theta_deg)
-    v_phase_rad = 0 
-    i_phase_rad = np.deg2rad(phase_diff_deg)
+    # Math
+    theta_deg = st.session_state.theta_step
+    theta_rad = np.deg2rad(theta_deg)
+    phi_rad = np.deg2rad(phi_deg)
+    
+    t_axis = np.linspace(0, 360, 400)
+    v_wave = V_m * np.sin(np.deg2rad(t_axis))
+    i_wave = I_m * np.sin(np.deg2rad(t_axis) + phi_rad)
+    
+    v_inst = V_m * np.sin(theta_rad)
+    i_inst = I_m * np.sin(theta_rad + phi_rad)
 
-    # Waveform Data
-    degrees_axis = np.linspace(0, 360, 500)
-    rad_axis = np.deg2rad(degrees_axis)
-    v_waveform = V_m * np.sin(rad_axis + v_phase_rad)
-    i_waveform = I_m * np.sin(rad_axis + i_phase_rad)
+    # --- PLOTLY FIGURE (FASTER RENDERING) ---
+    fig = make_subplots(
+        rows=1, cols=2, 
+        specs=[[{'type': 'polar'}, {'type': 'xy'}]],
+        column_widths=[0.4, 0.6]
+    )
 
-    # Instantaneous Values
-    v_inst = V_m * np.sin(current_theta_rad + v_phase_rad)
-    i_inst = I_m * np.sin(current_theta_rad + i_phase_rad)
+    # Phasor: Voltage
+    fig.add_trace(go.Scatterpolar(r=[0, V_m], theta=[0, theta_deg], mode='lines+markers', 
+                                 line=dict(color='crimson', width=4), name='Voltage'), row=1, col=1)
+    # Phasor: Current
+    fig.add_trace(go.Scatterpolar(r=[0, I_m], theta=[0, theta_deg + phi_deg], mode='lines+markers', 
+                                 line=dict(color='dodgerblue', width=4), name='Current'), row=1, col=1)
 
-    # Display Equations
-    st.latex(rf"v(\theta) = {V_m} \sin(\theta + 0^\circ) \quad | \quad i(\theta) = {I_m} \sin(\theta + {phase_diff_deg}^\circ)")
+    # Waveform: Voltage
+    fig.add_trace(go.Scatter(x=t_axis, y=v_wave, line=dict(color='crimson', width=1), opacity=0.3, showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[theta_deg], y=[v_inst], mode='markers', marker=dict(size=12, color='crimson'), showlegend=False), row=1, col=2)
 
-    # Plotting
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={'width_ratios': [1, 1.5]})
+    # Waveform: Current
+    fig.add_trace(go.Scatter(x=t_axis, y=i_wave, line=dict(color='dodgerblue', width=1), opacity=0.3, showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[theta_deg], y=[i_inst], mode='markers', marker=dict(size=12, color='dodgerblue'), showlegend=False), row=1, col=2)
 
-    # Polar Plot (Phasors)
-    ax1.remove()
-    ax1 = fig.add_subplot(121, projection='polar')
-    # Voltage Vector (Crimson)
-    ax1.annotate('', xy=(current_theta_rad + v_phase_rad, V_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='crimson', edgecolor='crimson', width=3, headwidth=10))
-    # Current Vector (Blue)
-    ax1.annotate('', xy=(current_theta_rad + i_phase_rad, I_m), xytext=(0, 0),
-                 arrowprops=dict(facecolor='dodgerblue', edgecolor='dodgerblue', width=3, headwidth=10))
-    ax1.set_ylim(0, 10)
-    ax1.set_title(f"Phasor Diagram ($\theta = {current_theta_deg:.1f}^\circ$)")
+    fig.update_layout(height=450, margin=dict(l=20, r=20, t=40, b=20), polar=dict(radialaxis=dict(range=[0, 10])))
+    fig.update_xaxes(title="Degrees", range=[0, 360], row=1, col=2)
+    fig.update_yaxes(range=[-11, 11], row=1, col=2)
 
-    # Time Domain Plot
-    ax2.plot(degrees_axis, v_waveform, color='crimson', alpha=0.3, label='Voltage')
-    ax2.plot(degrees_axis, i_waveform, color='dodgerblue', alpha=0.3, label='Current')
-    ax2.scatter(current_theta_deg, v_inst, color='crimson', s=100, zorder=5)
-    ax2.scatter(current_theta_deg, i_inst, color='dodgerblue', s=100, zorder=5)
-    ax2.set_xlim(0, 360)
-    ax2.set_ylim(-11, 11)
-    ax2.set_xticks([0, 90, 180, 270, 360])
-    ax2.set_xticklabels(['0°', '90°', '180°', '270°', '360°'])
-    ax2.grid(True, linestyle=':', alpha=0.5)
-    ax2.legend()
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    st.pyplot(fig)
-    plt.close(fig)
-
-# --- 4. RUN ---
 render_animation()
-
-st.markdown("---")
-st.write("👨‍🏫 **Professor's Note:** Note that the phasors rotate at the same angular frequency.")
