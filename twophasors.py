@@ -16,7 +16,7 @@ V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
 I_m = st.sidebar.slider("Current Amplitude ($I_m$)", 1.0, 10.0, 5.0)
 phi_deg = st.sidebar.slider("Phase Shift (φ in degrees)", -180, 180, -90)
 
-# Manual theta control (NO animation issues)
+# Manual theta control
 theta_deg = st.sidebar.slider("Theta (θ in degrees)", 0, 360, 0)
 
 # --- COMPUTATION ---
@@ -131,6 +131,7 @@ fig.add_trace(go.Scatter(
 fig.update_layout(
     height=520,
     margin=dict(t=30, b=30),
+    plot_bgcolor='white',
     polar=dict(
         radialaxis=dict(range=[0, 11], tickfont=dict(size=12)),
         angularaxis=dict(tickfont=dict(size=12))
@@ -138,14 +139,42 @@ fig.update_layout(
     font=dict(size=14)
 )
 
+# --- IMPROVED AXES (VERY CLEAR) ---
 fig.update_xaxes(
     title="Phase Angle (Degrees)",
     range=[0, 360],
+    showline=True,
+    linewidth=3,
+    linecolor='black',
+    mirror=True,
+    ticks='outside',
+    tickwidth=2,
+    tickcolor='black',
+    showgrid=True,
+    gridwidth=1,
+    gridcolor='lightgray',
+    zeroline=True,
+    zerolinewidth=3,
+    zerolinecolor='black',
     row=1, col=2
 )
 
 fig.update_yaxes(
+    title="Amplitude",
     range=[-11, 11],
+    showline=True,
+    linewidth=3,
+    linecolor='black',
+    mirror=True,
+    ticks='outside',
+    tickwidth=2,
+    tickcolor='black',
+    showgrid=True,
+    gridwidth=1,
+    gridcolor='lightgray',
+    zeroline=True,
+    zerolinewidth=3,
+    zerolinecolor='black',
     row=1, col=2
 )
 
