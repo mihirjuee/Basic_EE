@@ -74,59 +74,47 @@ fig = make_subplots(
     column_widths=[0.4, 0.6]
 )
 
-# --- Voltage Vector (Arrow) ---
+# --- Voltage Vector (Line) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, V_m],
     theta=[0, theta_deg],
     mode='lines',
-    line=dict(color='crimson', width=2),
+    line=dict(color='crimson', width=4),
+    name='Voltage'
+), row=1, col=1)
+
+# --- Voltage Arrow Head ---
+fig.add_trace(go.Scatterpolar(
+    r=[V_m],
+    theta=[theta_deg],
+    mode='markers+text',
+    marker=dict(size=12, color='crimson', symbol='triangle-up'),
+    text=["V"],
+    textposition="top center",
     showlegend=False
 ), row=1, col=1)
 
-fig.add_annotation(
-    x=theta_deg,
-    y=V_m,
-    ax=0,
-    ay=0,
-    xref='x1',
-    yref='y1',
-    axref='x1',
-    ayref='y1',
-    text="V",
-    showarrow=True,
-    arrowhead=3,
-    arrowsize=1.5,
-    arrowwidth=3,
-    arrowcolor='crimson'
-)
-
-# --- Current Vector (Arrow) ---
+# --- Current Vector (Line) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, I_m],
     theta=[0, theta_deg + phi_deg],
     mode='lines',
-    line=dict(color='dodgerblue', width=2),
+    line=dict(color='dodgerblue', width=4),
+    name='Current'
+), row=1, col=1)
+
+# --- Current Arrow Head ---
+fig.add_trace(go.Scatterpolar(
+    r=[I_m],
+    theta=[theta_deg + phi_deg],
+    mode='markers+text',
+    marker=dict(size=12, color='dodgerblue', symbol='triangle-up'),
+    text=["I"],
+    textposition="top center",
     showlegend=False
 ), row=1, col=1)
 
-fig.add_annotation(
-    x=theta_deg + phi_deg,
-    y=I_m,
-    ax=0,
-    ay=0,
-    xref='x1',
-    yref='y1',
-    axref='x1',
-    ayref='y1',
-    text="I",
-    showarrow=True,
-    arrowhead=3,
-    arrowsize=1.5,
-    arrowwidth=3,
-    arrowcolor='dodgerblue'
-)
-
-# --- Waveforms ---
+# --- Waveforms (NO ARROWS HERE) ---
 fig.add_trace(go.Scatter(
     x=t_axis, y=v_wave,
     line=dict(color='crimson'),
@@ -141,26 +129,26 @@ fig.add_trace(go.Scatter(
     name='Current Wave'
 ), row=1, col=2)
 
-# --- Instantaneous Points ---
+# Instantaneous points
 fig.add_trace(go.Scatter(
     x=[theta_deg], y=[v_inst],
     mode='markers',
-    marker=dict(size=12, color='crimson'),
+    marker=dict(size=10, color='crimson'),
     name='V(t)'
 ), row=1, col=2)
 
 fig.add_trace(go.Scatter(
     x=[theta_deg], y=[i_inst],
     mode='markers',
-    marker=dict(size=12, color='dodgerblue'),
+    marker=dict(size=10, color='dodgerblue'),
     name='I(t)'
 ), row=1, col=2)
 
 # --- Layout ---
 fig.update_layout(
     height=500,
-    margin=dict(t=30, b=30),
-    polar=dict(radialaxis=dict(range=[0, 11]))
+    polar=dict(radialaxis=dict(range=[0, 11])),
+    margin=dict(t=30, b=30)
 )
 
 fig.update_xaxes(title="Phase Angle (Degrees)", range=[0, 360], row=1, col=2)
@@ -169,8 +157,8 @@ fig.update_yaxes(range=[-11, 11], row=1, col=2)
 # --- Display ---
 st.plotly_chart(fig, use_container_width=True)
 
-# --- ANIMATION LOOP ---
+# --- ANIMATION LOOP (FIXED PAUSE) ---
 if st.session_state.running:
-    st.session_state.theta_step = (st.session_state.theta_step + speed * 0.5) % 360
     time.sleep(0.05)
+    st.session_state.theta_step = (st.session_state.theta_step + speed * 0.5) % 360
     st.rerun()
