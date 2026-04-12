@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.set_page_config(layout="narrow")
+st.set_page_config(layout="wide")
 st.title("Balanced 3-Phase Phasor Diagrams: Star vs. Delta")
 st.markdown("Compare the Voltage and Current relationships under a balanced load (R-Y-B Sequence).")
 
