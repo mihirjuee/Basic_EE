@@ -7,7 +7,13 @@ st.title("Balanced 3-Phase Phasor Diagrams: Star vs. Delta")
 st.markdown("Compare the Voltage and Current relationships under a balanced load (R-Y-B Sequence).")
 
 # --- Interactive Control ---
-phi_deg = st.slider("Load Power Factor Angle (Φ in degrees)", -90, 90, 30, 5)
+phi_deg = st.number_input(
+    "Load Power Factor Angle (Φ in degrees)",
+    min_value=-90,
+    max_value=90,
+    value=30,
+    step=1
+)
 phi = np.deg2rad(phi_deg)
 
 # --- Complex Number Math ---
