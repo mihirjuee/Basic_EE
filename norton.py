@@ -65,19 +65,24 @@ def draw_short_circuit(v, r1, r2, r3):
     return d.draw().fig
 
 def draw_rn_circuit(r1, r2, r3):
-    """Case 2b: Finding Rn."""
     d = schemdraw.Drawing(show=False)
+    # Source is shorted
     d += elm.Line().up().label('Short', loc='center')
     d += elm.Resistor().right().label(f'R1\n{r1}Ω')
     d.push()
-    d += elm.Resistor().down().label(f'R3\n{r3}Ω')
-    d += elm.Line().left()
+    # Draw R3 and capture its end coordinate (the bottom rail)
+    d += (R3_el := elm.Resistor().down().label(f'R3\n{r3}Ω'))
+    d += elm.Line().left().tox(d.elements[0].start)
     d.pop()
     d += elm.Resistor().right().label(f'R2\n{r2}Ω')
-    d += elm.Dot(open=True).label('A', loc='right')
-    d += elm.Line().down().at(d.elements[-1].end).toy(d.elements[-2].end)
-    d += elm.Dot(open=True).label('B', loc='right')
-    d += elm.Line().left().tox(d.elements[0].start)
+    # Terminal A
+    d += (DotA := elm.Dot(open=True).label('A', loc='right'))
+    # Line down to the level of R3's bottom point
+    d += (VertLine := elm.Line().down().at(DotA.end).toy(R3_el.end))
+    # Terminal B placed exactly at the end of that vertical line
+    d += elm.Dot(open=True).at(VertLine.end).label('B', loc='right')
+    # Close the bottom rail
+    d += elm.Line().left().tox(R3_el.end)
     return d.draw().fig
 
 def draw_norton_equivalent(isc, rn, rl):
