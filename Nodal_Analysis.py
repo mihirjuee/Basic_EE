@@ -4,6 +4,13 @@ import schemdraw
 import schemdraw.elements as elm
 import pandas as pd
 
+col1, col2 = st.columns([1, 6])
+
+with col1:
+    st.image("logo.png", width=80)
+
+with col2:
+    st.title("🔬 Nodal Analysis Virtual Lab")
 st.set_page_config(page_title="Nodal Analysis Lab", layout="wide")
 st.sidebar.image("logo.png", use_container_width=True)
 
