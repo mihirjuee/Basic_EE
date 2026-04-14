@@ -51,7 +51,7 @@ R3 = st.sidebar.slider("Resistor R3 [Ω]", 10, 500, 150)
 G_total = (1/R1) + (1/R2) + (1/R3)
 
 # ✅ Correct KCL injection
-I_injected = (Vs1/R1) + (Vs2/R3)
+I_injected = (Vs1/R1) - (Vs2/R3)
 
 V_node = I_injected / G_total
 
