@@ -4,6 +4,7 @@ import schemdraw
 import schemdraw.elements as elm
 import pandas as pd
 
+st.sidebar.image("logo.png", use_container_width=True)
 col1, col2 = st.columns([1, 6])
 
 with col1:
