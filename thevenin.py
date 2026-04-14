@@ -79,8 +79,15 @@ with col1:
     else:
         d = draw_thevenin()
 
-    fig = d.draw()              # ✅ FIXED
-    st.image(fig)               # ✅ SAFE DISPLAY
+import io
+
+fig = d.draw()
+
+buf = io.BytesIO()
+fig.savefig(buf, format="png", bbox_inches='tight')
+buf.seek(0)
+
+st.image(buf)
 
 with col2:
     st.subheader("📊 Results")
