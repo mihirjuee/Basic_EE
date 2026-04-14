@@ -1,75 +1,103 @@
 import streamlit as st
-import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
-# Page configuration
-st.set_page_config(page_title="Superposition Solver", page_icon="log.png")
+# Page Config
+st.set_page_config(page_title="Superposition Theorem", layout="wide")
 
-st.title("⚡ Superposition Theorem Solver")
-st.markdown("""
-This app calculates the current through a central load resistor ($R_3$) in a two-source circuit 
-by applying the **Superposition Theorem** step-by-step.
-""")
+def draw_circuit(v1, v2, r1, r2, r3, mode="Full"):
+    """Draws a schematic representation of the circuit using Matplotlib."""
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.set_xlim(-1, 11)
+    ax.set_ylim(-1, 6)
+    
+    # Coordinates for components
+    # Left Branch (V1 & R1)
+    ax.plot([0, 0], [0, 2], 'k-')  # Wire
+    if mode == "V2_Only":
+        ax.plot([0, 0], [2, 3], 'b--', label="Short Circuit (V1)")
+    else:
+        ax.add_patch(plt.Circle((0, 2.5), 0.5, color='orange', fill=False, lw=2))
+        ax.text(-1.5, 2.3, f"{v1}V", fontsize=12, fontweight='bold')
+    
+    ax.plot([0, 0], [3, 5], 'k-')  # Wire
+    ax.plot([0, 2], [5, 5], 'k-')  # Wire to R1
+    # R1 Rectangle
+    ax.add_patch(plt.Rectangle((2, 4.75), 2, 0.5, color='gray', alpha=0.3))
+    ax.text(2.5, 5.3, f"R1: {r1}Ω", fontsize=10)
+    ax.plot([4, 5], [5, 5], 'k-')
 
-# --- Sidebar Inputs ---
-st.sidebar.header("Circuit Parameters")
+    # Middle Branch (R3 - Load)
+    ax.plot([5, 5], [5, 4], 'k-')
+    ax.add_patch(plt.Rectangle((4.75, 2), 0.5, 2, color='red', alpha=0.3))
+    ax.text(5.6, 2.8, f"R3: {r3}Ω\n(LOAD)", fontsize=10, color='red')
+    ax.plot([5, 5], [2, 0], 'k-')
 
-with st.sidebar:
-    st.subheader("Voltage Sources (V)")
-    v1 = st.number_input("Source V1 (Volts)", value=12.0)
-    v2 = st.number_input("Source V2 (Volts)", value=6.0)
+    # Right Branch (V2 & R2)
+    ax.plot([5, 6], [5, 5], 'k-')
+    ax.add_patch(plt.Rectangle((6, 4.75), 2, 0.5, color='gray', alpha=0.3))
+    ax.text(6.5, 5.3, f"R2: {r2}Ω", fontsize=10)
+    ax.plot([8, 10], [5, 5], 'k-')
+    ax.plot([10, 10], [5, 3], 'k-')
+    
+    if mode == "V1_Only":
+        ax.plot([10, 10], [2, 3], 'b--', label="Short Circuit (V2)")
+    else:
+        ax.add_patch(plt.Circle((10, 2.5), 0.5, color='orange', fill=False, lw=2))
+        ax.text(10.7, 2.3, f"{v2}V", fontsize=12, fontweight='bold')
+    
+    ax.plot([10, 10], [2, 0], 'k-')
+    ax.plot([10, 0], [0, 0], 'k-') # Bottom rail
 
-    st.subheader("Resistors (Ω)")
-    r1 = st.number_input("Resistor R1", value=10.0, min_value=0.1)
-    r2 = st.number_input("Resistor R2", value=20.0, min_value=0.1)
-    r3 = st.number_input("Load Resistor R3", value=5.0, min_value=0.1)
+    ax.set_title(f"Circuit Diagram: {mode} Mode", fontsize=14)
+    ax.axis('off')
+    return fig
 
-# --- Calculation Logic ---
+# --- UI Setup ---
+st.title("🔌 Interactive Superposition Solver")
+st.sidebar.header("Configure Components")
 
-# Step 1: V1 acting alone (V2 shorted)
-# R2 and R3 are in parallel
-r_p1 = (r2 * r3) / (r2 + r3)
-i_total1 = v1 / (r1 + r_p1)
-# Current through R3 using current divider
-i_r3_v1 = i_total1 * (r2 / (r2 + r3))
+V1 = st.sidebar.slider("Voltage V1 (Volts)", 0, 100, 24)
+V2 = st.sidebar.slider("Voltage V2 (Volts)", 0, 100, 12)
+R1 = st.sidebar.number_input("R1 (Ω)", value=10.0)
+R2 = st.sidebar.number_input("R2 (Ω)", value=20.0)
+R3 = st.sidebar.number_input("R3 (Load Ω)", value=5.0)
 
-# Step 2: V2 acting alone (V1 shorted)
-# R1 and R3 are in parallel
-r_p2 = (r1 * r3) / (r1 + r3)
-i_total2 = v2 / (r2 + r_p2)
-# Current through R3 using current divider
-i_r3_v2 = i_total2 * (r1 / (r1 + r3))
+# --- Calculations ---
+# Step 1: V1 Only
+req1 = R1 + (R2 * R3 / (R2 + R3))
+i_total1 = V1 / req1
+i_load_v1 = i_total1 * (R2 / (R2 + R3))
 
-# Final Result
-total_current = i_r3_v1 + i_r3_v2
+# Step 2: V2 Only
+req2 = R2 + (R1 * R3 / (R1 + R3))
+i_total2 = V2 / req2
+i_load_v2 = i_total2 * (R1 / (R1 + R3))
 
-# --- UI Display ---
+total_i = i_load_v1 + i_load_v2
 
-col1, col2 = st.columns(2)
+# --- App Tabs ---
+tab1, tab2, tab3 = st.tabs(["Step 1: V1 Active", "Step 2: V2 Active", "Final Summary"])
 
-with col1:
-    st.info(f"**Contribution from V1**\n\n{i_r3_v1:.4f} A")
-    st.write(f"*Calculation:* V1 is active, V2 is replaced by a short circuit. R2 and R3 are in parallel.")
+with tab1:
+    st.subheader("Case 1: V1 is ON, V2 is Shorted")
+    st.pyplot(draw_circuit(V1, V2, R1, R2, R3, mode="V1_Only"))
+    st.metric("Contribution to Load", f"{i_load_v1:.4f} A")
+    st.latex(r"I_{R3(V1)} = \frac{V_1}{R_1 + (R_2 || R_3)} \times \frac{R_2}{R_2 + R_3}")
 
-with col2:
-    st.info(f"**Contribution from V2**\n\n{i_r3_v2:.4f} A")
-    st.write(f"*Calculation:* V2 is active, V1 is replaced by a short circuit. R1 and R3 are in parallel.")
+with tab2:
+    st.subheader("Case 2: V2 is ON, V1 is Shorted")
+    st.pyplot(draw_circuit(V1, V2, R1, R2, R3, mode="V2_Only"))
+    st.metric("Contribution to Load", f"{i_load_v2:.4f} A")
+    st.latex(r"I_{R3(V2)} = \frac{V_2}{R_2 + (R_1 || R_3)} \times \frac{R_1}{R_1 + R_3}")
 
-st.divider()
-
-# Final Large Display
-st.metric(label="Total Current through R3 (Load)", value=f"{total_current:.4f} A")
-
-# Visualizing the contribution
-chart_data = pd.DataFrame({
-    "Source": ["V1 Only", "V2 Only", "Total"],
-    "Current (A)": [i_r3_v1, i_r3_v2, total_current]
-})
-
-st.subheader("Contribution Visualization")
-st.bar_chart(chart_data, x="Source", y="Current (A)", color="#FF4B4B")
-
-# Detailed Mathematical Breakdown
-with st.expander("Show Detailed Mathematical Steps"):
-    st.latex(r"I_{R3(V1)} = \frac{V_1}{R_1 + \frac{R_2 \cdot R_3}{R_2 + R_3}} \cdot \frac{R_2}{R_2 + R_3}")
-    st.latex(r"I_{R3(V2)} = \frac{V_2}{R_2 + \frac{R_1 \cdot R_3}{R_1 + R_3}} \cdot \frac{R_1}{R_1 + R_3}")
-    st.latex(r"I_{total} = I_{R3(V1)} + I_{R3(V2)}")
+with tab3:
+    st.header("Results Summary")
+    st.pyplot(draw_circuit(V1, V2, R1, R2, R3, mode="Full"))
+    
+    c1, c2, c3 = st.columns(3)
+    c1.write(f"**From V1:** {i_load_v1:.4f} A")
+    c2.write(f"**From V2:** {i_load_v2:.4f} A")
+    c3.success(f"**Total I:** {total_i:.4f} A")
+    
+    st.progress(min(abs(total_i/10), 1.0)) # Visual current flow indicator
