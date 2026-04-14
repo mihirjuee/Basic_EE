@@ -71,7 +71,8 @@ def draw_open_circuit(v, r1, r2, r3):
     #d += elm.Dot(open=True).label('B')
 
     #d += elm.Line().left().tox(d.elements[0].start)
-
+    d += elm.Dot(open=True).at((d.elements[-1].end[0], R3_el.end[1])).label('B')
+    d += elm.Line().left().tox(R3_el.end)
     return d.draw().fig
 
 
