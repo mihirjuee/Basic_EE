@@ -5,7 +5,7 @@ import schemdraw.elements as elm
 import matplotlib.pyplot as plt
 
 # --- Page Config ---
-st.set_page_config(page_title="Norton's Theorem Virtual Lab", layout="wide")
+st.set_page_config(page_title="Norton's Theorem Virtual Lab",page_icon="logo.png", layout="wide")
 
 st.title("⚡ Verification of Norton's Theorem")
 st.markdown("""
