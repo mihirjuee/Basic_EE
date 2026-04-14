@@ -76,9 +76,9 @@ with col_res:
     
     st.markdown("---")
     st.write("**Branch Current Directions:**")
-    st.write(f"➡️ From V1: **{I_R1*1000:.2f} mA**")
-    st.write(f"⬇️ Through R2: **{I_R2*1000:.2f} mA**")
-    st.write(f"⬅️ From V2: **{I_R3*1000:.2f} mA**")
+    st.write(f"➡️ From V1: **{I_R1:.2f} A**")
+    st.write(f"⬇️ Through R2: **{I_R2:.2f} A**")
+    st.write(f"⬅️ From V2: **{I_R3:.2f} A**")
 
 st.divider()
 
