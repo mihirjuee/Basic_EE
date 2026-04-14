@@ -6,7 +6,7 @@ import schemdraw.elements as elm
 import io
 
 # --- Page Config ---
-st.set_page_config(page_title="⚡ Full AC Lab", layout="wide")
+st.set_page_config(page_title="⚡ Full AC Lab", page_icon="logo.png", layout="wide")
 
 # --- Title ---
 st.title("⚡ Full AC Circuits Virtual Lab")
