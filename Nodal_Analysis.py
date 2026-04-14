@@ -90,6 +90,6 @@ st.latex(rf"\frac{{V_a - {Vs1}}}{{{R1}}} + \frac{{V_a}}{{ {R2} }} + \frac{{V_a +
 # Comparison Table
 analysis_df = pd.DataFrame({
     "Parameter": ["Node A Voltage", "Current I_R1", "Current I_R2", "Current I_R3"],
-    "Value": [f"{V_node:.2f} V", f"{I_R1*1000:.2f} mA", f"{I_R2*1000:.2f} mA", f"{I_R3*1000:.2f} mA"]
+    "Value": [f"{V_node:.2f} V", f"{I_R1:.2f} A", f"{I_R2:.2f} A", f"{I_R3:.2f} A"]
 })
 st.table(analysis_df)
