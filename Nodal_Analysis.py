@@ -8,7 +8,7 @@ import os
 # ✅ MUST BE FIRST
 st.set_page_config(
     page_title="Nodal Analysis Lab",
-    page_icon="⚡",
+    page_icon="logo.png",
     layout="wide"
 )
 
