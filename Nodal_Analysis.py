@@ -5,6 +5,7 @@ import schemdraw.elements as elm
 import pandas as pd
 
 st.set_page_config(page_title="Nodal Analysis Lab", layout="wide")
+st.sidebar.image("logo.png", use_container_width=True)
 
 st.title("📍 Nodal Analysis Simulator")
 st.markdown("Solve for unknown node voltages using **Kirchhoff's Current Law (KCL)**.")
