@@ -12,6 +12,8 @@ st.set_page_config(page_title="⚡ Full AC Lab", layout="wide")
 st.title("⚡ Full AC Circuits Virtual Lab")
 
 # ------------------ SCHEMATIC ------------------
+import os
+
 def draw_circuit(R, L, C, V):
     d = schemdraw.Drawing()
     d.config(unit=3)
@@ -25,11 +27,11 @@ def draw_circuit(R, L, C, V):
     d.add(elm.Line().left().to(V1.start))
     d.add(elm.Line().up())
 
-    buf = io.BytesIO()
-    d.save(buf, fmt='png', dpi=300)
-    buf.seek(0)
+    # 👉 Save to file (SAFE METHOD)
+    filename = "circuit.png"
+    d.save(filename)
 
-    return buf
+    return filename
 
 # ------------------ PHASOR ------------------
 def phasor_plot(VR, VL, VC, V):
