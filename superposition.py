@@ -65,7 +65,13 @@ def draw_schematic(v1, v2, r1, r2, r3, active_source="Both"):
     return fig
 
 # --- STREAMLIT UI ---
-st.title("logo.png Superposition Solver")
+col1, col2 = st.columns([1, 6])
+
+with col1:
+    st.image("logo.png", width=60)
+
+with col2:
+    st.title("Superposition Solver")
 st.markdown("Calculate the total current through the load resistor **R3** using the Superposition Theorem.")
 
 # Inputs
