@@ -61,7 +61,7 @@ def draw_open_circuit(v, r1, r2, r3):
 
     d.push()
     d += elm.Resistor().down().label(f'R3\n{r3}Ω')
-    d += elm.Line().right()
+    d += elm.Line().right().label('B')
     d.pop()
 
     d += elm.Resistor().right().label(f'R2\n{r2}Ω')
