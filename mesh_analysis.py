@@ -4,70 +4,81 @@ import schemdraw
 import schemdraw.elements as elm
 import pandas as pd
 
-st.set_page_config(page_title="3-Loop Mesh Lab", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="3-Loop Mesh Simulator", layout="wide")
 
-st.title("🕸️ Advanced Mesh Analysis: 3-Loop Circuit")
-st.markdown("Experiment with a complex three-loop network and observe how currents redistribute.")
+st.title("🕸️ Interactive 3-Loop Mesh Analysis")
+st.markdown("""
+This lab solves a 3-loop resistive network using the **Mesh Current Method**. 
+Adjust the sliders to see how the currents $I_1, I_2,$ and $I_3$ interact in shared branches.
+""")
 
-# --- Sidebar: 8 Adjustable Parameters ---
-st.sidebar.header("Circuit Parameters")
-V1 = st.sidebar.slider("Source V1 [V]", 5, 100, 30)
-V2 = st.sidebar.slider("Source V2 [V]", 5, 100, 20)
-R1 = st.sidebar.slider("R1 (Loop 1) [Ω]", 10, 500, 100)
-R2 = st.sidebar.slider("R2 (Shared 1-2) [Ω]", 10, 500, 150)
-R3 = st.sidebar.slider("R3 (Loop 2) [Ω]", 10, 500, 100)
-R4 = st.sidebar.slider("R4 (Shared 2-3) [Ω]", 10, 500, 200)
-R5 = st.sidebar.slider("R5 (Loop 3) [Ω]", 10, 500, 120)
+# --- Sidebar: Circuit Parameters ---
+st.sidebar.header("🕹️ Circuit Controls")
+V1 = st.sidebar.slider("Source Voltage V1 [V]", 5, 100, 40)
+V2 = st.sidebar.slider("Source Voltage V2 [V]", 5, 100, 20)
+R1 = st.sidebar.slider("Resistor R1 (Loop 1) [Ω]", 10, 500, 100)
+R2 = st.sidebar.slider("Resistor R2 (Shared 1-2) [Ω]", 10, 500, 150)
+R3 = st.sidebar.slider("Resistor R3 (Loop 2) [Ω]", 10, 500, 100)
+R4 = st.sidebar.slider("Resistor R4 (Shared 2-3) [Ω]", 10, 500, 200)
+R5 = st.sidebar.slider("Resistor R5 (Loop 3) [Ω]", 10, 500, 120)
 
-# --- Math: Solving the 3x3 Matrix ---
-# Loop 1: (R1+R2)I1 - R2*I2 = V1
-# Loop 2: -R2*I1 + (R2+R3+R4)I2 - R4*I3 = 0
-# Loop 3: -R4*I2 + (R4+R5)I3 = -V2
-
-A = np.array([
+# --- Calculation Engine (Matrix Math) ---
+# Matrix R * I = V
+# Row 1: (R1+R2)I1 - R2*I2 + 0 = V1
+# Row 2: -R2*I1 + (R2+R3+R4)I2 - R4*I3 = 0
+# Row 3: 0 - R4*I2 + (R4+R5)I3 = -V2
+R_matrix = np.array([
     [R1 + R2, -R2, 0],
     [-R2, R2 + R3 + R4, -R4],
     [0, -R4, R4 + R5]
 ])
-B = np.array([V1, 0, -V2])
+V_vector = np.array([V1, 0, -V2])
 
 try:
-    I = np.linalg.solve(A, B)
-    I1, I2, I3 = I[0], I[1], I[2]
+    I_results = np.linalg.solve(R_matrix, V_vector)
+    I1, I2, I3 = I_results[0], I_results[1], I_results[2]
 except np.linalg.LinAlgError:
-    st.error("Calculation Error: Check resistor values.")
+    st.error("Matrix error. Please check resistor values.")
 
-# --- Circuit Diagram Generation ---
-def draw_3loop():
+# --- Diagram Generation with Loop Currents ---
+def generate_circuit_diagram():
     with schemdraw.Drawing() as d:
-        # Loop 1
-        d += (V_left := elm.SourceV().label(f'V1={V1}V'))
+        d.config(unit=3, fontsize=10)
+        
+        # --- Mesh 1 ---
+        d += (V_L := elm.SourceV().label(f'V1\n{V1}V'))
         d += elm.Resistor().right().label(f'R1\n{R1}Ω')
-        d += (R_shared1 := elm.Resistor().down().label(f'R2\n{R2}Ω'))
-        d += elm.Line().left().to(V_left.start)
+        d += (R_S1 := elm.Resistor().down().label(f'R2\n{R2}Ω'))
+        d += elm.Line().left().to(V_L.start)
+        d += elm.LoopCurrent([V_L, R_S1], direction='cw').label('$I_1$')
         
-        # Loop 2
-        d += elm.Resistor().right().at(R_shared1.start).label(f'R3\n{R3}Ω')
-        d += (R_shared2 := elm.Resistor().down().label(f'R4\n{R4}Ω'))
-        d += elm.Line().left().to(R_shared1.end)
+        # --- Mesh 2 ---
+        d += elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
+        d += (R_S2 := elm.Resistor().down().label(f'R4\n{R4}Ω'))
+        d += elm.Line().left().to(R_S1.end)
+        d += elm.LoopCurrent([R_S1, R_S2], direction='cw').label('$I_2$')
         
-        # Loop 3
-        d += elm.Resistor().right().at(R_shared2.start).label(f'R5\n{R5}Ω')
-        d += (V_right := elm.SourceV().down().label(f'V2={V2}V', loc='bottom'))
-        d += elm.Line().left().to(R_shared2.end)
+        # --- Mesh 3 ---
+        d += elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
+        d += (V_R := elm.SourceV().down().label(f'V2\n{V2}V', loc='bottom'))
+        d += elm.Line().left().to(R_S2.end)
+        d += elm.LoopCurrent([R_S2, V_R], direction='cw').label('$I_3$')
         
-        d.save("three_loop.png")
+        d.save("mesh_3_loop.png")
 
-draw_3loop()
+generate_circuit_diagram()
 
 # --- UI Layout ---
-col1, col2 = st.columns([1.5, 1])
+col_diag, col_math = st.columns([1.5, 1])
 
-with col1:
-    st.subheader("📋 3-Loop Network Diagram")
-    st.image("three_loop.png")
-    
-    st.markdown("### Mesh Matrix $[R][I] = [V]$")
+with col_diag:
+    st.subheader("🖼️ Live Circuit Diagram")
+    st.image("mesh_3_loop.png", use_container_width=True)
+    st.caption("The circular arrows indicate the clockwise Mesh Currents assumed in our equations.")
+
+with col_math:
+    st.subheader("🔢 System of Equations")
     st.latex(r"""
     \begin{bmatrix}
     R_1+R_2 & -R_2 & 0 \\
@@ -82,19 +93,35 @@ with col1:
     V_1 \\ 0 \\ -V_2
     \end{bmatrix}
     """)
-
-with col2:
+    
+    st.markdown("---")
     st.subheader("🧪 Results")
     st.metric("Mesh Current I1", f"{I1*1000:.2f} mA")
     st.metric("Mesh Current I2", f"{I2*1000:.2f} mA")
     st.metric("Mesh Current I3", f"{I3*1000:.2f} mA")
-    
-    st.divider()
-    st.write("**Real Branch Currents:**")
-    branch_data = {
-        "Branch": ["R1", "R2 (Shared)", "R3", "R4 (Shared)", "R5"],
-        "Current": [f"{I1*1000:.2f} mA", f"{(I1-I2)*1000:.2f} mA", f"{I2*1000:.2f} mA", f"{(I2-I3)*1000:.2f} mA", f"{I3*1000:.2f} mA"]
-    }
-    st.table(pd.DataFrame(branch_data))
 
-st.info("💡 **Observation:** Notice how Mesh 2 has no direct voltage source, yet current flows through it due to the coupling from Mesh 1 and Mesh 3 via the shared resistors.")
+st.divider()
+
+# --- Analysis Table ---
+st.subheader("📋 Detailed Branch Analysis")
+analysis_data = {
+    "Component": ["R1", "R2 (Shared)", "R3", "R4 (Shared)", "R5"],
+    "KCL Expression": ["I1", "I1 - I2", "I2", "I2 - I3", "I3"],
+    "Current (mA)": [
+        f"{I1*1000:.2f}", 
+        f"{(I1-I2)*1000:.2f}", 
+        f"{I2*1000:.2f}", 
+        f"{(I2-I3)*1000:.2f}", 
+        f"{I3*1000:.2f}"
+    ],
+    "Voltage Drop (V)": [
+        f"{abs(I1*R1):.2f}", 
+        f"{abs((I1-I2)*R2):.2f}", 
+        f"{abs(I2*R3):.2f}", 
+        f"{abs((I2-I3)*R4):.2f}", 
+        f"{abs(I3*R5):.2f}"
+    ]
+}
+st.table(pd.DataFrame(analysis_data))
+
+st.info("**Pedagogical Note:** In Mesh Analysis, the physical current in a shared branch (like R2) is the algebraic difference between the two mesh currents overlapping there. If the result is negative, it simply means the actual current flows opposite to our assumed direction.")
