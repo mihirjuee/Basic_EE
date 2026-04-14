@@ -6,10 +6,13 @@ import schemdraw.elements as elm
 import io
 
 # --- Page Config ---
-st.set_page_config(page_title="RLC Circuit Pro", layout="wide")
+st.set_page_config(page_title="⚡ Full AC Lab", layout="wide")
 
-# --- Schemdraw Circuit (FIXED) ---
-def draw_schematic(R, L, C, V):
+# --- Title ---
+st.title("⚡ Full AC Circuits Virtual Lab")
+
+# ------------------ SCHEMATIC ------------------
+def draw_circuit(R, L, C, V):
     d = schemdraw.Drawing()
     d.config(unit=3)
 
@@ -22,112 +25,138 @@ def draw_schematic(R, L, C, V):
     d.add(elm.Line().left().to(V1.start))
     d.add(elm.Line().up())
 
-    # Convert to image buffer
     buf = io.BytesIO()
     d.save(buf, fmt='png', dpi=300)
     buf.seek(0)
 
     return buf
 
-# --- Phasor Diagram ---
-def draw_phasors(vr, vl, vc, vs, phase_deg):
-    fig, ax = plt.subplots(figsize=(6, 6))
-
-    max_val = max(vr, vl, vc, vs) * 1.3
+# ------------------ PHASOR ------------------
+def phasor_plot(VR, VL, VC, V):
+    fig, ax = plt.subplots(figsize=(5,5))
 
     ax.axhline(0)
     ax.axvline(0)
 
-    # VR
-    ax.quiver(0, 0, vr, 0, angles='xy', scale_units='xy', scale=1, label='Vr')
-    # VL
-    ax.quiver(0, 0, 0, vl, angles='xy', scale_units='xy', scale=1, label='Vl')
-    # VC
-    ax.quiver(0, 0, 0, -vc, angles='xy', scale_units='xy', scale=1, label='Vc')
-    # VS
-    ax.quiver(0, 0, vr, (vl-vc), angles='xy', scale_units='xy', scale=1, label='Vs')
+    ax.quiver(0,0,VR,0, angles='xy', scale_units='xy', scale=1, label='Vr')
+    ax.quiver(0,0,0,VL, angles='xy', scale_units='xy', scale=1, label='Vl')
+    ax.quiver(0,0,0,-VC, angles='xy', scale_units='xy', scale=1, label='Vc')
+    ax.quiver(0,0,VR,(VL-VC), angles='xy', scale_units='xy', scale=1, label='Vs')
 
-    ax.set_xlim(-max_val/4, max_val)
-    ax.set_ylim(-max_val, max_val)
-    ax.set_title(f"Phasor Diagram (Phase: {phase_deg:.2f}°)")
+    ax.set_title("Phasor Diagram")
     ax.grid()
     ax.legend()
 
     return fig
 
-# --- Title ---
-st.title("🔌 Series RLC Analyzer & Phasor Generator")
+# ------------------ POWER TRIANGLE ------------------
+def power_triangle(V, I, phi):
+    P = V * I * np.cos(phi)
+    Q = V * I * np.sin(phi)
+    S = V * I
 
-# --- Sidebar ---
+    fig, ax = plt.subplots()
+
+    ax.plot([0, P], [0, 0])
+    ax.plot([P, P], [0, Q])
+    ax.plot([0, P], [0, Q])
+
+    ax.set_title("Power Triangle")
+    ax.set_xlabel("Real Power (P)")
+    ax.set_ylabel("Reactive Power (Q)")
+    ax.grid()
+
+    return fig, P, Q, S
+
+# ------------------ FREQUENCY SWEEP ------------------
+def freq_response(R, L, C):
+    f = np.linspace(1, 500, 500)
+    w = 2*np.pi*f
+
+    XL = w * L
+    XC = 1/(w*C)
+    Z = np.sqrt(R**2 + (XL-XC)**2)
+    I = 1/Z
+
+    fig, ax = plt.subplots()
+    ax.plot(f, I)
+    ax.set_title("Frequency Response (Resonance Curve)")
+    ax.set_xlabel("Frequency (Hz)")
+    ax.set_ylabel("Current (A)")
+    ax.grid()
+
+    return fig
+
+# ------------------ SIDEBAR ------------------
 with st.sidebar:
-    st.header("Input Parameters")
+    st.header("Controls")
 
-    V_rms = st.slider("Voltage (Vrms)", 10, 500, 230)
-    freq = st.slider("Frequency (Hz)", 1, 200, 50)
+    V = st.slider("Voltage (Vrms)", 10, 500, 230)
+    f = st.slider("Frequency (Hz)", 1, 200, 50)
 
     R = st.number_input("Resistance (Ω)", value=100.0)
-    L_mH = st.number_input("Inductance (mH)", value=300.0)
-    C_uF = st.number_input("Capacitance (µF)", value=30.0)
+    L_mH = st.number_input("Inductance (mH)", value=200.0)
+    C_uF = st.number_input("Capacitance (µF)", value=50.0)
 
-# --- Physics ---
+# --- Convert Units ---
 L = L_mH / 1000
 C = C_uF / 1e6
 
-omega = 2 * np.pi * freq
+w = 2*np.pi*f
 
-XL = omega * L
-XC = 1 / (omega * C)
+XL = w * L
+XC = 1/(w*C)
 X = XL - XC
 
 Z = np.sqrt(R**2 + X**2)
-I = V_rms / Z
+I = V / Z
 
-phase = np.arctan2(X, R)
-phase_deg = np.degrees(phase)
+phi = np.arctan2(X, R)
 
 VR = I * R
 VL = I * XL
 VC = I * XC
 
-# --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["🏠 Circuit", "📈 Phasor", "🧠 Math"])
+# ------------------ TABS ------------------
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["🔌 Circuit", "📈 Phasor", "⚡ Power", "📊 Resonance", "🧠 Theory"]
+)
 
-# --- Circuit Tab ---
+# --- Circuit ---
 with tab1:
     st.subheader("Circuit Diagram")
-    st.image(draw_schematic(R, L, C, V_rms))
+    st.image(draw_circuit(R, L, C, V))
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Impedance (Z)", f"{Z:.2f} Ω")
-    c2.metric("Current (I)", f"{I:.3f} A")
-    c3.metric("Phase Angle", f"{phase_deg:.2f}°")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Impedance", f"{Z:.2f} Ω")
+    col2.metric("Current", f"{I:.3f} A")
+    col3.metric("Phase Angle", f"{np.degrees(phi):.2f}°")
 
-# --- Phasor Tab ---
+# --- Phasor ---
 with tab2:
     st.subheader("Phasor Diagram")
-    st.pyplot(draw_phasors(VR, VL, VC, V_rms, phase_deg))
+    st.pyplot(phasor_plot(VR, VL, VC, V))
 
-    if XL > XC:
-        st.info("💡 Inductive Circuit → Voltage leads current")
-    elif XC > XL:
-        st.info("💡 Capacitive Circuit → Current leads voltage")
-    else:
-        st.success("🎯 Resonance → Purely resistive")
-
-# --- Math Tab ---
+# --- Power ---
 with tab3:
-    st.subheader("Equations")
+    st.subheader("Power Triangle")
+    fig, P, Q, S = power_triangle(V, I, phi)
+    st.pyplot(fig)
 
+    st.write(f"Real Power (P): {P:.2f} W")
+    st.write(f"Reactive Power (Q): {Q:.2f} VAR")
+    st.write(f"Apparent Power (S): {S:.2f} VA")
+
+# --- Resonance ---
+with tab4:
+    st.subheader("Frequency Sweep")
+    st.pyplot(freq_response(R, L, C))
+
+# --- Theory ---
+with tab5:
     st.latex(r"X_L = 2\pi f L")
     st.latex(r"X_C = \frac{1}{2\pi f C}")
     st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
-
-    st.write("### Calculated Values")
-    st.write(f"XL = {XL:.2f} Ω")
-    st.write(f"XC = {XC:.2f} Ω")
-    st.write(f"Z = {Z:.2f} Ω")
-
-    st.write("### Voltages")
-    st.write(f"VR = {VR:.2f} V")
-    st.write(f"VL = {VL:.2f} V")
-    st.write(f"VC = {VC:.2f} V")
+    st.latex(r"P = VI\cos\phi")
+    st.latex(r"Q = VI\sin\phi")
+    st.latex(r"S = VI")
