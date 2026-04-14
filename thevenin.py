@@ -75,11 +75,12 @@ with col1:
     st.subheader("🔌 Circuit View")
 
     if mode == "Original Circuit":
-        fig = draw_original().draw()
+        d = draw_original()
     else:
-        fig = draw_thevenin().draw()
+        d = draw_thevenin()
 
-    st.pyplot(fig)
+    fig = d.draw()              # ✅ FIXED
+    st.image(fig)               # ✅ SAFE DISPLAY
 
 with col2:
     st.subheader("📊 Results")
@@ -101,20 +102,23 @@ if animate:
 
     for i in range(50):
         fig, ax = plt.subplots()
-        y = np.sin(x + i * 0.3)
 
+        y = np.sin(x + i * 0.3)
         ax.plot(x, y)
+
         ax.set_title("AC Current Flow Representation")
         ax.set_xlabel("Time")
         ax.set_ylabel("Current")
 
         placeholder.pyplot(fig)
+        plt.close(fig)   # ✅ Prevent memory crash
+
         time.sleep(0.05)
 
 else:
     st.info("Enable animation from sidebar to visualize current flow.")
 
-# --- Comparison Table ---
+# --- Table ---
 st.divider()
 st.subheader("📋 Verification Table")
 
@@ -125,11 +129,12 @@ data = {
 
 st.table(pd.DataFrame(data))
 
-# --- Theory Section ---
+# --- Theory ---
 st.divider()
 st.markdown("### 💡 Theory")
 
 st.write("""
-Any linear circuit can be replaced by a single voltage source (Vth) in series with a resistance (Rth).
-This app demonstrates that both circuits produce the same load current.
+Any linear circuit can be replaced by an equivalent voltage source (Vth) 
+in series with a resistance (Rth). This app demonstrates that both circuits 
+produce the same load current.
 """)
