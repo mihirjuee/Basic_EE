@@ -9,7 +9,17 @@ import io
 st.set_page_config(page_title="⚡ Full AC Lab", page_icon="logo.png", layout="wide")
 
 # --- Title ---
-st.title("⚡ Full AC Circuits Virtual Lab")
+# 1. Create two columns (adjust ratio as needed)
+col1, col2 = st.columns([1, 5])
+
+with col1:
+    # Use a local file path or a URL
+    st.image("logo.png", width=80) 
+
+with col2:
+    st.title("⚡ Full AC Circuits Virtual Lab")
+
+st.divider()
 
 # ------------------ SCHEMATIC ------------------
 import os
