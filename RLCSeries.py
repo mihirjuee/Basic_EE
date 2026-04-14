@@ -3,33 +3,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import schemdraw
 import schemdraw.elements as elm
+import io
 
 # --- Page Config ---
 st.set_page_config(page_title="RLC Circuit Pro", layout="wide")
 
-# --- Schemdraw Circuit ---
+# --- Schemdraw Circuit (FIXED) ---
 def draw_schematic(R, L, C, V):
     d = schemdraw.Drawing()
     d.config(unit=3)
 
-    # Source
     V1 = d.add(elm.SourceSin().label(f'{V}V'))
-
-    # Resistor
     d.add(elm.Resistor().right().label(f'R\n{R}Ω'))
-
-    # Inductor
     d.add(elm.Inductor().right().label(f'L\n{L*1000:.0f} mH'))
-
-    # Capacitor
     d.add(elm.Capacitor().right().label(f'C\n{C*1e6:.0f} µF'))
 
-    # Close loop
     d.add(elm.Line().down())
     d.add(elm.Line().left().to(V1.start))
     d.add(elm.Line().up())
 
-    return d
+    # Convert to image buffer
+    buf = io.BytesIO()
+    d.save(buf, fmt='png', dpi=300)
+    buf.seek(0)
+
+    return buf
 
 # --- Phasor Diagram ---
 def draw_phasors(vr, vl, vc, vs, phase_deg):
@@ -41,18 +39,19 @@ def draw_phasors(vr, vl, vc, vs, phase_deg):
     ax.axvline(0)
 
     # VR
-    ax.quiver(0, 0, vr, 0, angles='xy', scale_units='xy', scale=1)
+    ax.quiver(0, 0, vr, 0, angles='xy', scale_units='xy', scale=1, label='Vr')
     # VL
-    ax.quiver(0, 0, 0, vl, angles='xy', scale_units='xy', scale=1)
+    ax.quiver(0, 0, 0, vl, angles='xy', scale_units='xy', scale=1, label='Vl')
     # VC
-    ax.quiver(0, 0, 0, -vc, angles='xy', scale_units='xy', scale=1)
+    ax.quiver(0, 0, 0, -vc, angles='xy', scale_units='xy', scale=1, label='Vc')
     # VS
-    ax.quiver(0, 0, vr, (vl-vc), angles='xy', scale_units='xy', scale=1)
+    ax.quiver(0, 0, vr, (vl-vc), angles='xy', scale_units='xy', scale=1, label='Vs')
 
     ax.set_xlim(-max_val/4, max_val)
     ax.set_ylim(-max_val, max_val)
     ax.set_title(f"Phasor Diagram (Phase: {phase_deg:.2f}°)")
     ax.grid()
+    ax.legend()
 
     return fig
 
@@ -93,29 +92,29 @@ VC = I * XC
 # --- Tabs ---
 tab1, tab2, tab3 = st.tabs(["🏠 Circuit", "📈 Phasor", "🧠 Math"])
 
-# --- Tab 1 ---
+# --- Circuit Tab ---
 with tab1:
     st.subheader("Circuit Diagram")
-    st.pyplot(draw_schematic(R, L, C, V_rms))
+    st.image(draw_schematic(R, L, C, V_rms))
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Impedance", f"{Z:.2f} Ω")
-    c2.metric("Current", f"{I:.3f} A")
+    c1.metric("Impedance (Z)", f"{Z:.2f} Ω")
+    c2.metric("Current (I)", f"{I:.3f} A")
     c3.metric("Phase Angle", f"{phase_deg:.2f}°")
 
-# --- Tab 2 ---
+# --- Phasor Tab ---
 with tab2:
     st.subheader("Phasor Diagram")
     st.pyplot(draw_phasors(VR, VL, VC, V_rms, phase_deg))
 
     if XL > XC:
-        st.info("Inductive Circuit → Voltage leads current")
+        st.info("💡 Inductive Circuit → Voltage leads current")
     elif XC > XL:
-        st.info("Capacitive Circuit → Current leads voltage")
+        st.info("💡 Capacitive Circuit → Current leads voltage")
     else:
-        st.success("Resonance → Purely resistive")
+        st.success("🎯 Resonance → Purely resistive")
 
-# --- Tab 3 ---
+# --- Math Tab ---
 with tab3:
     st.subheader("Equations")
 
@@ -123,7 +122,7 @@ with tab3:
     st.latex(r"X_C = \frac{1}{2\pi f C}")
     st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
 
-    st.write("### Values")
+    st.write("### Calculated Values")
     st.write(f"XL = {XL:.2f} Ω")
     st.write(f"XC = {XC:.2f} Ω")
     st.write(f"Z = {Z:.2f} Ω")
