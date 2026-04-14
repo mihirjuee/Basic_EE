@@ -24,7 +24,6 @@ R4 = st.sidebar.slider("R4 (Shared 2-3) [Ω]", 10, 500, 200)
 R5 = st.sidebar.slider("R5 [Ω]", 10, 500, 120)
 
 selected_loop = st.sidebar.selectbox("Highlight Loop", ["All", "Loop 1", "Loop 2", "Loop 3"])
-
 animate = st.sidebar.checkbox("⚡ Animate Current")
 quiz_mode = st.sidebar.checkbox("🎓 Quiz Mode")
 
@@ -54,7 +53,7 @@ def draw_circuit():
     with schemdraw.Drawing() as d:
         d.config(unit=3, fontsize=10)
 
-        # --- LOOP 1 ---
+        # LOOP 1
         V_L = elm.SourceV().label(f'V1\n{V1}V')
         d += V_L
 
@@ -67,16 +66,11 @@ def draw_circuit():
         L1 = elm.Line().left().to(V_L.start)
         d += L1
 
-d += elm.ArcArrow(
-    radius=0.8,
-    theta1=20,
-    theta2=340,
-    color=color1
-).at((1.5, -0.5))
+        # 🔴 Circular Arrow
+        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color1).at((1.5, -0.6))
+        d += elm.Label().at((1.5, -1.4)).label('$I_1$', color=color1)
 
-d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
-
-        # --- LOOP 2 ---
+        # LOOP 2
         R3_e = elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
         d += R3_e
 
@@ -86,11 +80,11 @@ d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
         L2 = elm.Line().left().to(R_S1.end)
         d += L2
 
-        # 🟢 Manual arrow
-        d += elm.Arrow().at((4.2, -0.5)).right().length(1).color(color2)
-        d += elm.Label().at((4.7, -0.8)).label('$I_2$', color=color2)
+        # 🟢 Circular Arrow
+        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color2).at((4.5, -0.6))
+        d += elm.Label().at((4.5, -1.4)).label('$I_2$', color=color2)
 
-        # --- LOOP 3 ---
+        # LOOP 3
         R5_e = elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
         d += R5_e
 
@@ -100,11 +94,11 @@ d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
         L3 = elm.Line().left().to(R_S2.end)
         d += L3
 
-        # 🔵 Manual arrow
-        d += elm.Arrow().at((7.2, -0.5)).right().length(1).color(color3)
-        d += elm.Label().at((7.7, -0.8)).label('$I_3$', color=color3)
+        # 🔵 Circular Arrow
+        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color3).at((7.5, -0.6))
+        d += elm.Label().at((7.5, -1.4)).label('$I_3$', color=color3)
 
-        # --- Shared currents ---
+        # Shared currents
         d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
         d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
 
