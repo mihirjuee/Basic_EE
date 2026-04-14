@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Page Setup
-st.set_page_config(page_title="Superposition Theorem","logo.png", layout="wide")
+st.set_page_config(page_title="Superposition Theorem",page_icon="logo.png", layout="wide")
 
 def draw_schematic(v1, v2, r1, r2, r3, active_source="Both"):
     """Draws the circuit with polarity and source status."""
