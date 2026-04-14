@@ -27,11 +27,6 @@ selected_loop = st.sidebar.selectbox("Highlight Loop", ["All", "Loop 1", "Loop 2
 animate = st.sidebar.checkbox("⚡ Animate Current")
 quiz_mode = st.sidebar.checkbox("🎓 Quiz Mode")
 
-# --- Safety ---
-if any(r == 0 for r in [R1, R2, R3, R4, R5]):
-    st.error("Resistance cannot be zero.")
-    st.stop()
-
 # --- Mesh Calculation ---
 R_matrix = np.array([
     [R1 + R2, -R2, 0],
@@ -40,7 +35,6 @@ R_matrix = np.array([
 ])
 
 V_vector = np.array([V1, 0, -V2])
-
 I1, I2, I3 = np.linalg.solve(R_matrix, V_vector)
 
 # --- Colors ---
@@ -50,69 +44,65 @@ color3 = 'blue' if selected_loop in ["All", "Loop 3"] else 'black'
 
 # --- Draw Circuit ---
 def draw_circuit():
-    with schemdraw.Drawing() as d:
-        d.config(unit=3, fontsize=10)
+    d = schemdraw.Drawing()
+    d.config(unit=3)
 
-        # LOOP 1
-        V_L = elm.SourceV().label(f'V1\n{V1}V')
-        d += V_L
+    # LOOP 1
+    V_L = elm.SourceV().label(f'V1\n{V1}V')
+    d += V_L
 
-        R1_e = elm.Resistor().right().label(f'R1\n{R1}Ω')
-        d += R1_e
+    R1_e = elm.Resistor().right().label(f'R1\n{R1}Ω')
+    d += R1_e
 
-        R_S1 = elm.Resistor().down().label(f'R2\n{R2}Ω')
-        d += R_S1
+    R_S1 = elm.Resistor().down().label(f'R2\n{R2}Ω')
+    d += R_S1
 
-        L1 = elm.Line().left().to(V_L.start)
-        d += L1
+    d += elm.Line().left().to(V_L.start)
 
-# Loop 1 circular arrow (manual)
-d += elm.Line().at((1.5, -0.3)).right(0.5).color(color1)
-d += elm.Line().down(0.6).color(color1)
-d += elm.Line().left(0.5).color(color1)
-d += elm.Arrow().up(0.6).color(color1)
+    # Loop 1 arrow
+    d += elm.Line().at((1.5, -0.3)).right(0.5).color(color1)
+    d += elm.Line().down(0.6).color(color1)
+    d += elm.Line().left(0.5).color(color1)
+    d += elm.Arrow().up(0.6).color(color1)
+    d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
 
-d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
+    # LOOP 2
+    R3_e = elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
+    d += R3_e
 
-        # LOOP 2
-        R3_e = elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
-        d += R3_e
+    R_S2 = elm.Resistor().down().label(f'R4\n{R4}Ω')
+    d += R_S2
 
-        R_S2 = elm.Resistor().down().label(f'R4\n{R4}Ω')
-        d += R_S2
+    d += elm.Line().left().to(R_S1.end)
 
-        L2 = elm.Line().left().to(R_S1.end)
-        d += L2
+    # Loop 2 arrow
+    d += elm.Line().at((4.5, -0.3)).right(0.5).color(color2)
+    d += elm.Line().down(0.6).color(color2)
+    d += elm.Line().left(0.5).color(color2)
+    d += elm.Arrow().up(0.6).color(color2)
+    d += elm.Label().at((4.5, -1.3)).label('$I_2$', color=color2)
 
-d += elm.Line().at((4.5, -0.3)).right(0.5).color(color2)
-d += elm.Line().down(0.6).color(color2)
-d += elm.Line().left(0.5).color(color2)
-d += elm.Arrow().up(0.6).color(color2)
+    # LOOP 3
+    R5_e = elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
+    d += R5_e
 
-d += elm.Label().at((4.5, -1.3)).label('$I_2$', color=color2)
+    V_R = elm.SourceV().down().label(f'V2\n{V2}V')
+    d += V_R
 
-        # LOOP 3
-        R5_e = elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
-        d += R5_e
+    d += elm.Line().left().to(R_S2.end)
 
-        V_R = elm.SourceV().down().label(f'V2\n{V2}V')
-        d += V_R
+    # Loop 3 arrow
+    d += elm.Line().at((7.5, -0.3)).right(0.5).color(color3)
+    d += elm.Line().down(0.6).color(color3)
+    d += elm.Line().left(0.5).color(color3)
+    d += elm.Arrow().up(0.6).color(color3)
+    d += elm.Label().at((7.5, -1.3)).label('$I_3$', color=color3)
 
-        L3 = elm.Line().left().to(R_S2.end)
-        d += L3
+    # Currents
+    d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
+    d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
 
-d += elm.Line().at((7.5, -0.3)).right(0.5).color(color3)
-d += elm.Line().down(0.6).color(color3)
-d += elm.Line().left(0.5).color(color3)
-d += elm.Arrow().up(0.6).color(color3)
-
-d += elm.Label().at((7.5, -1.3)).label('$I_3$', color=color3)
-
-        # Shared branch currents
-        d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
-        d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
-
-        d.save("mesh.png")
+    d.save("mesh.png")
 
 draw_circuit()
 
@@ -120,83 +110,22 @@ draw_circuit()
 col1, col2 = st.columns([1.5, 1])
 
 with col1:
-    st.subheader("🖼️ Circuit Diagram")
     st.image("mesh.png", use_container_width=True)
 
 with col2:
-    st.subheader("🔢 Results")
     st.metric("I1", f"{I1*1000:.2f} mA")
     st.metric("I2", f"{I2*1000:.2f} mA")
     st.metric("I3", f"{I3*1000:.2f} mA")
 
 # --- Animation ---
 if animate:
-    st.subheader("⚡ Current Animation")
     bar = st.progress(0)
     for i in range(100):
         bar.progress(i+1)
         time.sleep(0.01)
 
 # --- KVL ---
-st.divider()
-st.subheader("🧠 KVL Equations")
-
+st.subheader("KVL Equations")
 st.latex(f"I_1({R1}+{R2}) - I_2({R2}) = {V1}")
 st.latex(f"-I_1({R2}) + I_2({R2}+{R3}+{R4}) - I_3({R4}) = 0")
 st.latex(f"-I_2({R4}) + I_3({R4}+{R5}) = -{V2}")
-
-# --- Table ---
-st.divider()
-st.subheader("📋 Branch Analysis")
-
-df = pd.DataFrame({
-    "Component": ["R1", "R2", "R3", "R4", "R5"],
-    "Current (mA)": [
-        I1*1000,
-        (I1-I2)*1000,
-        I2*1000,
-        (I2-I3)*1000,
-        I3*1000
-    ],
-    "Voltage (V)": [
-        abs(I1*R1),
-        abs((I1-I2)*R2),
-        abs(I2*R3),
-        abs((I2-I3)*R4),
-        abs(I3*R5)
-    ]
-})
-
-st.table(df)
-
-# --- Power ---
-st.subheader("⚡ Power Dissipation")
-
-power_df = pd.DataFrame({
-    "Component": ["R1", "R2", "R3", "R4", "R5"],
-    "Power (W)": [
-        I1**2 * R1,
-        (I1-I2)**2 * R2,
-        I2**2 * R3,
-        (I2-I3)**2 * R4,
-        I3**2 * R5
-    ]
-})
-
-st.table(power_df)
-
-# --- Quiz ---
-if quiz_mode:
-    st.divider()
-    st.subheader("🎓 Quiz Mode")
-
-    guess = st.number_input("Guess I1 (mA)")
-
-    if st.button("Check Answer"):
-        if abs(guess - I1*1000) < 5:
-            st.success("Correct! 🎉")
-        else:
-            st.error("Try again!")
-
-# --- Footer ---
-st.info("Shared branch current = difference of mesh currents. Negative means opposite direction.")
