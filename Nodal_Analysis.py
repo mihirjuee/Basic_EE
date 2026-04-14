@@ -85,7 +85,7 @@ st.divider()
 # --- Math Section ---
 st.subheader("📝 The Mathematical Model")
 st.latex(r"I_1 + I_2 + I_3 = 0")
-st.latex(rf"\frac{{V_a - {Vs1}}}{{{R1}}} + \frac{{V_a}}{{ {R2} }} + \frac{{V_a - {Vs2}}}{{{R3}}} = 0")
+st.latex(rf"\frac{{V_a - {Vs1}}}{{{R1}}} + \frac{{V_a}}{{ {R2} }} + \frac{{V_a + {Vs2}}}{{{R3}}} = 0")
 
 # Comparison Table
 analysis_df = pd.DataFrame({
