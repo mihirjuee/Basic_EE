@@ -2,91 +2,128 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="RLC Phasor Analyzer", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="RLC Circuit Pro", layout="wide")
 
-st.title("🔌 Series RLC Circuit & Phasor Diagram")
+# --- Functions for Graphics ---
 
-# --- Sidebar Inputs ---
+def draw_schematic():
+    """Draws a professional RLC series circuit schematic."""
+    fig, ax = plt.subplots(figsize=(8, 3))
+    # Main loop wires
+    ax.plot([0, 0, 2], [0, 4, 4], 'k-', lw=1.5)   
+    ax.plot([8, 10, 10, 0], [4, 4, 0, 0], 'k-', lw=1.5) 
+    
+    # AC Source
+    circle = plt.Circle((0, 2), 0.5, color='black', fill=False, lw=2)
+    ax.add_patch(circle)
+    ax.text(-0.15, 1.8, "~", fontsize=25)
+    ax.text(-1.5, 2, "Vs", fontsize=12, fontweight='bold')
+
+    # Resistor R
+    ax.add_patch(plt.Rectangle((2, 3.7), 1.5, 0.6, facecolor='white', edgecolor='black', lw=2))
+    ax.text(2.5, 4.5, "R", fontsize=12, fontweight='bold')
+
+    # Inductor L (simplified coils)
+    for i in range(3):
+        ax.add_patch(plt.Circle((4.5 + i*0.4, 4), 0.25, color='black', fill=False, lw=1.5))
+    ax.text(4.9, 4.5, "L", fontsize=12, fontweight='bold')
+
+    # Capacitor C
+    ax.plot([7.5, 7.5], [3.3, 4.7], 'k-', lw=3)
+    ax.plot([8.0, 8.0], [3.3, 4.7], 'k-', lw=3)
+    ax.text(7.6, 4.8, "C", fontsize=12, fontweight='bold')
+
+    ax.set_xlim(-2, 12)
+    ax.set_ylim(-1, 6)
+    ax.axis('off')
+    return fig
+
+def draw_phasors(vr, vl, vc, vs, phase_deg):
+    """Draws the phasor diagram with voltage vectors."""
+    fig, ax = plt.subplots(figsize=(6, 6))
+    max_val = max(vr, vl, vc, vs) * 1.2
+    
+    # Reference axis
+    ax.axhline(0, color='gray', lw=1, ls='--')
+    ax.axvline(0, color='gray', lw=1, ls='--')
+
+    # VR - Horizontal (In phase with Current)
+    ax.quiver(0, 0, vr, 0, angles='xy', scale_units='xy', scale=1, color='red', label=f'Vr ({vr:.1f}V)')
+    # VL - Vertical Up
+    ax.quiver(0, 0, 0, vl, angles='xy', scale_units='xy', scale=1, color='blue', label=f'Vl ({vl:.1f}V)')
+    # VC - Vertical Down
+    ax.quiver(0, 0, 0, -vc, angles='xy', scale_units='xy', scale=1, color='green', label=f'Vc ({vc:.1f}V)')
+    # Vs - Resultant
+    ax.quiver(0, 0, vr, (vl-vc), angles='xy', scale_units='xy', scale=1, color='black', width=0.015, label=f'Vs ({vs:.1f}V)')
+
+    ax.set_xlim(-max_val/5, max_val)
+    ax.set_ylim(-max_val, max_val)
+    ax.set_title(f"Phasor Diagram (Phase: {phase_deg:.1f}°)")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    return fig
+
+# --- Main App Logic ---
+
+st.title("🔌 Series RLC Analyzer & Phasor Generator")
+
 with st.sidebar:
-    st.header("Circuit Parameters")
-    v_rms = st.number_input("Source Voltage (Vrms)", value=230.0)
-    freq = st.number_input("Frequency (Hz)", value=50.0)
-    r = st.number_input("Resistance R (Ω)", value=100.0)
-    l_mH = st.number_input("Inductance L (mH)", value=300.0)
-    c_uF = st.number_input("Capacitance C (µF)", value=30.0)
+    st.header("Input Parameters")
+    V_rms = st.slider("Source Voltage (Vrms)", 10, 500, 230)
+    freq = st.slider("Frequency (Hz)", 1, 200, 50)
+    R = st.number_input("Resistance (Ω)", value=100.0)
+    L_mH = st.number_input("Inductance (mH)", value=300.0)
+    C_uF = st.number_input("Capacitance (µF)", value=30.0)
 
-# --- Calculations ---
-l = l_mH / 1000
-c = c_uF / 1e6
+# Physics Engine
+L = L_mH / 1000
+C = C_uF / 1e6
 omega = 2 * np.pi * freq
 
-xl = omega * l
-xc = 1 / (omega * c)
-net_x = xl - xc
-z = np.sqrt(r**2 + net_x**2)
-i_rms = v_rms / z
-phase_rad = np.arctan2(net_x, r)
+XL = omega * L
+XC = 1 / (omega * C)
+X_net = XL - XC
+Z = np.sqrt(R**2 + X_net**2)
+I_rms = V_rms / Z
+phase_rad = np.arctan2(X_net, R)
 phase_deg = np.degrees(phase_rad)
 
 # Voltages
-vr = i_rms * r
-vl = i_rms * xl
-vc = i_rms * xc
+VR = I_rms * R
+VL = I_rms * XL
+VC = I_rms * XC
 
-# --- UI Layout ---
-col1, col2 = st.columns([1, 1.5])
+# --- UI Tabs ---
+tab1, tab2, tab3 = st.tabs(["🏠 Circuit Overview", "📈 Phasor Analysis", "🔢 Step-by-Step Math"])
 
-with col1:
-    st.subheader("📊 Analysis Results")
-    st.write(f"**Inductive Reactance ($X_L$):** {xl:.2f} Ω")
-    st.write(f"**Capacitive Reactance ($X_C$):** {xc:.2f} Ω")
-    st.write(f"**Total Impedance ($Z$):** {z:.2f} Ω")
-    st.metric("RMS Current (I)", f"{i_rms:.3f} A")
-    st.metric("Phase Angle (φ)", f"{phase_deg:.2f}°")
+with tab1:
+    st.subheader("Circuit Schematic")
+    st.pyplot(draw_schematic())
     
-    if xl > xc:
-        st.warning("Circuit is Inductive (Current Lags)")
-    elif xc > xl:
-        st.info("Circuit is Capacitive (Current Leads)")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Impedance (Z)", f"{Z:.2f} Ω")
+    col2.metric("RMS Current (I)", f"{I_rms:.3f} A")
+    col3.metric("Phase Angle", f"{phase_deg:.2f}°")
+
+with tab2:
+    st.subheader("Vector Representation")
+    st.pyplot(draw_phasors(VR, VL, VC, V_rms, phase_deg))
+    
+    if XL > XC:
+        st.info("💡 **Inductive Circuit**: Voltage leads current (ELI).")
+    elif XC > XL:
+        st.info("💡 **Capacitive Circuit**: Current leads voltage (ICE).")
     else:
-        st.success("Circuit is at Resonance!")
+        st.success("🎯 **Resonance**: $X_L = X_C$. The circuit acts as purely resistive.")
 
-with col2:
-    # --- Phasor Diagram ---
-    fig, ax = plt.subplots(figsize=(6, 6))
+with tab3:
+    st.subheader("Calculated Values")
+    st.latex(rf"X_L = 2\pi f L = {XL:.2f} \Omega")
+    st.latex(rf"X_C = \frac{{1}}{{2\pi f C}} = {XC:.2f} \Omega")
+    st.latex(rf"Z = \sqrt{{R^2 + (X_L - X_C)^2}} = {Z:.2f} \Omega")
     
-    # Draw Phasors
-    # VR (Reference horizontal)
-    ax.quiver(0, 0, vr, 0, angles='xy', scale_units='xy', scale=1, color='red', label='VR (Resistor)')
-    # VL (Up)
-    ax.quiver(0, 0, 0, vl, angles='xy', scale_units='xy', scale=1, color='blue', label='VL (Inductor)')
-    # VC (Down)
-    ax.quiver(0, 0, 0, -vc, angles='xy', scale_units='xy', scale=1, color='green', label='VC (Capacitor)')
-    # V Source (Resultant)
-    ax.quiver(0, 0, vr, net_x * i_rms, angles='xy', scale_units='xy', scale=1, color='black', width=0.015, label='V Total')
-
-    # Formatting
-    limit = max(vr, vl, vc, v_rms) * 1.2
-    ax.set_xlim(-limit/4, limit)
-    ax.set_ylim(-limit, limit)
-    ax.axhline(0, color='black', lw=1)
-    ax.axvline(0, color='black', lw=1)
-    ax.grid(True, linestyle='--')
-    ax.set_title("Phasor Diagram")
-    ax.legend()
-    
-    st.pyplot(fig)
-
-# --- Waveform Visualization ---
-st.divider()
-st.subheader("📈 Time Domain Waveforms")
-t = np.linspace(0, 2/freq, 500)
-v_source_t = np.sqrt(2) * v_rms * np.sin(omega * t)
-i_t = np.sqrt(2) * i_rms * np.sin(omega * t - phase_rad)
-
-fig2, ax2 = plt.subplots(figsize=(10, 4))
-ax2.plot(t, v_source_t, label="Voltage (V)", color='black')
-ax2.plot(t, i_t * (v_rms/i_rms * 0.5), label="Current (I) - Scaled", color='orange', linestyle='--')
-ax2.set_xlabel("Time (s)")
-ax2.legend()
-st.pyplot(fig2)
+    st.write("### Component Voltages")
+    st.write(f"- Voltage across Resistor ($V_R$): **{VR:.2f} V**")
+    st.write(f"- Voltage across Inductor ($V_L$): **{VL:.2f} V**")
+    st.write(f"- Voltage across Capacitor ($V_C$): **{VC:.2f} V**")
