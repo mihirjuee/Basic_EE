@@ -54,7 +54,7 @@ def draw_circuit():
     with schemdraw.Drawing() as d:
         d.config(unit=3, fontsize=10)
 
-        # LOOP 1
+        # --- LOOP 1 ---
         V_L = elm.SourceV().label(f'V1\n{V1}V')
         d += V_L
 
@@ -67,17 +67,11 @@ def draw_circuit():
         L1 = elm.Line().left().to(V_L.start)
         d += L1
 
-        d += elm.LoopCurrent(
-            [V_L, R1_e, R_S1, L1],
-            direction='cw',
-            color=color1,
-            theta1=30,
-            theta2=330,
-            pad=0.4,
-            lw=1.5
-        ).label('$I_1$')
+        # 🔴 Manual arrow (INSIDE loop)
+        d += elm.Arrow().at((1.2, -0.5)).right().length(1).color(color1)
+        d += elm.Label().at((1.7, -0.8)).label('$I_1$', color=color1)
 
-        # LOOP 2
+        # --- LOOP 2 ---
         R3_e = elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
         d += R3_e
 
@@ -87,17 +81,11 @@ def draw_circuit():
         L2 = elm.Line().left().to(R_S1.end)
         d += L2
 
-        d += elm.LoopCurrent(
-            [R_S1, R3_e, R_S2, L2],
-            direction='cw',
-            color=color2,
-            theta1=30,
-            theta2=330,
-            pad=0.4,
-            lw=1.5
-        ).label('$I_2$')
+        # 🟢 Manual arrow
+        d += elm.Arrow().at((4.2, -0.5)).right().length(1).color(color2)
+        d += elm.Label().at((4.7, -0.8)).label('$I_2$', color=color2)
 
-        # LOOP 3
+        # --- LOOP 3 ---
         R5_e = elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
         d += R5_e
 
@@ -107,17 +95,11 @@ def draw_circuit():
         L3 = elm.Line().left().to(R_S2.end)
         d += L3
 
-        d += elm.LoopCurrent(
-            [R_S2, R5_e, V_R, L3],
-            direction='cw',
-            color=color3,
-            theta1=30,
-            theta2=330,
-            pad=0.4,
-            lw=1.5
-        ).label('$I_3$')
+        # 🔵 Manual arrow
+        d += elm.Arrow().at((7.2, -0.5)).right().length(1).color(color3)
+        d += elm.Label().at((7.7, -0.8)).label('$I_3$', color=color3)
 
-        # Shared branch currents
+        # --- Shared currents ---
         d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
         d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
 
