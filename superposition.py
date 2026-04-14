@@ -1,133 +1,75 @@
 import streamlit as st
-import numpy as np
-import schemdraw
-import schemdraw.elements as elm
 import pandas as pd
-import os
 
-# --- Page Config ---
-st.set_page_config(
-    page_title="Superposition Theorem Lab",
-    page_icon="logo.png",
-    layout="wide"
-)
+# Page configuration
+st.set_page_config(page_title="Superposition Solver", page_icon="log.png")
 
-# --- Logo Loader (safe) ---
-def load_logo():
-    path = "logo.png"
-    return path if os.path.exists(path) else None
-
-logo = load_logo()
-
-# --- Header ---
-col1, col2 = st.columns([1, 6])
-
-with col1:
-    if logo:
-        st.image(logo, width=80)
-
-with col2:
-    st.title("⚡ Superposition Theorem Virtual Lab")
-
-if logo:
-    st.sidebar.image(logo, use_container_width=True)
-
+st.title("⚡ Superposition Theorem Solver")
 st.markdown("""
-Analyze circuits with multiple sources using **Superposition Theorem**  
-👉 Activate one source at a time (others replaced by internal resistance)
+This app calculates the current through a central load resistor ($R_3$) in a two-source circuit 
+by applying the **Superposition Theorem** step-by-step.
 """)
 
-# --- Sidebar Controls ---
-st.sidebar.header("🕹️ Circuit Parameters")
+# --- Sidebar Inputs ---
+st.sidebar.header("Circuit Parameters")
 
-V1 = st.sidebar.slider("Voltage Source V1 [V]", 1, 100, 20)
-V2 = st.sidebar.slider("Voltage Source V2 [V]", 1, 100, 10)
+with st.sidebar:
+    st.subheader("Voltage Sources (V)")
+    v1 = st.number_input("Source V1 (Volts)", value=12.0)
+    v2 = st.number_input("Source V2 (Volts)", value=6.0)
 
-R1 = st.sidebar.slider("R1 [Ω]", 10, 500, 100)
-R2 = st.sidebar.slider("R2 [Ω]", 10, 500, 200)
-R3 = st.sidebar.slider("R3 [Ω]", 10, 500, 150)
+    st.subheader("Resistors (Ω)")
+    r1 = st.number_input("Resistor R1", value=10.0, min_value=0.1)
+    r2 = st.number_input("Resistor R2", value=20.0, min_value=0.1)
+    r3 = st.number_input("Load Resistor R3", value=5.0, min_value=0.1)
 
-# --- Superposition Calculations ---
+# --- Calculation Logic ---
 
-# Case 1: Only V1 active (V2 shorted)
-I1_case1 = V1 / (R1 + (R2*R3)/(R2+R3))
-V_out1 = I1_case1 * (R2*R3)/(R2+R3)
+# Step 1: V1 acting alone (V2 shorted)
+# R2 and R3 are in parallel
+r_p1 = (r2 * r3) / (r2 + r3)
+i_total1 = v1 / (r1 + r_p1)
+# Current through R3 using current divider
+i_r3_v1 = i_total1 * (r2 / (r2 + r3))
 
-# Case 2: Only V2 active (V1 shorted)
-I2_case2 = V2 / (R3 + (R1*R2)/(R1+R2))
-V_out2 = I2_case2 * (R1*R2)/(R1+R2)
+# Step 2: V2 acting alone (V1 shorted)
+# R1 and R3 are in parallel
+r_p2 = (r1 * r3) / (r1 + r3)
+i_total2 = v2 / (r2 + r_p2)
+# Current through R3 using current divider
+i_r3_v2 = i_total2 * (r1 / (r1 + r3))
 
-# Total response
-V_total = V_out1 + V_out2
+# Final Result
+total_current = i_r3_v1 + i_r3_v2
 
-# --- Circuit Diagram ---
-def draw_circuit():
-    d = schemdraw.Drawing()
-    d.config(unit=3)
+# --- UI Display ---
 
-    # Left source
-    V1_src = d.add(elm.SourceV().label(f'V1\n{V1}V'))
-    d.add(elm.Resistor().right().label(f'R1\n{R1}Ω'))
-
-    # Node
-    d.add(elm.Dot().label("Output Node", loc='top', color='blue'))
-
-    # Middle branch
-    d.push()
-    d.add(elm.Resistor().down().label(f'R2\n{R2}Ω'))
-    d.add(elm.Ground())
-    d.pop()
-
-    # Right branch
-    d.add(elm.Resistor().right().label(f'R3\n{R3}Ω'))
-    d.add(elm.SourceV().down().label(f'V2\n{V2}V'))
-
-    # Bottom return
-    d.add(elm.Line().left().to(V1_src.start))
-    d.add(elm.Dot())
-
-    d.save("superposition_circuit.png")
-
-draw_circuit()
-
-# --- Layout ---
-col1, col2 = st.columns([1.5, 1])
+col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("🖼️ Circuit Diagram")
-    st.image("superposition_circuit.png", use_container_width=True)
+    st.info(f"**Contribution from V1**\n\n{i_r3_v1:.4f} A")
+    st.write(f"*Calculation:* V1 is active, V2 is replaced by a short circuit. R2 and R3 are in parallel.")
 
 with col2:
-    st.subheader("📊 Results")
-
-    st.metric("Total Output Voltage", f"{V_total:.2f} V")
-
-    st.markdown("### Contributions")
-    st.write(f"🔹 From V1 only: {V_out1:.2f} V")
-    st.write(f"🔹 From V2 only: {V_out2:.2f} V")
+    st.info(f"**Contribution from V2**\n\n{i_r3_v2:.4f} A")
+    st.write(f"*Calculation:* V2 is active, V1 is replaced by a short circuit. R1 and R3 are in parallel.")
 
 st.divider()
 
-# --- Step-by-Step Explanation ---
-st.subheader("🧠 Step-by-Step Superposition")
+# Final Large Display
+st.metric(label="Total Current through R3 (Load)", value=f"{total_current:.4f} A")
 
-st.markdown("### Step 1: Activate V1, Turn OFF V2 (short circuit)")
-st.latex(r"V_{out1} = V1 \cdot \frac{R_2 || R_3}{R_1 + (R_2 || R_3)}")
-
-st.markdown("### Step 2: Activate V2, Turn OFF V1")
-st.latex(r"V_{out2} = V2 \cdot \frac{R_1 || R_2}{R_3 + (R_1 || R_2)}")
-
-st.markdown("### Step 3: Total Response")
-st.latex(r"V_{total} = V_{out1} + V_{out2}")
-
-# --- Table ---
-df = pd.DataFrame({
-    "Case": ["Only V1 active", "Only V2 active", "Total"],
-    "Voltage (V)": [
-        f"{V_out1:.2f}",
-        f"{V_out2:.2f}",
-        f"{V_total:.2f}"
-    ]
+# Visualizing the contribution
+chart_data = pd.DataFrame({
+    "Source": ["V1 Only", "V2 Only", "Total"],
+    "Current (A)": [i_r3_v1, i_r3_v2, total_current]
 })
 
-st.table(df)
+st.subheader("Contribution Visualization")
+st.bar_chart(chart_data, x="Source", y="Current (A)", color="#FF4B4B")
+
+# Detailed Mathematical Breakdown
+with st.expander("Show Detailed Mathematical Steps"):
+    st.latex(r"I_{R3(V1)} = \frac{V_1}{R_1 + \frac{R_2 \cdot R_3}{R_2 + R_3}} \cdot \frac{R_2}{R_2 + R_3}")
+    st.latex(r"I_{R3(V2)} = \frac{V_2}{R_2 + \frac{R_1 \cdot R_3}{R_1 + R_3}} \cdot \frac{R_1}{R_1 + R_3}")
+    st.latex(r"I_{total} = I_{R3(V1)} + I_{R3(V2)}")
