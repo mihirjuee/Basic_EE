@@ -66,8 +66,10 @@ def draw_circuit():
         L1 = elm.Line().left().to(V_L.start)
         d += L1
 
-        # 🔴 Circular Arrow
-        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color1).at((1.5, -0.6))
+        # 🔴 Circular Arrow (Arc + Arrow)
+        arc1 = elm.Arc(radius=0.7, theta1=20, theta2=340, color=color1).at((1.5, -0.6))
+        d += arc1
+        d += elm.Arrow().at(arc1.end).theta(340).length(0.3).color(color1)
         d += elm.Label().at((1.5, -1.4)).label('$I_1$', color=color1)
 
         # LOOP 2
@@ -81,7 +83,9 @@ def draw_circuit():
         d += L2
 
         # 🟢 Circular Arrow
-        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color2).at((4.5, -0.6))
+        arc2 = elm.Arc(radius=0.7, theta1=20, theta2=340, color=color2).at((4.5, -0.6))
+        d += arc2
+        d += elm.Arrow().at(arc2.end).theta(340).length(0.3).color(color2)
         d += elm.Label().at((4.5, -1.4)).label('$I_2$', color=color2)
 
         # LOOP 3
@@ -95,10 +99,12 @@ def draw_circuit():
         d += L3
 
         # 🔵 Circular Arrow
-        d += elm.ArcArrow(radius=0.7, theta1=20, theta2=340, color=color3).at((7.5, -0.6))
+        arc3 = elm.Arc(radius=0.7, theta1=20, theta2=340, color=color3).at((7.5, -0.6))
+        d += arc3
+        d += elm.Arrow().at(arc3.end).theta(340).length(0.3).color(color3)
         d += elm.Label().at((7.5, -1.4)).label('$I_3$', color=color3)
 
-        # Shared currents
+        # Shared branch currents
         d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
         d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
 
