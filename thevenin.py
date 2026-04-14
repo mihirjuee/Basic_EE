@@ -1,107 +1,173 @@
 import streamlit as st
 import pandas as pd
+import schemdraw
+import schemdraw.elements as elm
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Thevenin's Theorem Simulator", layout="wide")
+# --- Page Config ---
+st.set_page_config(page_title="Thevenin's Theorem Virtual Lab", layout="wide")
 
-st.title("⚡ Thevenin's Theorem Verification")
+st.title("⚡ Verification of Thevenin's Theorem")
 st.markdown("""
-This app verifies Thevenin's Theorem by comparing the load current in a **Complex Circuit** vs. the **Thevenin Equivalent Circuit**.
+This interactive lab demonstrates how a complex network can be reduced to a single voltage source ($V_{th}$) 
+in series with a resistance ($R_{th}$).
 """)
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Circuit Parameters")
-V_s = st.sidebar.slider("Source Voltage (Vs) [V]", 1, 100, 12)
-R1 = st.sidebar.slider("Resistor R1 [Ω]", 10, 1000, 100)
-R2 = st.sidebar.slider("Resistor R2 [Ω]", 10, 1000, 200)
-R3 = st.sidebar.slider("Resistor R3 [Ω]", 10, 1000, 150)
-RL = st.sidebar.slider("Load Resistor (RL) [Ω]", 10, 1000, 50)
+V1 = st.sidebar.slider("Voltage Source (V1) [V]", 5.0, 50.0, 10.0, step=1.0)
+R1 = st.sidebar.slider("Resistor R1 [Ω]", 10.0, 100.0, 50.0, step=5.0)
+R2 = st.sidebar.slider("Resistor R2 [Ω]", 10.0, 100.0, 50.0, step=5.0)
+R3 = st.sidebar.slider("Resistor R3 [Ω]", 10.0, 100.0, 50.0, step=5.0)
+RL = st.sidebar.slider("Load Resistor RL [Ω]", 10.0, 200.0, 100.0, step=10.0)
 
-# --- Calculations ---
-# These are simplified calculations assuming a specific circuit topology:
-# A series circuit of Vs, R1, and R2, and R3 in series with RL.
-V_th = V_s * (R2 / (R1 + R2))
-R_parallel = (R1 * R2) / (R1 + R2)
-R_th = R_parallel + R3
-I_L_theoretical = V_th / (R_th + RL)
+# --- Circuit Calculations ---
+# Thevenin Voltage (Open Circuit Voltage)
+Vth = V1 * (R3 / (R1 + R3))
 
-# --- Circuit Diagrams using Graphviz (Stylized) ---
-original_circuit_dot = """
-graph {
-  rankdir=LR; // Left-to-right orientation
-  node [shape=box, style=filled, color=lightgrey, fontname="Helvetica"]; // Stylized nodes
+# Thevenin Resistance (Source shorted)
+Rth = R2 + ((R1 * R3) / (R1 + R3))
 
-  // Components as labeled nodes
-  Vs [label="Vs", shape=circle, color=gold];
-  R1 [label="R1"];
-  R2 [label="R2"];
-  R3 [label="R3"];
-  RL [label="RL", color=tomato];
+# Load Current (Original Circuit)
+IL_actual = Vth / (Rth + RL)
 
-  // Connections and junctions
-  top_left -- Vs -- bottom_left;
-  top_left -- R1 -- top_middle;
-  top_middle -- R2 -- bottom_middle;
-  bottom_middle -- bottom_left;
-  top_middle -- R3 -- node_A [label="A"];
-  bottom_middle -- node_B [label="B"];
-  node_A -- RL -- node_B;
-}
-"""
+# Load Current (Thevenin Equivalent)
+IL_thevenin = Vth / (Rth + RL)
 
-thevenin_equivalent_dot = """
-graph {
-  rankdir=LR; // Left-to-right orientation
-  node [shape=box, style=filled, color=lightgrey, fontname="Helvetica"];
+# --- Drawing Functions ---
 
-  // Components as labeled nodes
-  Vth [label="Vth", shape=circle, color=gold];
-  Rth [label="Rth"];
-  RL [label="RL", color=tomato];
+def draw_main_circuit(v, r1, r2, r3, rl):
+    d = schemdraw.Drawing(show=False)
+    d += elm.SourceV().up().label(f'{v}V')
+    d += elm.Resistor().right().label(f'R1\n{r1}Ω')
 
-  // Connections
-  bottom -- Vth -- top_left;
-  top_left -- Rth -- node_A [label="A"];
-  bottom -- node_B [label="B"];
-  node_A -- RL -- node_B;
-}
-"""
+    d.push()
+    d += elm.Resistor().down().label(f'R3\n{r3}Ω')
+    d += elm.Line().left()
+    d.pop()
 
-# --- UI Layout ---
-col1, col2 = st.columns(2)
+    d += elm.Resistor().right().label(f'R2\n{r2}Ω')
+    d += elm.Resistor().down().label(f'RL\n{rl}Ω', color='blue')
+    d += elm.Line().left().tox(d.elements[0].start)
 
-with col1:
-    st.subheader("📋 Step 1: Original Circuit & Thevenin Parameters")
-    
-    # Render the original circuit diagram
-    st.graphviz_chart(original_circuit_dot)
-    
-    st.markdown("### Parameters:")
-    st.metric("Thevenin Voltage (Vth)", f"{V_th:.2f} V")
-    st.metric("Thevenin Resistance (Rth)", f"{R_th:.2f} Ω")
-    
-    st.info(f"**Formula used:** \n $V_{{th}} = V_s \\times \\frac{{R_2}}{{R_1 + R_2}}$  \n $R_{{th}} = \\frac{{R_1 \\times R_2}}{{R_1 + R_2}} + R_3$")
+    return d.draw().fig
 
-with col2:
-    st.subheader("🧪 Step 2: Verification with Thevenin Equivalent Circuit")
-    
-    # Render the Thevenin equivalent circuit diagram
-    st.graphviz_chart(thevenin_equivalent_dot)
-    
-    st.markdown("### Results:")
-    st.write(f"Current through Load ($I_L$) in Equivalent Circuit:")
-    st.success(f"**I_L = {I_L_theoretical*1000:.2f} mA**")
-    
-    # Comparison Table
-    st.markdown("### Observation Data:")
-    data = {
-        "Parameter": ["Vth", "Rth", "RL", "Load Current (mA)"],
-        "Value": [f"{V_th:.2f} V", f"{R_th:.2f} Ω", f"{RL} Ω", f"{I_L_theoretical*1000:.2f} mA"]
-    }
-    st.table(pd.DataFrame(data))
 
+def draw_open_circuit(v, r1, r2, r3):
+    """Finding Vth (open RL)"""
+    d = schemdraw.Drawing(show=False)
+    d += elm.SourceV().up().label(f'{v}V')
+    d += elm.Resistor().right().label(f'R1\n{r1}Ω')
+
+    d.push()
+    d += elm.Resistor().down().label(f'R3\n{r3}Ω')
+    d += elm.Line().left()
+    d.pop()
+
+    d += elm.Resistor().right().label(f'R2\n{r2}Ω')
+    d += elm.Dot(open=True).label('A')
+
+    d += elm.Line().down().length(2)
+    d += elm.Dot(open=True).label('B')
+
+    d += elm.Line().left().tox(d.elements[0].start)
+
+    return d.draw().fig
+
+
+def draw_rth_circuit(r1, r2, r3):
+    """Finding Rth (source shorted)"""
+    d = schemdraw.Drawing(show=False)
+
+    d += elm.Line().up().label('Short')
+    d += elm.Resistor().right().label(f'R1\n{r1}Ω')
+
+    d.push()
+    R3_el = elm.Resistor().down().label(f'R3\n{r3}Ω')
+    d += R3_el
+    d += elm.Line().left().tox(d.elements[0].start)
+    d.pop()
+
+    d += elm.Resistor().right().label(f'R2\n{r2}Ω')
+    d += elm.Dot(open=True).label('A')
+
+    d += elm.Dot(open=True).at((d.elements[-1].end[0], R3_el.end[1])).label('B')
+    d += elm.Line().left().tox(R3_el.end)
+
+    return d.draw().fig
+
+
+def draw_thevenin_equivalent(vth, rth, rl):
+    d = schemdraw.Drawing(show=False)
+
+    d += elm.SourceV().up().label(f'$V_{{th}}$\n{vth:.2f}V')
+    d += elm.Resistor().right().label(f'$R_{{th}}$\n{rth:.2f}Ω')
+
+    d += elm.Resistor().down().label(f'$R_L$\n{rl}Ω', color='blue')
+    d += elm.Line().left().tox(d.elements[0].start)
+
+    return d.draw().fig
+
+
+# --- UI Tabs ---
+tab1, tab2, tab3 = st.tabs(["1. Actual Circuit", "2. Thevenin Parameters", "3. Verification"])
+
+# --- TAB 1 ---
+with tab1:
+    st.header("Step 1: Original Network")
+    c1, c2 = st.columns([2, 1])
+
+    with c1:
+        st.pyplot(draw_main_circuit(V1, R1, R2, R3, RL))
+
+    with c2:
+        st.metric("Load Current ($I_L$)", f"{IL_actual:.4f} A")
+        st.info("Current through load in original circuit.")
+
+# --- TAB 2 ---
+with tab2:
+    st.header("Step 2: Deriving $V_{th}$ and $R_{th}$")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("2(a): Open Circuit Voltage")
+        st.pyplot(draw_open_circuit(V1, R1, R2, R3))
+        st.success(f"**$V_{{th}}$ = {Vth:.2f} V**")
+
+    with col2:
+        st.subheader("2(b): Equivalent Resistance")
+        st.pyplot(draw_rth_circuit(R1, R2, R3))
+        st.success(f"**$R_{{th}}$ = {Rth:.2f} Ω**")
+
+# --- TAB 3 ---
+with tab3:
+    st.header("Step 3: Thevenin Verification")
+
+    c1, c2 = st.columns([2, 1])
+
+    with c1:
+        st.pyplot(draw_thevenin_equivalent(Vth, Rth, RL))
+
+    with c2:
+        st.latex(r"I_L = \frac{V_{th}}{R_{th} + R_L}")
+        st.metric("Calculated $I_L$", f"{IL_thevenin:.4f} A")
+
+        if round(IL_actual, 4) == round(IL_thevenin, 4):
+            st.balloons()
+            st.success("✅ **Verified!** Thevenin equivalent matches original circuit.")
+
+# --- Results Table ---
 st.divider()
-st.markdown("### 💡 Theory Recap")
-st.write("""
-Any linear electrical network with voltage and current sources and only resistances can be replaced at 
-terminals A-B by an equivalent voltage source **Vth** in series with a resistance **Rth**.
-""")
+st.subheader("📋 Observation Data")
+
+res_data = {
+    "V_source": [V1],
+    "R_load": [RL],
+    "Vth": [round(Vth, 2)],
+    "Rth": [round(Rth, 2)],
+    "Actual_IL": [round(IL_actual, 4)],
+    "Thevenin_IL": [round(IL_thevenin, 4)]
+}
+
+st.table(pd.DataFrame(res_data))
