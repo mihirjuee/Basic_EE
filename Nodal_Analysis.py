@@ -26,7 +26,7 @@ col1, col2 = st.columns([1, 6])
 
 with col1:
     if logo:
-        st.image(logo, width=60)
+        st.image(logo, width=80)
 
 with col2:
     st.title("🔬 Nodal Analysis Virtual Lab")
