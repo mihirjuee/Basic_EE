@@ -67,8 +67,8 @@ def draw_open_circuit(v, r1, r2, r3):
     d += elm.Resistor().right().label(f'R2\n{r2}Ω')
     d += elm.Dot(open=True).label('A')
 
-    d += elm.Line().down().length(2)
-    d += elm.Dot(open=True).label('B')
+    #d += elm.Line().down().length(2)
+    #d += elm.Dot(open=True).label('B')
 
     #d += elm.Line().left().tox(d.elements[0].start)
 
