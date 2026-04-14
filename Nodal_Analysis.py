@@ -20,7 +20,7 @@ R3 = st.sidebar.slider("Resistor R3 [Ω]", 10, 500, 150)
 # --- Calculation Engine (Nodal Equations) ---
 # Node 1 is at the junction of R1, R2, and R3.
 # Let V_node be the voltage at this central junction.
-# KCL at Node: (V_node - Vs1)/R1 + (V_node / R2) + (V_node - Vs2)/R3 = 0
+# KCL at Node: (V_node - Vs1)/R1 + (V_node / R2) + (V_node + Vs2)/R3 = 0
 # V_node * (1/R1 + 1/R2 + 1/R3) = (Vs1/R1) + (Vs2/R3)
 
 G_total = (1/R1) + (1/R2) + (1/R3)
