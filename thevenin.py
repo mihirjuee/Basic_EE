@@ -83,9 +83,22 @@ import io
 
 fig = d.draw()
 
-buf = io.BytesIO()
-fig.savefig(buf, format="png", bbox_inches='tight')
-buf.seek(0)
+import io
+
+with col1:
+    st.subheader("🔌 Circuit View")
+
+    if mode == "Original Circuit":
+        d = draw_original()
+    else:
+        d = draw_thevenin()
+
+    # ✅ Save directly to PNG buffer (NO matplotlib dependency)
+    buf = io.BytesIO()
+    d.save(buf)   # <-- KEY FIX
+    buf.seek(0)
+
+    st.image(buf, use_container_width=True)
 
 st.image(buf)
 
