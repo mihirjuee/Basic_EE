@@ -3,125 +3,176 @@ import numpy as np
 import schemdraw
 import schemdraw.elements as elm
 import pandas as pd
+import time
 
-# Page Configuration
-st.set_page_config(page_title="3-Loop Mesh Simulator", layout="wide")
+# --- Page Config ---
+st.set_page_config(page_title="3-Loop Mesh Virtual Lab", layout="wide")
 
-st.title("🕸️ Interactive 3-Loop Mesh Analysis")
-st.markdown("""
-This lab solves a 3-loop resistive network using the **Mesh Current Method**. 
-Adjust the sliders to see how the currents $I_1, I_2,$ and $I_3$ interact in shared branches.
-""")
+st.title("🔬 Mesh Analysis Virtual Lab")
+st.markdown("Interactive 3-loop mesh analysis with visualization, equations, and learning tools.")
 
-# --- Sidebar: Circuit Parameters ---
+# --- Sidebar Controls ---
 st.sidebar.header("🕹️ Circuit Controls")
+
 V1 = st.sidebar.slider("Source Voltage V1 [V]", 5, 100, 40)
 V2 = st.sidebar.slider("Source Voltage V2 [V]", 5, 100, 20)
-R1 = st.sidebar.slider("Resistor R1 (Loop 1) [Ω]", 10, 500, 100)
-R2 = st.sidebar.slider("Resistor R2 (Shared 1-2) [Ω]", 10, 500, 150)
-R3 = st.sidebar.slider("Resistor R3 (Loop 2) [Ω]", 10, 500, 100)
-R4 = st.sidebar.slider("Resistor R4 (Shared 2-3) [Ω]", 10, 500, 200)
-R5 = st.sidebar.slider("Resistor R5 (Loop 3) [Ω]", 10, 500, 120)
 
-# --- Calculation Engine (Matrix Math) ---
-# Matrix R * I = V
-# Row 1: (R1+R2)I1 - R2*I2 + 0 = V1
-# Row 2: -R2*I1 + (R2+R3+R4)I2 - R4*I3 = 0
-# Row 3: 0 - R4*I2 + (R4+R5)I3 = -V2
+R1 = st.sidebar.slider("R1 [Ω]", 10, 500, 100)
+R2 = st.sidebar.slider("R2 (Shared 1-2) [Ω]", 10, 500, 150)
+R3 = st.sidebar.slider("R3 [Ω]", 10, 500, 100)
+R4 = st.sidebar.slider("R4 (Shared 2-3) [Ω]", 10, 500, 200)
+R5 = st.sidebar.slider("R5 [Ω]", 10, 500, 120)
+
+selected_loop = st.sidebar.selectbox("Highlight Loop", ["All", "Loop 1", "Loop 2", "Loop 3"])
+
+animate = st.sidebar.checkbox("⚡ Animate Current")
+quiz_mode = st.sidebar.checkbox("🎓 Quiz Mode")
+
+# --- Calculations ---
 R_matrix = np.array([
     [R1 + R2, -R2, 0],
     [-R2, R2 + R3 + R4, -R4],
     [0, -R4, R4 + R5]
 ])
+
 V_vector = np.array([V1, 0, -V2])
 
 try:
-    I_results = np.linalg.solve(R_matrix, V_vector)
-    I1, I2, I3 = I_results[0], I_results[1], I_results[2]
-except np.linalg.LinAlgError:
-    st.error("Matrix error. Please check resistor values.")
+    I1, I2, I3 = np.linalg.solve(R_matrix, V_vector)
+except:
+    st.error("Matrix error. Check values.")
+    I1 = I2 = I3 = 0
 
-# --- Diagram Generation with Loop Currents ---
-def generate_circuit_diagram():
+# --- Colors ---
+color1 = 'red' if selected_loop in ["All", "Loop 1"] else 'black'
+color2 = 'green' if selected_loop in ["All", "Loop 2"] else 'black'
+color3 = 'blue' if selected_loop in ["All", "Loop 3"] else 'black'
+
+# --- Diagram ---
+def draw_circuit():
     with schemdraw.Drawing() as d:
         d.config(unit=3, fontsize=10)
-        
-        # --- Mesh 1 ---
-        d += (V_L := elm.SourceV().label(f'V1\n{V1}V'))
+
+        # Loop 1
+        V_L = elm.SourceV().label(f'V1\n{V1}V')
+        d += V_L
         d += elm.Resistor().right().label(f'R1\n{R1}Ω')
-        d += (R_S1 := elm.Resistor().down().label(f'R2\n{R2}Ω'))
+
+        R_S1 = elm.Resistor().down().label(f'R2\n{R2}Ω')
+        d += R_S1
         d += elm.Line().left().to(V_L.start)
-        d += elm.LoopCurrent([V_L, R_S1], direction='cw').label('$I_1$')
-        
-        # --- Mesh 2 ---
+
+        d += elm.LoopCurrent([V_L, R_S1], direction='cw', color=color1).label('$I_1$')
+
+        # Loop 2
         d += elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
-        d += (R_S2 := elm.Resistor().down().label(f'R4\n{R4}Ω'))
+
+        R_S2 = elm.Resistor().down().label(f'R4\n{R4}Ω')
+        d += R_S2
         d += elm.Line().left().to(R_S1.end)
-        d += elm.LoopCurrent([R_S1, R_S2], direction='cw').label('$I_2$')
-        
-        # --- Mesh 3 ---
+
+        d += elm.LoopCurrent([R_S1, R_S2], direction='cw', color=color2).label('$I_2$')
+
+        # Loop 3
         d += elm.Resistor().right().at(R_S2.start).label(f'R5\n{R5}Ω')
-        d += (V_R := elm.SourceV().down().label(f'V2\n{V2}V', loc='bottom'))
+
+        V_R = elm.SourceV().down().label(f'V2\n{V2}V')
+        d += V_R
         d += elm.Line().left().to(R_S2.end)
-        d += elm.LoopCurrent([R_S2, V_R], direction='cw').label('$I_3$')
-        
-        d.save("mesh_3_loop.png")
 
-generate_circuit_diagram()
+        d += elm.LoopCurrent([R_S2, V_R], direction='cw', color=color3).label('$I_3$')
 
-# --- UI Layout ---
-col_diag, col_math = st.columns([1.5, 1])
+        # Current labels
+        d += elm.CurrentLabel().at(R_S1).label(f'{(I1-I2)*1000:.1f} mA')
+        d += elm.CurrentLabel().at(R_S2).label(f'{(I2-I3)*1000:.1f} mA')
 
-with col_diag:
-    st.subheader("🖼️ Live Circuit Diagram")
-    st.image("mesh_3_loop.png", use_container_width=True)
-    st.caption("The circular arrows indicate the clockwise Mesh Currents assumed in our equations.")
+        d.save("mesh_updated.png")
 
-with col_math:
-    st.subheader("🔢 System of Equations")
-    st.latex(r"""
-    \begin{bmatrix}
-    R_1+R_2 & -R_2 & 0 \\
-    -R_2 & R_2+R_3+R_4 & -R_4 \\
-    0 & -R_4 & R_4+R_5
-    \end{bmatrix}
-    \begin{bmatrix}
-    I_1 \\ I_2 \\ I_3
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    V_1 \\ 0 \\ -V_2
-    \end{bmatrix}
-    """)
-    
-    st.markdown("---")
-    st.subheader("🧪 Results")
-    st.metric("Mesh Current I1", f"{I1*1000:.2f} mA")
-    st.metric("Mesh Current I2", f"{I2*1000:.2f} mA")
-    st.metric("Mesh Current I3", f"{I3*1000:.2f} mA")
+draw_circuit()
 
+# --- Layout ---
+col1, col2 = st.columns([1.5, 1])
+
+with col1:
+    st.subheader("🖼️ Circuit Diagram")
+    st.image("mesh_updated.png", use_container_width=True)
+
+with col2:
+    st.subheader("🔢 Results")
+    st.metric("I1", f"{I1*1000:.2f} mA")
+    st.metric("I2", f"{I2*1000:.2f} mA")
+    st.metric("I3", f"{I3*1000:.2f} mA")
+
+    st.progress(min(abs(I1)/0.1, 1.0))
+
+# --- Animation ---
+if animate:
+    st.subheader("⚡ Current Animation")
+    progress = st.progress(0)
+    for i in range(100):
+        progress.progress(i+1)
+        time.sleep(0.01)
+
+# --- KVL Equations ---
 st.divider()
+st.subheader("🧠 KVL Equations")
+
+st.latex(f"I_1({R1}+{R2}) - I_2({R2}) = {V1}")
+st.latex(f"-I_1({R2}) + I_2({R2}+{R3}+{R4}) - I_3({R4}) = 0")
+st.latex(f"-I_2({R4}) + I_3({R4}+{R5}) = -{V2}")
 
 # --- Analysis Table ---
-st.subheader("📋 Detailed Branch Analysis")
-analysis_data = {
-    "Component": ["R1", "R2 (Shared)", "R3", "R4 (Shared)", "R5"],
-    "KCL Expression": ["I1", "I1 - I2", "I2", "I2 - I3", "I3"],
-    "Current (mA)": [
-        f"{I1*1000:.2f}", 
-        f"{(I1-I2)*1000:.2f}", 
-        f"{I2*1000:.2f}", 
-        f"{(I2-I3)*1000:.2f}", 
-        f"{I3*1000:.2f}"
-    ],
-    "Voltage Drop (V)": [
-        f"{abs(I1*R1):.2f}", 
-        f"{abs((I1-I2)*R2):.2f}", 
-        f"{abs(I2*R3):.2f}", 
-        f"{abs((I2-I3)*R4):.2f}", 
-        f"{abs(I3*R5):.2f}"
-    ]
-}
-st.table(pd.DataFrame(analysis_data))
+st.divider()
+st.subheader("📋 Branch Analysis")
 
-st.info("**Pedagogical Note:** In Mesh Analysis, the physical current in a shared branch (like R2) is the algebraic difference between the two mesh currents overlapping there. If the result is negative, it simply means the actual current flows opposite to our assumed direction.")
+df = pd.DataFrame({
+    "Component": ["R1", "R2", "R3", "R4", "R5"],
+    "Current (mA)": [
+        I1*1000,
+        (I1-I2)*1000,
+        I2*1000,
+        (I2-I3)*1000,
+        I3*1000
+    ],
+    "Voltage (V)": [
+        abs(I1*R1),
+        abs((I1-I2)*R2),
+        abs(I2*R3),
+        abs((I2-I3)*R4),
+        abs(I3*R5)
+    ]
+})
+
+st.table(df)
+
+# --- Power Table ---
+st.subheader("⚡ Power Dissipation")
+
+power_df = pd.DataFrame({
+    "Component": ["R1", "R2", "R3", "R4", "R5"],
+    "Power (W)": [
+        I1**2 * R1,
+        (I1-I2)**2 * R2,
+        I2**2 * R3,
+        (I2-I3)**2 * R4,
+        I3**2 * R5
+    ]
+})
+
+st.table(power_df)
+
+# --- Quiz Mode ---
+if quiz_mode:
+    st.divider()
+    st.subheader("🎓 Quiz Mode")
+
+    guess = st.number_input("Guess I1 (mA)")
+
+    if st.button("Check"):
+        if abs(guess - I1*1000) < 5:
+            st.success("Correct! 🎉")
+        else:
+            st.error("Try again!")
+
+# --- Info ---
+st.info("In shared branches, actual current = difference of mesh currents. Negative value means opposite direction.")
