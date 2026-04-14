@@ -17,7 +17,7 @@ with col1:
     st.image("logo.png", width=80) 
 
 with col2:
-    st.title("⚡ Full AC Circuits Virtual Lab")
+    st.title("⚡ RLC Series Circuits Virtual Lab")
 
 st.divider()
 
