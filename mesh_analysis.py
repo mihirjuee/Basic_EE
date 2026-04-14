@@ -67,9 +67,14 @@ def draw_circuit():
         L1 = elm.Line().left().to(V_L.start)
         d += L1
 
-        # 🔴 Manual arrow (INSIDE loop)
-        d += elm.Arrow().at((1.2, -0.5)).right().length(1).color(color1)
-        d += elm.Label().at((1.7, -0.8)).label('$I_1$', color=color1)
+d += elm.ArcArrow(
+    radius=0.8,
+    theta1=20,
+    theta2=340,
+    color=color1
+).at((1.5, -0.5))
+
+d += elm.Label().at((1.5, -1.3)).label('$I_1$', color=color1)
 
         # --- LOOP 2 ---
         R3_e = elm.Resistor().right().at(R_S1.start).label(f'R3\n{R3}Ω')
