@@ -19,7 +19,7 @@ def draw_circuit(R, L, C, V):
     d.config(unit=3)
 
     #V1 = d.add(elm.SourceSin().label(f'{V}V'))
-    V1 = d.add(elm.SourceSin().label([f'{V}V', f'{F}Hz'], loc='left'))
+    V1 = d.add(elm.SourceSin().label([f'{V}V', f'{f}Hz'], loc='left'))
     d.add(elm.Resistor().right().label(f'R\n{R}Ω'))
     d.add(elm.Inductor().right().label(f'L\n{L*1000:.0f} mH'))
     d.add(elm.Capacitor().right().label(f'C\n{C*1e6:.0f} µF'))
