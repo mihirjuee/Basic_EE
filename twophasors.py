@@ -9,7 +9,7 @@ st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 # --- MOBILE TOGGLE ---
 is_mobile = st.toggle("📱 Mobile Layout", value=False)
 
-# --- HEADER (RESPONSIVE) ---
+# --- HEADER (Responsive Logo + Title) ---
 if is_mobile:
     st.image("logo.png", width=80)
     st.title("⚡ Voltage & Current Visualization")
@@ -20,7 +20,7 @@ else:
     with col2:
         st.title("⚡ Voltage & Current Visualization")
 
-# --- SIDEBAR ---
+# --- SIDEBAR CONTROLS ---
 st.sidebar.header("Signal Parameters")
 
 V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
@@ -40,9 +40,9 @@ i_wave = I_m * np.sin(np.deg2rad(t_axis) + phi_rad)
 v_inst = V_m * np.sin(theta_rad)
 i_inst = I_m * np.sin(theta_rad + phi_rad)
 
+# --- POWER FACTOR ---
 pf = np.cos(phi_rad)
 
-# --- POWER FACTOR DISPLAY ---
 col1, col2 = st.columns(2)
 col1.metric("Power Factor", f"{pf:.2f}")
 
@@ -64,17 +64,15 @@ if is_mobile:
         specs=[[{'type': 'polar'}], [{'type': 'xy'}]],
         vertical_spacing=0.25
     )
-    polar_row, wave_row = 1, 2
-    wave_col = 1
-    fig_height = 750
+    polar_row, wave_row, wave_col = 1, 2, 1
+    fig_height = 700
 else:
     fig = make_subplots(
         rows=1, cols=2,
         specs=[[{'type': 'polar'}, {'type': 'xy'}]],
         column_widths=[0.4, 0.6]
     )
-    polar_row, wave_row = 1, 1
-    wave_col = 2
+    polar_row, wave_row, wave_col = 1, 1, 2
     fig_height = 520
 
 # --- VOLTAGE VECTOR ---
@@ -86,6 +84,7 @@ fig.add_trace(go.Scatterpolar(
     name='Voltage'
 ), row=polar_row, col=1)
 
+# Arrow for Voltage
 fig.add_annotation(
     x=theta_deg,
     y=V_m,
@@ -111,6 +110,7 @@ fig.add_trace(go.Scatterpolar(
     name='Current'
 ), row=polar_row, col=1)
 
+# Arrow for Current
 fig.add_annotation(
     x=theta_deg + phi_deg,
     y=I_m,
@@ -163,7 +163,7 @@ fig.add_trace(go.Scatter(
     name='Current'
 ), row=wave_row, col=wave_col)
 
-# --- INSTANT POINTS ---
+# --- INSTANTANEOUS POINTS ---
 fig.add_trace(go.Scatter(
     x=[theta_deg],
     y=[v_inst],
@@ -186,10 +186,7 @@ fig.update_layout(
     margin=dict(t=20, b=20, l=10, r=10),
     plot_bgcolor='white',
     font=dict(size=12 if is_mobile else 14),
-    showlegend=True,
-    polar=dict(
-        radialaxis=dict(range=[0, 11])
-    )
+    showlegend=True
 )
 
 # --- AXES ---
