@@ -6,6 +6,9 @@ from plotly.subplots import make_subplots
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 
+# --- DETECT MOBILE ---
+is_mobile = st.checkbox("📱 Mobile View (Simulate)", value=False)
+
 # --- TITLE ---
 st.title("⚡ AC Fundamentals: Voltage & Current Visualization")
 
@@ -15,8 +18,6 @@ st.sidebar.header("Signal Parameters")
 V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
 I_m = st.sidebar.slider("Current Amplitude ($I_m$)", 1.0, 10.0, 5.0)
 phi_deg = st.sidebar.slider("Phase Shift (φ in degrees)", -180, 180, -90)
-
-# Manual theta control
 theta_deg = st.sidebar.slider("Theta (θ in degrees)", 0, 360, 0)
 
 # --- COMPUTATION ---
@@ -31,7 +32,6 @@ i_wave = I_m * np.sin(np.deg2rad(t_axis) + phi_rad)
 v_inst = V_m * np.sin(theta_rad)
 i_inst = I_m * np.sin(theta_rad + phi_rad)
 
-# --- POWER FACTOR ---
 pf = np.cos(phi_rad)
 
 col1, col2 = st.columns(2)
@@ -48,135 +48,107 @@ else:
 st.latex(r"v(t) = V_m \sin(\omega t)")
 st.latex(r"i(t) = I_m \sin(\omega t + \phi)")
 
-# --- CREATE FIGURE ---
-fig = make_subplots(
-    rows=1, cols=2,
-    specs=[[{'type': 'polar'}, {'type': 'xy'}]],
-    column_widths=[0.4, 0.6]
-)
+# --- RESPONSIVE SUBPLOT ---
+if is_mobile:
+    fig = make_subplots(
+        rows=2, cols=1,
+        specs=[[{'type': 'polar'}], [{'type': 'xy'}]],
+        vertical_spacing=0.25
+    )
+    polar_row, wave_row = 1, 2
+    fig_height = 700
+else:
+    fig = make_subplots(
+        rows=1, cols=2,
+        specs=[[{'type': 'polar'}, {'type': 'xy'}]],
+        column_widths=[0.4, 0.6]
+    )
+    polar_row, wave_row = 1, 1
+    fig_height = 520
 
-# --- VOLTAGE VECTOR (BOLD) ---
+# --- POLAR PLOT ---
 fig.add_trace(go.Scatterpolar(
     r=[0, V_m],
     theta=[0, theta_deg],
     mode='lines',
-    line=dict(color='crimson', width=6),
+    line=dict(color='crimson', width=5),
     name='Voltage'
-), row=1, col=1)
+), row=polar_row, col=1)
 
-fig.add_trace(go.Scatterpolar(
-    r=[V_m],
-    theta=[theta_deg],
-    mode='markers+text',
-    marker=dict(size=16, color='crimson', symbol='triangle-up'),
-    text=["V"],
-    textposition="top center",
-    showlegend=False
-), row=1, col=1)
-
-# --- CURRENT VECTOR (BOLD) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, I_m],
     theta=[0, theta_deg + phi_deg],
     mode='lines',
-    line=dict(color='dodgerblue', width=6),
+    line=dict(color='dodgerblue', width=5),
     name='Current'
-), row=1, col=1)
-
-fig.add_trace(go.Scatterpolar(
-    r=[I_m],
-    theta=[theta_deg + phi_deg],
-    mode='markers+text',
-    marker=dict(size=16, color='dodgerblue', symbol='triangle-up'),
-    text=["I"],
-    textposition="top center",
-    showlegend=False
-), row=1, col=1)
+), row=polar_row, col=1)
 
 # --- WAVEFORMS ---
 fig.add_trace(go.Scatter(
     x=t_axis,
     y=v_wave,
-    line=dict(color='crimson', width=3),
-    opacity=0.7,
-    name='Voltage Wave'
-), row=1, col=2)
+    line=dict(color='crimson', width=2),
+    name='Voltage'
+), row=wave_row, col=(2 if not is_mobile else 1))
 
 fig.add_trace(go.Scatter(
     x=t_axis,
     y=i_wave,
-    line=dict(color='dodgerblue', width=3),
-    opacity=0.7,
-    name='Current Wave'
-), row=1, col=2)
+    line=dict(color='dodgerblue', width=2),
+    name='Current'
+), row=wave_row, col=(2 if not is_mobile else 1))
 
-# --- INSTANTANEOUS POINTS ---
+# --- INSTANT POINTS ---
 fig.add_trace(go.Scatter(
     x=[theta_deg],
     y=[v_inst],
     mode='markers',
-    marker=dict(size=14, color='crimson'),
+    marker=dict(size=10, color='crimson'),
     name='V(t)'
-), row=1, col=2)
+), row=wave_row, col=(2 if not is_mobile else 1))
 
 fig.add_trace(go.Scatter(
     x=[theta_deg],
     y=[i_inst],
     mode='markers',
-    marker=dict(size=14, color='dodgerblue'),
+    marker=dict(size=10, color='dodgerblue'),
     name='I(t)'
-), row=1, col=2)
+), row=wave_row, col=(2 if not is_mobile else 1))
 
 # --- LAYOUT ---
 fig.update_layout(
-    height=520,
-    margin=dict(t=30, b=30),
+    height=fig_height,
+    margin=dict(t=20, b=20, l=10, r=10),
     plot_bgcolor='white',
-    polar=dict(
-        radialaxis=dict(range=[0, 11], tickfont=dict(size=12)),
-        angularaxis=dict(tickfont=dict(size=12))
-    ),
-    font=dict(size=14)
+    font=dict(size=12 if is_mobile else 14),
+    showlegend=True
 )
 
-# --- IMPROVED AXES (VERY CLEAR) ---
+# --- AXES ---
 fig.update_xaxes(
-    title="Phase Angle (Degrees)",
+    title="Phase Angle (°)",
     range=[0, 360],
     showline=True,
-    linewidth=3,
+    linewidth=2,
     linecolor='black',
-    mirror=True,
     ticks='outside',
-    tickwidth=2,
-    tickcolor='black',
     showgrid=True,
-    gridwidth=1,
-    gridcolor='lightgray',
-    zeroline=True,
-    zerolinewidth=3,
-    zerolinecolor='black',
-    row=1, col=2
+    row=wave_row, col=(2 if not is_mobile else 1)
 )
 
 fig.update_yaxes(
     title="Amplitude",
     range=[-11, 11],
     showline=True,
-    linewidth=3,
+    linewidth=2,
     linecolor='black',
-    mirror=True,
     ticks='outside',
-    tickwidth=2,
-    tickcolor='black',
     showgrid=True,
-    gridwidth=1,
-    gridcolor='lightgray',
-    zeroline=True,
-    zerolinewidth=3,
-    zerolinecolor='black',
-    row=1, col=2
+    row=wave_row, col=(2 if not is_mobile else 1)
 )
 
 # --- DISPLAY ---
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True, config={
+    "responsive": True,
+    "displayModeBar": False
+})
