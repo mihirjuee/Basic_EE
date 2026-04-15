@@ -6,17 +6,24 @@ from plotly.subplots import make_subplots
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 
-# --- DETECT MOBILE ---
-is_mobile = st.checkbox("📱 Mobile View (Simulate)", value=False)
 
 # --- TITLE ---
-col1, col2 = st.columns([1, 6])
 
-with col1:
-    st.image("logo.png", width=60)  # আপনার logo file
+# crude detection using query params (optional advanced trick)
+is_mobile = st.session_state.get("is_mobile", False)
 
-with col2:
+# fallback manual toggle
+is_mobile = st.toggle("📱 Mobile Layout", value=is_mobile)
+
+if is_mobile:
+    st.image("logo.png", width=80)
     st.title("⚡ Voltage & Current Visualization")
+else:
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        st.image("logo.png", width=60)
+    with col2:
+        st.title("⚡ Voltage & Current Visualization")
 
 # --- SIDEBAR CONTROLS ---
 st.sidebar.header("Signal Parameters")
