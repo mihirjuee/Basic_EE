@@ -7,20 +7,20 @@ from PIL import Image
 st.set_page_config(page_title="3-Phase Phasor", layout="centered")
 
 # --- Logo + Title ---
-logo = Image.open("logo.png")  # Replace with your logo file
+logo = Image.open("logo.png")  # Replace if needed
 col_logo, col_title = st.columns([1, 5])
 with col_logo:
     st.image(logo, width=60)
 with col_title:
     st.title("Balanced 3-Phase Phasor Diagrams")
 
-st.markdown("Compare Star (Y) and Delta (Δ) systems interactively.")
+st.markdown("Visualizing how line quantities are formed using parallelogram law.")
 
-# --- Mode Toggle ---
-mode = st.toggle("🖥️ Desktop Mode (Side-by-Side View)", value=False)
+# --- Toggle ---
+mode = st.toggle("🖥️ Desktop Mode", value=False)
 
 # --- Input ---
-phi_deg = st.slider("Load Power Factor Angle (Φ)", -90, 90, 30)
+phi_deg = st.slider("Power Factor Angle (Φ)", -90, 90, 30)
 phi = np.deg2rad(phi_deg)
 
 # --- Math ---
@@ -33,88 +33,113 @@ Van = V_mag * np.exp(j * 0)
 Vbn = V_mag * np.exp(-j * np.deg2rad(120))
 Vcn = V_mag * np.exp(j * np.deg2rad(120))
 
-Vab_star = Van - Vbn
-Vbc_star = Vbn - Vcn
-Vca_star = Vcn - Van
+Vab = Van - Vbn
+Vbc = Vbn - Vcn
+Vca = Vcn - Van
 
-Ia_star = I_mag * np.exp(-j * phi)
-Ib_star = I_mag * np.exp(-j * (np.deg2rad(120) + phi))
-Ic_star = I_mag * np.exp(j * (np.deg2rad(120) - phi))
+Ia = I_mag * np.exp(-j * phi)
+Ib = I_mag * np.exp(-j * (np.deg2rad(120) + phi))
+Ic = I_mag * np.exp(j * (np.deg2rad(120) - phi))
 
 # DELTA
-Vab_delta = V_mag * 1.732 * np.exp(j * 0)
-Vbc_delta = V_mag * 1.732 * np.exp(-j * np.deg2rad(120))
-Vca_delta = V_mag * 1.732 * np.exp(j * np.deg2rad(120))
+Vab_d = V_mag * 1.732 * np.exp(j * 0)
+Vbc_d = V_mag * 1.732 * np.exp(-j * np.deg2rad(120))
+Vca_d = V_mag * 1.732 * np.exp(j * np.deg2rad(120))
 
-Iab_delta = I_mag * np.exp(-j * phi)
-Ibc_delta = I_mag * np.exp(-j * (np.deg2rad(120) + phi))
-Ica_delta = I_mag * np.exp(j * (np.deg2rad(120) - phi))
+Iab = I_mag * np.exp(-j * phi)
+Ibc = I_mag * np.exp(-j * (np.deg2rad(120) + phi))
+Ica = I_mag * np.exp(j * (np.deg2rad(120) - phi))
 
-Ia_delta = Iab_delta - Ica_delta
-Ib_delta = Ibc_delta - Iab_delta
-Ic_delta = Ica_delta - Ibc_delta
+Ia_d = Iab - Ica
+Ib_d = Ibc - Iab
+Ic_d = Ica - Ibc
 
-# --- Drawing Functions ---
-def draw_vector(ax, c_end, color, label):
-    x, y = c_end.real, c_end.imag
-    ax.annotate('', xy=(x, y), xytext=(0, 0),
+# --- Draw Functions ---
+def draw_vector(ax, c, color, label):
+    ax.annotate('', xy=(c.real, c.imag), xytext=(0, 0),
                 arrowprops=dict(facecolor=color, edgecolor=color,
                                 width=2, headwidth=8))
-    ax.text(x*1.1, y*1.1, label, color=color, fontsize=10)
+    ax.text(c.real*1.1, c.imag*1.1, label, color=color, fontsize=10)
 
-def setup_ax(ax, title):
-    ax.set_title(title, fontsize=12)
+def draw_parallelogram(ax, v1, v2, color):
+    # v1 -> v1+v2
+    ax.plot([v1.real, v1.real + v2.real],
+            [v1.imag, v1.imag + v2.imag],
+            linestyle='--', color=color, alpha=0.6)
+
+    # v2 -> v1+v2
+    ax.plot([v2.real, v1.real + v2.real],
+            [v2.imag, v1.imag + v2.imag],
+            linestyle='--', color=color, alpha=0.6)
+
+def setup(ax, title):
+    ax.set_title(title)
     ax.set_xlim(-3, 3)
     ax.set_ylim(-3, 3)
     ax.grid(True, linestyle=":", alpha=0.4)
 
-# --- Plot Functions ---
+# --- STAR PLOT ---
 def plot_star():
     fig, ax = plt.subplots(figsize=(5, 5))
-    setup_ax(ax, "Star (Y)")
+    setup(ax, "Star (Y): Line Voltage Formation")
 
+    # Phase voltages
     draw_vector(ax, Van, 'red', 'Van')
-    draw_vector(ax, Vbn, 'orange', 'Vbn')
-    draw_vector(ax, Vcn, 'blue', 'Vcn')
+    draw_vector(ax, -Vbn, 'orange', '-Vbn')
 
-    draw_vector(ax, Ia_star, 'red', 'Ia')
-    draw_vector(ax, Ib_star, 'orange', 'Ib')
-    draw_vector(ax, Ic_star, 'blue', 'Ic')
+    # Parallelogram (Van + (-Vbn) = Vab)
+    draw_parallelogram(ax, Van, -Vbn, 'red')
+
+    # Resultant
+    draw_vector(ax, Vab, 'red', 'Vab')
 
     st.pyplot(fig)
     plt.close(fig)
 
+# --- DELTA PLOT ---
 def plot_delta():
     fig, ax = plt.subplots(figsize=(5, 5))
-    setup_ax(ax, "Delta (Δ)")
+    setup(ax, "Delta (Δ): Line Current Formation")
 
-    draw_vector(ax, Vab_delta, 'red', 'Vab')
-    draw_vector(ax, Vbc_delta, 'orange', 'Vbc')
-    draw_vector(ax, Vca_delta, 'blue', 'Vca')
+    # Phase currents
+    draw_vector(ax, Iab, 'red', 'Iab')
+    draw_vector(ax, -Ica, 'blue', '-Ica')
 
-    draw_vector(ax, Ia_delta, 'red', 'Ia')
-    draw_vector(ax, Ib_delta, 'orange', 'Ib')
-    draw_vector(ax, Ic_delta, 'blue', 'Ic')
+    # Parallelogram (Iab + (-Ica) = Ia)
+    draw_parallelogram(ax, Iab, -Ica, 'red')
+
+    # Resultant
+    draw_vector(ax, Ia_d, 'red', 'Ia')
 
     st.pyplot(fig)
     plt.close(fig)
 
-# --- Layout Logic ---
+# --- Layout ---
 if mode:
-    # Desktop → Side by side
     col1, col2 = st.columns(2)
     with col1:
         plot_star()
     with col2:
         plot_delta()
 else:
-    # Mobile → Stacked
     plot_star()
     plot_delta()
 
-# --- Info ---
+# --- Explanation ---
 st.markdown("""
-### 🔍 Key Insight
-- ⭐ **Star:** Line Voltage leads Phase Voltage by **30°**
-- 🔺 **Delta:** Line Current lags Phase Current by **30°**
+### 🔍 Understanding the Construction
+
+#### ⭐ Star (Y)
+- Line voltage is vector difference:
+  **Vab = Van − Vbn**
+- Shown using **parallelogram (dotted lines)**
+
+#### 🔺 Delta (Δ)
+- Line current is vector difference:
+  **Ia = Iab − Ica**
+- Again formed using **parallelogram law**
+
+---
+
+👉 These dotted lines help students *visually understand* how line quantities are derived.
 """)
