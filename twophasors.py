@@ -9,7 +9,7 @@ st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 # --- MOBILE TOGGLE ---
 is_mobile = st.toggle("📱 Mobile Layout", value=False)
 
-# --- HEADER (Responsive Logo + Title) ---
+# --- HEADER ---
 if is_mobile:
     st.image("logo.png", width=80)
     st.title("⚡ Voltage & Current Visualization")
@@ -20,7 +20,7 @@ else:
     with col2:
         st.title("⚡ Voltage & Current Visualization")
 
-# --- SIDEBAR CONTROLS ---
+# --- SIDEBAR ---
 st.sidebar.header("Signal Parameters")
 
 V_m = st.sidebar.slider("Voltage Amplitude ($V_m$)", 1.0, 10.0, 8.0)
@@ -40,9 +40,9 @@ i_wave = I_m * np.sin(np.deg2rad(t_axis) + phi_rad)
 v_inst = V_m * np.sin(theta_rad)
 i_inst = I_m * np.sin(theta_rad + phi_rad)
 
-# --- POWER FACTOR ---
 pf = np.cos(phi_rad)
 
+# --- POWER FACTOR ---
 col1, col2 = st.columns(2)
 col1.metric("Power Factor", f"{pf:.2f}")
 
@@ -64,89 +64,65 @@ if is_mobile:
         specs=[[{'type': 'polar'}], [{'type': 'xy'}]],
         vertical_spacing=0.25
     )
-    polar_row, wave_row, wave_col = 1, 2, 1
-    fig_height = 700
+    polar_row, wave_row = 1, 2
+    wave_col = 1
+    fig_height = 750
 else:
     fig = make_subplots(
         rows=1, cols=2,
         specs=[[{'type': 'polar'}, {'type': 'xy'}]],
         column_widths=[0.4, 0.6]
     )
-    polar_row, wave_row, wave_col = 1, 1, 2
+    polar_row, wave_row = 1, 1
+    wave_col = 2
     fig_height = 520
 
-# --- VOLTAGE VECTOR ---
+# --- VOLTAGE VECTOR (WITH ARROW TIP) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, V_m],
     theta=[0, theta_deg],
-    mode='lines',
+    mode='lines+markers',
     line=dict(color='crimson', width=5),
+    marker=dict(
+        size=[0, 14],
+        color='crimson',
+        symbol=["circle", "triangle-up"]
+    ),
     name='Voltage'
 ), row=polar_row, col=1)
 
-# Arrow for Voltage
-fig.add_annotation(
-    x=theta_deg,
-    y=V_m,
-    ax=theta_deg - 5,
-    ay=V_m - 1,
-    xref="polar",
-    yref="polar",
-    axref="polar",
-    ayref="polar",
-    showarrow=True,
-    arrowhead=3,
-    arrowsize=1.5,
-    arrowwidth=3,
-    arrowcolor="crimson"
-)
-
-# --- CURRENT VECTOR ---
+# --- CURRENT VECTOR (WITH ARROW TIP) ---
 fig.add_trace(go.Scatterpolar(
     r=[0, I_m],
     theta=[0, theta_deg + phi_deg],
-    mode='lines',
+    mode='lines+markers',
     line=dict(color='dodgerblue', width=5),
+    marker=dict(
+        size=[0, 14],
+        color='dodgerblue',
+        symbol=["circle", "triangle-up"]
+    ),
     name='Current'
 ), row=polar_row, col=1)
 
-# Arrow for Current
-fig.add_annotation(
-    x=theta_deg + phi_deg,
-    y=I_m,
-    ax=theta_deg + phi_deg - 5,
-    ay=I_m - 1,
-    xref="polar",
-    yref="polar",
-    axref="polar",
-    ayref="polar",
-    showarrow=True,
-    arrowhead=3,
-    arrowsize=1.5,
-    arrowwidth=3,
-    arrowcolor="dodgerblue"
-)
-
 # --- LABELS ---
-fig.add_annotation(
-    x=theta_deg,
-    y=V_m,
-    text="V",
-    showarrow=False,
-    font=dict(size=14, color="crimson"),
-    xref="polar",
-    yref="polar"
-)
+fig.add_trace(go.Scatterpolar(
+    r=[V_m],
+    theta=[theta_deg],
+    mode='text',
+    text=["V"],
+    textposition="top center",
+    showlegend=False
+), row=polar_row, col=1)
 
-fig.add_annotation(
-    x=theta_deg + phi_deg,
-    y=I_m,
-    text="I",
-    showarrow=False,
-    font=dict(size=14, color="dodgerblue"),
-    xref="polar",
-    yref="polar"
-)
+fig.add_trace(go.Scatterpolar(
+    r=[I_m],
+    theta=[theta_deg + phi_deg],
+    mode='text',
+    text=["I"],
+    textposition="top center",
+    showlegend=False
+), row=polar_row, col=1)
 
 # --- WAVEFORMS ---
 fig.add_trace(go.Scatter(
@@ -163,7 +139,7 @@ fig.add_trace(go.Scatter(
     name='Current'
 ), row=wave_row, col=wave_col)
 
-# --- INSTANTANEOUS POINTS ---
+# --- INSTANT POINTS ---
 fig.add_trace(go.Scatter(
     x=[theta_deg],
     y=[v_inst],
@@ -186,7 +162,10 @@ fig.update_layout(
     margin=dict(t=20, b=20, l=10, r=10),
     plot_bgcolor='white',
     font=dict(size=12 if is_mobile else 14),
-    showlegend=True
+    showlegend=True,
+    polar=dict(
+        radialaxis=dict(range=[0, 11])
+    )
 )
 
 # --- AXES ---
