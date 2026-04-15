@@ -1,151 +1,124 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="3-Phase Simulator", layout="centered")
+st.set_page_config(page_title="3-Phase Phasor Lab", layout="wide", page_icon="⚡")
 
-# --- HEADER ---
-col1, col2 = st.columns([1, 6])
-with col1:
-    st.image("logo.png", width=70)  # Replace if needed
-with col2:
-    st.markdown("## ⚡ 3-Phase Phasor Simulation Tool")
+# --- CUSTOM CSS ---
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; }
+    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; }
+    </style>
+    """, unsafe_allow_密=True)
 
-st.markdown("Interactive visualization of **Star (Y)** and **Delta (Δ)** systems.")
+# --- SIDEBAR CONTROLS ---
+with st.sidebar:
+    st.header("⚙️ Simulation Settings")
+    phi_deg = st.slider("Power Factor Angle (Φ)", -90, 90, 30, help="Lagging (+) or Leading (-)")
+    v_mag = st.slider("Voltage Magnitude (V)", 0.5, 2.5, 1.5)
+    show_para = st.checkbox("Show Parallelogram Construction", value=True)
+    desktop_mode = st.toggle("🖥️ Side-by-Side View", value=True)
+    
+    st.divider()
+    st.info("The dotted lines represent the vector subtraction: $\\vec{V}_{line} = \\vec{V}_{p1} - \\vec{V}_{p2}$")
 
-# --- MODE ---
-desktop_mode = st.toggle("🖥️ Desktop View", value=False)
-
-# --- CONTROL PANEL ---
-st.markdown("### 🎛️ Controls")
-phi_deg = st.slider("Power Factor Angle (Φ)", -90, 90, 30)
+# --- MATHEMATICAL ENGINE ---
 phi = np.deg2rad(phi_deg)
-
-# --- CONSTANTS ---
 j = 1j
-V = 1.5
-I = 1.0
 
-# --- STAR SYSTEM ---
-Van = V*np.exp(j*0)
-Vbn = V*np.exp(-j*np.deg2rad(120))
-Vcn = V*np.exp(j*np.deg2rad(120))
+# Star Calculation (Voltages)
+Van = v_mag * np.exp(j*0)
+Vbn = v_mag * np.exp(-j * np.deg2rad(120))
+Vcn = v_mag * np.exp(j * np.deg2rad(120))
 
-Vab = Van - Vbn
-Vbc = Vbn - Vcn
-Vca = Vcn - Van
+Vab, Vbc, Vca = Van - Vbn, Vbn - Vcn, Vcn - Van
 
-# --- DELTA SYSTEM ---
-Iab = I*np.exp(-j*phi)
-Ibc = I*np.exp(-j*(np.deg2rad(120)+phi))
-Ica = I*np.exp(j*(np.deg2rad(120)-phi))
+# Delta Calculation (Currents)
+I_base = 1.0
+Iab = I_base * np.exp(-j * phi)
+Ibc = I_base * np.exp(-j * (np.deg2rad(120) + phi))
+Ica = I_base * np.exp(j * (np.deg2rad(120) - phi))
 
-Ia = Iab - Ica
-Ib = Ibc - Iab
-Ic = Ica - Ibc
+Ia, Ib, Ic = Iab - Ica, Ibc - Iab, Ica - Ibc
 
-# --- COLORS (Professional EE Standard) ---
-COLORS = {
-    "A": "#E63946",  # Red
-    "B": "#E9C46A",  # Yellow
-    "C": "#1D3557"   # Blue
-}
+# --- PLOTTING HELPERS ---
+COLORS = {"A": "#FF4B4B", "B": "#FFBD45", "C": "#1C83E1"}
 
-# --- DRAW FUNCTIONS ---
-def draw_vector(ax, c, color, label, lw=2):
-    ax.annotate('', xy=(c.real, c.imag), xytext=(0, 0),
-                arrowprops=dict(arrowstyle='-|>', lw=lw, color=color))
-    ax.text(c.real*1.1, c.imag*1.1, label, color=color, fontsize=10, weight='bold')
-
-def draw_para(ax, v1, v2, color):
-    ax.plot([v1.real, v1.real+v2.real],
-            [v1.imag, v1.imag+v2.imag],
-            linestyle='--', color=color, alpha=0.5)
-
-    ax.plot([v2.real, v1.real+v2.real],
-            [v2.imag, v1.imag+v2.imag],
-            linestyle='--', color=color, alpha=0.5)
+def draw_vector(ax, complex_num, color, label, lw=2, zorder=3):
+    ax.annotate('', xy=(complex_num.real, complex_num.imag), xytext=(0, 0),
+                arrowprops=dict(arrowstyle='-|>', lw=lw, color=color, mutation_scale=20), zorder=zorder)
+    # Offset label slightly from tip
+    ax.text(complex_num.real*1.15, complex_num.imag*1.15, label, 
+            color=color, fontsize=11, weight='bold', ha='center')
 
 def setup_axis(ax, title):
-    ax.set_title(title, fontsize=13, weight='bold')
-    ax.set_xlim(-3.5, 3.5)
-    ax.set_ylim(-3.5, 3.5)
-    ax.axhline(0, linewidth=1)
-    ax.axvline(0, linewidth=1)
-    ax.grid(True, linestyle=":", alpha=0.4)
+    ax.set_title(title, fontsize=14, color='white', pad=20)
+    ax.set_facecolor('#0e1117')
+    limit = 4.5
+    ax.set_xlim(-limit, limit)
+    ax.set_ylim(-limit, limit)
+    # Draw unit circles for scale
+    circle = plt.Circle((0, 0), v_mag, color='white', fill=False, alpha=0.1, linestyle='--')
+    ax.add_artist(circle)
+    ax.axhline(0, color='white', linewidth=0.5, alpha=0.3)
+    ax.axvline(0, color='white', linewidth=0.5, alpha=0.3)
+    ax.grid(True, linestyle=":", alpha=0.2)
+    ax.set_aspect('equal')
+    ax.axis('off')
 
-# --- STAR PLOT ---
-def plot_star():
-    fig, ax = plt.subplots(figsize=(5,5))
-    setup_axis(ax, "⭐ Star (Y) - Line Voltage Formation")
+# --- PLOT FUNCTIONS ---
+def create_phasor_plot(system_type):
+    fig, ax = plt.subplots(figsize=(6, 6), facecolor='#0e1117')
+    
+    if system_type == "Star":
+        setup_axis(ax, "⭐ STAR (Y): Phase to Line Voltage")
+        # Phases
+        draw_vector(ax, Van, COLORS["A"], "Van")
+        draw_vector(ax, Vbn, COLORS["B"], "Vbn")
+        draw_vector(ax, Vcn, COLORS["C"], "Vcn")
+        # Lines
+        draw_vector(ax, Vab, COLORS["A"], "Vab", lw=4)
+        draw_vector(ax, Vbc, COLORS["B"], "Vbc", lw=4)
+        draw_vector(ax, Vca, COLORS["C"], "Vca", lw=4)
+        if show_para:
+            ax.plot([Van.real, Vab.real], [Van.imag, Vab.imag], '--', color='gray', alpha=0.5)
+            ax.plot([-Vbn.real, Vab.real], [-Vbn.imag, Vab.imag], '--', color='gray', alpha=0.5)
 
-    # Phase voltages
-    draw_vector(ax, Van, COLORS["A"], "Van")
-    draw_vector(ax, Vbn, COLORS["B"], "Vbn")
-    draw_vector(ax, Vcn, COLORS["C"], "Vcn")
+    else:
+        setup_axis(ax, "🔺 DELTA (Δ): Phase to Line Current")
+        draw_vector(ax, Iab, COLORS["A"], "Iab")
+        draw_vector(ax, Ibc, COLORS["B"], "Ibc")
+        draw_vector(ax, Ica, COLORS["C"], "Ica")
+        draw_vector(ax, Ia, COLORS["A"], "Ia", lw=4)
+        draw_vector(ax, Ib, COLORS["B"], "Ib", lw=4)
+        draw_vector(ax, Ic, COLORS["C"], "Ic", lw=4)
+        if show_para:
+            ax.plot([Iab.real, Ia.real], [Iab.imag, Ia.imag], '--', color='gray', alpha=0.5)
 
-    # Parallelograms
-    draw_para(ax, Van, -Vbn, COLORS["A"])
-    draw_para(ax, Vbn, -Vcn, COLORS["B"])
-    draw_para(ax, Vcn, -Van, COLORS["C"])
+    return fig
 
-    # Line voltages
-    draw_vector(ax, Vab, COLORS["A"], "Vab", lw=3)
-    draw_vector(ax, Vbc, COLORS["B"], "Vbc", lw=3)
-    draw_vector(ax, Vca, COLORS["C"], "Vca", lw=3)
+# --- MAIN UI ---
+st.title("⚡ 3-Phase Phasor Analysis Lab")
 
-    st.pyplot(fig)
-    plt.close(fig)
+# Metric Row
+m1, m2, m3 = st.columns(3)
+m1.metric("Line Voltage Magnitude", f"{np.abs(Vab):.2f} V", f"√3 × {v_mag}")
+m2.metric("Line Current Magnitude", f"{np.abs(Ia):.2f} A", f"√3 × {I_base}")
+m3.metric("Phase Shift", f"{phi_deg}°")
 
-# --- DELTA PLOT ---
-def plot_delta():
-    fig, ax = plt.subplots(figsize=(5,5))
-    setup_axis(ax, "🔺 Delta (Δ) - Line Current Formation")
-
-    # Phase currents
-    draw_vector(ax, Iab, COLORS["A"], "Iab")
-    draw_vector(ax, Ibc, COLORS["B"], "Ibc")
-    draw_vector(ax, Ica, COLORS["C"], "Ica")
-
-    # Parallelograms
-    draw_para(ax, Iab, -Ica, COLORS["A"])
-    draw_para(ax, Ibc, -Iab, COLORS["B"])
-    draw_para(ax, Ica, -Ibc, COLORS["C"])
-
-    # Line currents
-    draw_vector(ax, Ia, COLORS["A"], "Ia", lw=3)
-    draw_vector(ax, Ib, COLORS["B"], "Ib", lw=3)
-    draw_vector(ax, Ic, COLORS["C"], "Ic", lw=3)
-
-    st.pyplot(fig)
-    plt.close(fig)
-
-# --- LAYOUT ---
-st.markdown("### 📊 Simulation Output")
+st.divider()
 
 if desktop_mode:
     col1, col2 = st.columns(2)
-    with col1:
-        plot_star()
-    with col2:
-        plot_delta()
+    with col1: st.pyplot(create_phasor_plot("Star"))
+    with col2: st.pyplot(create_phasor_plot("Delta"))
 else:
-    plot_star()
-    plot_delta()
+    st.pyplot(create_phasor_plot("Star"))
+    st.pyplot(create_phasor_plot("Delta"))
 
-# --- LEGEND PANEL ---
-st.markdown("""
-### 🎨 Phase Color Legend
-- 🔴 Phase A  
-- 🟡 Phase B  
-- 🔵 Phase C  
-
----
-
-### 📘 Key Concepts
-- ⭐ Star: **Line Voltage = Vector Difference of Phase Voltages**
-- 🔺 Delta: **Line Current = Vector Difference of Phase Currents**
-- Dotted lines show **Parallelogram Law**
-""")
+# --- MATH EXPLORER ---
+with st.expander("📝 View Live Vector Equations"):
+    st.latex(rf"V_{{ab}} = V_{{an}} - V_{{bn}} = {v_mag}\angle 0^\circ - {v_mag}\angle -120^\circ = {np.abs(Vab):.2f}\angle 30^\circ")
+    st.latex(rf"I_{{a}} = I_{{ab}} - I_{{ca}} = {I_base}\angle {-phi_deg}^\circ - {I_base}\angle {120-phi_deg}^\circ")
