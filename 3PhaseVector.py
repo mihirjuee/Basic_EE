@@ -3,32 +3,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-# --- Page Config ---
-st.set_page_config(page_title="3-Phase Phasor", layout="centered")
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="3-Phase Simulator", layout="centered")
 
-# --- Logo + Title ---
-logo = Image.open("logo.png")  # Replace if needed
-col_logo, col_title = st.columns([1, 5])
-with col_logo:
-    st.image(logo, width=60)
-with col_title:
-    st.title("Balanced 3-Phase Phasor Diagrams")
+# --- HEADER ---
+col1, col2 = st.columns([1, 6])
+with col1:
+    st.image("logo.png", width=70)  # Replace if needed
+with col2:
+    st.markdown("## ⚡ 3-Phase Phasor Simulation Tool")
 
-st.markdown("Complete 3-phase visualization with parallelogram construction.")
+st.markdown("Interactive visualization of **Star (Y)** and **Delta (Δ)** systems.")
 
-# --- Toggle ---
-mode = st.toggle("🖥️ Desktop Mode", value=False)
+# --- MODE ---
+desktop_mode = st.toggle("🖥️ Desktop View", value=False)
 
-# --- Input ---
+# --- CONTROL PANEL ---
+st.markdown("### 🎛️ Controls")
 phi_deg = st.slider("Power Factor Angle (Φ)", -90, 90, 30)
 phi = np.deg2rad(phi_deg)
 
-# --- Math ---
+# --- CONSTANTS ---
 j = 1j
 V = 1.5
 I = 1.0
 
-# STAR voltages
+# --- STAR SYSTEM ---
 Van = V*np.exp(j*0)
 Vbn = V*np.exp(-j*np.deg2rad(120))
 Vcn = V*np.exp(j*np.deg2rad(120))
@@ -37,94 +37,95 @@ Vab = Van - Vbn
 Vbc = Vbn - Vcn
 Vca = Vcn - Van
 
-Ia = I*np.exp(-j*phi)
-Ib = I*np.exp(-j*(np.deg2rad(120)+phi))
-Ic = I*np.exp(j*(np.deg2rad(120)-phi))
-
-# DELTA currents
+# --- DELTA SYSTEM ---
 Iab = I*np.exp(-j*phi)
 Ibc = I*np.exp(-j*(np.deg2rad(120)+phi))
 Ica = I*np.exp(j*(np.deg2rad(120)-phi))
 
-Ia_d = Iab - Ica
-Ib_d = Ibc - Iab
-Ic_d = Ica - Ibc
+Ia = Iab - Ica
+Ib = Ibc - Iab
+Ic = Ica - Ibc
 
-# --- Draw Functions ---
-def draw_vector(ax, c, color, label):
+# --- COLORS (Professional EE Standard) ---
+COLORS = {
+    "A": "#E63946",  # Red
+    "B": "#E9C46A",  # Yellow
+    "C": "#1D3557"   # Blue
+}
+
+# --- DRAW FUNCTIONS ---
+def draw_vector(ax, c, color, label, lw=2):
     ax.annotate('', xy=(c.real, c.imag), xytext=(0, 0),
-                arrowprops=dict(facecolor=color, edgecolor=color,
-                                width=2, headwidth=8))
-    ax.text(c.real*1.1, c.imag*1.1, label, color=color, fontsize=10)
+                arrowprops=dict(arrowstyle='-|>', lw=lw, color=color))
+    ax.text(c.real*1.1, c.imag*1.1, label, color=color, fontsize=10, weight='bold')
 
 def draw_para(ax, v1, v2, color):
     ax.plot([v1.real, v1.real+v2.real],
             [v1.imag, v1.imag+v2.imag],
-            linestyle='--', color=color, alpha=0.6)
+            linestyle='--', color=color, alpha=0.5)
 
     ax.plot([v2.real, v1.real+v2.real],
             [v2.imag, v1.imag+v2.imag],
-            linestyle='--', color=color, alpha=0.6)
+            linestyle='--', color=color, alpha=0.5)
 
-def setup(ax, title):
-    ax.set_title(title)
+def setup_axis(ax, title):
+    ax.set_title(title, fontsize=13, weight='bold')
     ax.set_xlim(-3.5, 3.5)
     ax.set_ylim(-3.5, 3.5)
+    ax.axhline(0, linewidth=1)
+    ax.axvline(0, linewidth=1)
     ax.grid(True, linestyle=":", alpha=0.4)
 
-# Colors (R-Y-B)
-cA = 'red'
-cB = 'orange'
-cC = 'blue'
-
-# --- STAR ---
+# --- STAR PLOT ---
 def plot_star():
     fig, ax = plt.subplots(figsize=(5,5))
-    setup(ax, "Star (Y): Line Voltages")
+    setup_axis(ax, "⭐ Star (Y) - Line Voltage Formation")
 
     # Phase voltages
-    draw_vector(ax, Van, cA, 'Van')
-    draw_vector(ax, Vbn, cB, 'Vbn')
-    draw_vector(ax, Vcn, cC, 'Vcn')
+    draw_vector(ax, Van, COLORS["A"], "Van")
+    draw_vector(ax, Vbn, COLORS["B"], "Vbn")
+    draw_vector(ax, Vcn, COLORS["C"], "Vcn")
 
     # Parallelograms
-    draw_para(ax, Van, -Vbn, cA)
-    draw_para(ax, Vbn, -Vcn, cB)
-    draw_para(ax, Vcn, -Van, cC)
+    draw_para(ax, Van, -Vbn, COLORS["A"])
+    draw_para(ax, Vbn, -Vcn, COLORS["B"])
+    draw_para(ax, Vcn, -Van, COLORS["C"])
 
     # Line voltages
-    draw_vector(ax, Vab, cA, 'Vab')
-    draw_vector(ax, Vbc, cB, 'Vbc')
-    draw_vector(ax, Vca, cC, 'Vca')
+    draw_vector(ax, Vab, COLORS["A"], "Vab", lw=3)
+    draw_vector(ax, Vbc, COLORS["B"], "Vbc", lw=3)
+    draw_vector(ax, Vca, COLORS["C"], "Vca", lw=3)
 
     st.pyplot(fig)
     plt.close(fig)
 
-# --- DELTA ---
+# --- DELTA PLOT ---
 def plot_delta():
     fig, ax = plt.subplots(figsize=(5,5))
-    setup(ax, "Delta (Δ): Line Currents")
+    setup_axis(ax, "🔺 Delta (Δ) - Line Current Formation")
 
     # Phase currents
-    draw_vector(ax, Iab, cA, 'Iab')
-    draw_vector(ax, Ibc, cB, 'Ibc')
-    draw_vector(ax, Ica, cC, 'Ica')
+    draw_vector(ax, Iab, COLORS["A"], "Iab")
+    draw_vector(ax, Ibc, COLORS["B"], "Ibc")
+    draw_vector(ax, Ica, COLORS["C"], "Ica")
 
     # Parallelograms
-    draw_para(ax, Iab, -Ica, cA)
-    draw_para(ax, Ibc, -Iab, cB)
-    draw_para(ax, Ica, -Ibc, cC)
+    draw_para(ax, Iab, -Ica, COLORS["A"])
+    draw_para(ax, Ibc, -Iab, COLORS["B"])
+    draw_para(ax, Ica, -Ibc, COLORS["C"])
 
     # Line currents
-    draw_vector(ax, Ia_d, cA, 'Ia')
-    draw_vector(ax, Ib_d, cB, 'Ib')
-    draw_vector(ax, Ic_d, cC, 'Ic')
+    draw_vector(ax, Ia, COLORS["A"], "Ia", lw=3)
+    draw_vector(ax, Ib, COLORS["B"], "Ib", lw=3)
+    draw_vector(ax, Ic, COLORS["C"], "Ic", lw=3)
 
     st.pyplot(fig)
     plt.close(fig)
 
-# --- Layout ---
-if mode:
+# --- LAYOUT ---
+st.markdown("### 📊 Simulation Output")
+
+if desktop_mode:
     col1, col2 = st.columns(2)
     with col1:
         plot_star()
@@ -134,19 +135,17 @@ else:
     plot_star()
     plot_delta()
 
-# --- Notes ---
+# --- LEGEND PANEL ---
 st.markdown("""
-### 🔍 Full 3-Phase Insight
+### 🎨 Phase Color Legend
+- 🔴 Phase A  
+- 🟡 Phase B  
+- 🔵 Phase C  
 
-⭐ **Star (Y):**
-- Vab = Van − Vbn  
-- Vbc = Vbn − Vcn  
-- Vca = Vcn − Van  
+---
 
-🔺 **Delta (Δ):**
-- Ia = Iab − Ica  
-- Ib = Ibc − Iab  
-- Ic = Ica − Ibc  
-
-👉 Each dotted shape = **Parallelogram Law**
+### 📘 Key Concepts
+- ⭐ Star: **Line Voltage = Vector Difference of Phase Voltages**
+- 🔺 Delta: **Line Current = Vector Difference of Phase Currents**
+- Dotted lines show **Parallelogram Law**
 """)
