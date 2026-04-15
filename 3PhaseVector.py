@@ -3,122 +3,111 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="3-Phase Phasor Lab", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="EE Phasor Lab Pro", layout="wide")
 
-# --- CUSTOM CSS ---
+# --- CUSTOM THEMEING ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
-    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; }
+    .main { background-color: #0e1117; color: white; }
+    div[data-testid="stMetricValue"] { color: #00d4ff; }
     </style>
-    """, unsafe_allow_密=True)
+    """, unsafe_allow_html=True)
 
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
-    st.header("⚙️ Simulation Settings")
-    phi_deg = st.slider("Power Factor Angle (Φ)", -90, 90, 30, help="Lagging (+) or Leading (-)")
-    v_mag = st.slider("Voltage Magnitude (V)", 0.5, 2.5, 1.5)
-    show_para = st.checkbox("Show Parallelogram Construction", value=True)
-    desktop_mode = st.toggle("🖥️ Side-by-Side View", value=True)
-    
+    st.header("⚡ System Parameters")
+    v_rms = st.slider("Phase Voltage (V_ph)", 100.0, 240.0, 120.0)
+    i_rms = st.slider("Phase Current (I_ph)", 1.0, 20.0, 10.0)
+    pf_angle = st.slider("Power Factor Angle (θ)", -90, 90, 30)
     st.divider()
-    st.info("The dotted lines represent the vector subtraction: $\\vec{V}_{line} = \\vec{V}_{p1} - \\vec{V}_{p2}$")
+    st.caption("Positive θ: Lagging (Inductive)")
+    st.caption("Negative θ: Leading (Capacitive)")
 
 # --- MATHEMATICAL ENGINE ---
-phi = np.deg2rad(phi_deg)
-j = 1j
+theta = np.deg2rad(pf_angle)
+rad120 = np.deg2rad(120)
 
-# Star Calculation (Voltages)
-Van = v_mag * np.exp(j*0)
-Vbn = v_mag * np.exp(-j * np.deg2rad(120))
-Vcn = v_mag * np.exp(j * np.deg2rad(120))
-
+# STAR (Y) CALCULATIONS
+# Phase Voltages
+Van = v_rms * np.exp(j*0 if 'j' in locals() else 1j*0)
+Vbn = v_rms * np.exp(-1j * rad120)
+Vcn = v_rms * np.exp(1j * rad120)
+# Line Voltages (V_line = V_ph * sqrt(3) at +30deg shift)
 Vab, Vbc, Vca = Van - Vbn, Vbn - Vcn, Vcn - Van
 
-# Delta Calculation (Currents)
-I_base = 1.0
-Iab = I_base * np.exp(-j * phi)
-Ibc = I_base * np.exp(-j * (np.deg2rad(120) + phi))
-Ica = I_base * np.exp(j * (np.deg2rad(120) - phi))
-
+# DELTA (Δ) CALCULATIONS
+# Phase Currents
+Iab = i_rms * np.exp(-1j * theta)
+Ibc = i_rms * np.exp(-1j * (rad120 + theta))
+Ica = i_rms * np.exp(1j * (rad120 - theta))
+# Line Currents (I_line = I_ph * sqrt(3) at -30deg shift from phase)
 Ia, Ib, Ic = Iab - Ica, Ibc - Iab, Ica - Ibc
 
-# --- PLOTTING HELPERS ---
+# --- PLOTTING ENGINE ---
 COLORS = {"A": "#FF4B4B", "B": "#FFBD45", "C": "#1C83E1"}
 
-def draw_vector(ax, complex_num, color, label, lw=2, zorder=3):
-    ax.annotate('', xy=(complex_num.real, complex_num.imag), xytext=(0, 0),
-                arrowprops=dict(arrowstyle='-|>', lw=lw, color=color, mutation_scale=20), zorder=zorder)
-    # Offset label slightly from tip
-    ax.text(complex_num.real*1.15, complex_num.imag*1.15, label, 
-            color=color, fontsize=11, weight='bold', ha='center')
+def draw_phasor_set(ax, phase_vecs, line_vecs, p_labels, l_labels, title):
+    ax.set_title(title, fontsize=14, color='white', fontweight='bold')
+    ax.set_facecolor('#161b22')
+    
+    # Calculate limits based on max vector length
+    limit = max(np.abs(line_vecs)) * 1.3
+    ax.set_xlim(-limit, limit); ax.set_ylim(-limit, limit)
+    
+    # Grid and Circles
+    circles = [np.abs(phase_vecs[0]), np.abs(line_vecs[0])]
+    for c in circles:
+        ax.add_artist(plt.Circle((0,0), c, color='white', fill=False, alpha=0.1, ls='--'))
+    
+    ax.axhline(0, color='white', alpha=0.2); ax.axvline(0, color='white', alpha=0.2)
+    
+    # Draw Phase Vectors (Thinner)
+    for v, col, lab in zip(phase_vecs, COLORS.values(), p_labels):
+        ax.annotate('', xy=(v.real, v.imag), xytext=(0,0),
+                    arrowprops=dict(arrowstyle='->', color=col, lw=1.5, alpha=0.7))
+        ax.text(v.real*1.1, v.imag*1.1, lab, color=col, fontsize=9)
 
-def setup_axis(ax, title):
-    ax.set_title(title, fontsize=14, color='white', pad=20)
-    ax.set_facecolor('#0e1117')
-    limit = 4.5
-    ax.set_xlim(-limit, limit)
-    ax.set_ylim(-limit, limit)
-    # Draw unit circles for scale
-    circle = plt.Circle((0, 0), v_mag, color='white', fill=False, alpha=0.1, linestyle='--')
-    ax.add_artist(circle)
-    ax.axhline(0, color='white', linewidth=0.5, alpha=0.3)
-    ax.axvline(0, color='white', linewidth=0.5, alpha=0.3)
-    ax.grid(True, linestyle=":", alpha=0.2)
+    # Draw Line Vectors (Thicker)
+    for v, col, lab in zip(line_vecs, COLORS.values(), l_labels):
+        ax.annotate('', xy=(v.real, v.imag), xytext=(0,0),
+                    arrowprops=dict(arrowstyle='-|>', color=col, lw=3))
+        ax.text(v.real*1.1, v.imag*1.1, lab, color=col, fontsize=11, fontweight='bold')
+    
     ax.set_aspect('equal')
     ax.axis('off')
 
-# --- PLOT FUNCTIONS ---
-def create_phasor_plot(system_type):
-    fig, ax = plt.subplots(figsize=(6, 6), facecolor='#0e1117')
-    
-    if system_type == "Star":
-        setup_axis(ax, "⭐ STAR (Y): Phase to Line Voltage")
-        # Phases
-        draw_vector(ax, Van, COLORS["A"], "Van")
-        draw_vector(ax, Vbn, COLORS["B"], "Vbn")
-        draw_vector(ax, Vcn, COLORS["C"], "Vcn")
-        # Lines
-        draw_vector(ax, Vab, COLORS["A"], "Vab", lw=4)
-        draw_vector(ax, Vbc, COLORS["B"], "Vbc", lw=4)
-        draw_vector(ax, Vca, COLORS["C"], "Vca", lw=4)
-        if show_para:
-            ax.plot([Van.real, Vab.real], [Van.imag, Vab.imag], '--', color='gray', alpha=0.5)
-            ax.plot([-Vbn.real, Vab.real], [-Vbn.imag, Vab.imag], '--', color='gray', alpha=0.5)
+# --- DISPLAY UI ---
+st.title("🌐 3-Phase Comprehensive Phasor Simulator")
 
-    else:
-        setup_axis(ax, "🔺 DELTA (Δ): Phase to Line Current")
-        draw_vector(ax, Iab, COLORS["A"], "Iab")
-        draw_vector(ax, Ibc, COLORS["B"], "Ibc")
-        draw_vector(ax, Ica, COLORS["C"], "Ica")
-        draw_vector(ax, Ia, COLORS["A"], "Ia", lw=4)
-        draw_vector(ax, Ib, COLORS["B"], "Ib", lw=4)
-        draw_vector(ax, Ic, COLORS["C"], "Ic", lw=4)
-        if show_para:
-            ax.plot([Iab.real, Ia.real], [Iab.imag, Ia.imag], '--', color='gray', alpha=0.5)
+tab1, tab2 = st.tabs(["📊 Phasor Visualizer", "📝 Mathematical Proofs"])
 
-    return fig
-
-# --- MAIN UI ---
-st.title("⚡ 3-Phase Phasor Analysis Lab")
-
-# Metric Row
-m1, m2, m3 = st.columns(3)
-m1.metric("Line Voltage Magnitude", f"{np.abs(Vab):.2f} V", f"√3 × {v_mag}")
-m2.metric("Line Current Magnitude", f"{np.abs(Ia):.2f} A", f"√3 × {I_base}")
-m3.metric("Phase Shift", f"{phi_deg}°")
-
-st.divider()
-
-if desktop_mode:
+with tab1:
     col1, col2 = st.columns(2)
-    with col1: st.pyplot(create_phasor_plot("Star"))
-    with col2: st.pyplot(create_phasor_plot("Delta"))
-else:
-    st.pyplot(create_phasor_plot("Star"))
-    st.pyplot(create_phasor_plot("Delta"))
+    
+    with col1:
+        fig_v, ax_v = plt.subplots(figsize=(6,6), facecolor='#0e1117')
+        draw_phasor_set(ax_v, [Van, Vbn, Vcn], [Vab, Vbc, Vca], 
+                       ["Van", "Vbn", "Vcn"], ["Vab", "Vbc", "Vca"], "VOLTAGE (Star Connection)")
+        st.pyplot(fig_v)
+        
+        st.info(f"**Line Voltage:** {np.abs(Vab):.1f} V (≈ √3 × {v_rms:.1f} V)")
 
-# --- MATH EXPLORER ---
-with st.expander("📝 View Live Vector Equations"):
-    st.latex(rf"V_{{ab}} = V_{{an}} - V_{{bn}} = {v_mag}\angle 0^\circ - {v_mag}\angle -120^\circ = {np.abs(Vab):.2f}\angle 30^\circ")
-    st.latex(rf"I_{{a}} = I_{{ab}} - I_{{ca}} = {I_base}\angle {-phi_deg}^\circ - {I_base}\angle {120-phi_deg}^\circ")
+    with col2:
+        fig_i, ax_i = plt.subplots(figsize=(6,6), facecolor='#0e1117')
+        draw_phasor_set(ax_i, [Iab, Ibc, Ica], [Ia, Ib, Ic], 
+                       ["Iab", "Ibc", "Ica"], ["Ia", "Ib", "Ic"], "CURRENT (Delta Connection)")
+        st.pyplot(fig_i)
+        
+        st.info(f"**Line Current:** {np.abs(Ia):.1f} A (≈ √3 × {i_rms:.1f} A)")
+
+with tab2:
+    st.subheader("Key Transformation Equations")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("### Star Connection (Voltage Focus)")
+        st.latex(r"V_{line} = \sqrt{3} \cdot V_{phase} \angle 30^\circ")
+        st.latex(rf"V_{{ab}} = {np.abs(Vab):.2f} \angle 30^\circ")
+    with c2:
+        st.markdown("### Delta Connection (Current Focus)")
+        st.latex(r"I_{line} = \sqrt{3} \cdot I_{phase} \angle -30^\circ")
+        st.latex(rf"I_{{a}} = {np.abs(Ia):.2f} \angle {-30-pf_angle}^\circ")
