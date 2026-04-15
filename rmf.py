@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-st.set_page_config(title="rmf",page_icon="logo.png",layout="wide")
+st.set_page_config(page_title="rmf",page_icon="logo.png",layout="wide")
 st.title("Rotating Magnetic Field (RMF) Simulator")
 st.markdown("Observe how three stationary coils fed by 3-phase currents create a rotating field.")
 
