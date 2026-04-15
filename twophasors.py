@@ -10,7 +10,13 @@ st.set_page_config(page_title="AC V & I Analysis", layout="wide")
 is_mobile = st.checkbox("📱 Mobile View (Simulate)", value=False)
 
 # --- TITLE ---
-st.title("⚡ AC Fundamentals: Voltage & Current Visualization")
+col1, col2 = st.columns([1, 6])
+
+with col1:
+    st.image("logo.png", width=60)  # আপনার logo file
+
+with col2:
+    st.title("⚡ Voltage & Current Visualization")
 
 # --- SIDEBAR CONTROLS ---
 st.sidebar.header("Signal Parameters")
