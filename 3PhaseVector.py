@@ -3,216 +3,116 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="EE Phasor Lab", layout="centered")
+st.set_page_config(page_title="3-Phase Phasor Lab", layout="wide")
 
-# --- VIEW TOGGLE ---
-desktop = st.toggle("🖥️ Desktop Mode", value=False)
-if desktop:
-    st.set_page_config(layout="wide")
+# --- CUSTOM CSS ---
+st.markdown("""
+    <style>
+    .main { background-color: #ffffff; color: #000000; }
+    p, h1, h2, h3, span { color: #000000 !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title("⚡ Three-Phase Phasor Visualization Lab")
+st.title("⚡ Unified 3-Phase Phasor Analysis")
+st.markdown("Visualizing the relationship between **Phase** and **Line** vectors as shown in your reference diagram.")
 
 # --- SIDEBAR ---
 st.sidebar.header("🕹️ Controls")
-v_mag = st.sidebar.slider("Voltage Magnitude", 50.0, 240.0, 150.0)
-i_mag = st.sidebar.slider("Current Magnitude", 1.0, 100.0, 60.0)
+v_mag = st.sidebar.slider("Voltage Magnitude (V_ph)", 50.0, 240.0, 150.0)
+i_mag = st.sidebar.slider("Current Magnitude (I_ph)", 1.0, 100.0, 80.0)
 phi_deg = st.sidebar.slider("Power Factor Angle (Φ°)", -90, 90, 30)
 
-phi = np.deg2rad(phi_deg)
+# --- MATH CONSTANTS ---
 rad120 = np.deg2rad(120)
+phi = np.deg2rad(phi_deg)
+# Colors: Red (R), Yellow (Y), Blue (B) - matching standard labeling
+colors = ['#E63946', '#FFB703', '#1D3557'] 
 
-COL = ['#E63946', '#FFB703', '#1D3557']
+def draw_phasor_diagram(ax, v_vecs, i_ph_vecs, i_line_vecs, title, is_star=True):
+    ax.set_facecolor('white')
+    limit = max(v_mag, i_mag * 2) * 1.2
+    ax.set_xlim(-limit, limit); ax.set_ylim(-limit, limit)
+    ax.axhline(0, color='black', lw=0.5, alpha=0.3)
+    ax.axvline(0, color='black', lw=0.5, alpha=0.3)
 
-# --- ANGLE DRAW ---
-def draw_angle(ax, v1, v2, r, label, color):
-    a1, a2 = np.angle(v1), np.angle(v2)
-    theta = np.linspace(a1, a2, 60)
-
-    ax.plot(r*np.cos(theta), r*np.sin(theta),
-            linestyle=':', color=color, lw=1.5)
-
-    mid = (a1 + a2)/2
-    ax.text(r*np.cos(mid), r*np.sin(mid),
-            label, color=color, fontsize=10, weight='bold')
-
-# --- DELTA DRAW FUNCTION (TEXTBOOK PERFECT) ---
-def draw_delta(ax, Vph, Iph, Iline):
-
-    limit = max(v_mag, i_mag) * 2
-    ax.set_xlim(-limit, limit)
-    ax.set_ylim(-limit, limit)
-
-    ax.axhline(0, lw=0.5, color='gray')
-    ax.axvline(0, lw=0.5, color='gray')
-
-    v_labels = ["Vab", "Vbc", "Vca"]
-    iph_labels = ["Iab", "Ibc", "Ica"]
-    il_labels = ["Ia", "Ib", "Ic"]
+    v_labels = ["V_RY", "V_YB", "V_BR"]
+    i_ph_labels = ["I_R", "I_Y", "I_B"]
+    i_line_labels = ["I_1", "I_2", "I_3"]
 
     for i in range(3):
+        # 1. DRAW VOLTAGE VECTORS (Solid)
+        ax.annotate('', xy=(v_vecs[i].real, v_vecs[i].imag), xytext=(0,0),
+                    arrowprops=dict(arrowstyle='-|>', color=colors[i], lw=2.5))
+        ax.text(v_vecs[i].real*1.1, v_vecs[i].imag*1.1, v_labels[i], color=colors[i], fontweight='bold')
 
-        # --- COMPONENTS ---
-        comp1 = Iph[i]                # Iab
-        comp2 = -Iph[(i-1)%3]         # -Ica
-        res = Iline[i]                # Ia
+        # 2. PARALLELOGRAM FOR LINE CURRENT (Only for Delta)
+        if not is_star:
+            # I1 = IR - IB (Reference to your image (a) and (b))
+            curr_ph = i_ph_vecs[i]
+            prev_ph_neg = -i_ph_vecs[(i-1)%3]
+            line_res = i_line_vecs[i]
+            
+            # Draw parallelogram dotted lines
+            ax.plot([curr_ph.real, line_res.real], [curr_ph.imag, line_res.imag], 'k--', lw=0.8, alpha=0.2)
+            ax.plot([prev_ph_neg.real, line_res.real], [prev_ph_neg.imag, line_res.imag], 'k--', lw=0.8, alpha=0.2)
+            ax.plot([0, prev_ph_neg.real], [0, prev_ph_neg.imag], 'k:', lw=1, alpha=0.1)
 
-        # --- BASE VECTORS (PHASE CURRENTS) ---
-        ax.annotate('', xy=(comp1.real, comp1.imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='->',
-                                    color=COL[i], lw=2))
-        ax.text(comp1.real*1.1, comp1.imag*1.1,
-                iph_labels[i], color=COL[i])
+        # 3. DRAW PHASE CURRENTS (Thin Solid)
+        ax.annotate('', xy=(i_ph_vecs[i].real, i_ph_vecs[i].imag), xytext=(0,0),
+                    arrowprops=dict(arrowstyle='->', color=colors[i], lw=1, alpha=0.7))
+        ax.text(i_ph_vecs[i].real*0.8, i_ph_vecs[i].imag*0.8, i_ph_labels[i], color=colors[i], fontsize=9)
 
-        # --- NEGATIVE VECTOR ---
-        ax.annotate('', xy=(comp2.real, comp2.imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='->',
-                                    linestyle='--',
-                                    color=COL[i], lw=1.5))
-        ax.text(comp2.real*1.1, comp2.imag*1.1,
-                f"-{iph_labels[(i-1)%3]}",
-                color=COL[i], style='italic')
+        # 4. DRAW LINE CURRENTS (Thick Dashed)
+        ax.annotate('', xy=(i_line_vecs[i].real, i_line_vecs[i].imag), xytext=(0,0),
+                    arrowprops=dict(arrowstyle='-|>', color=colors[i], lw=2, ls='--'))
+        ax.text(i_line_vecs[i].real*1.15, i_line_vecs[i].imag*1.15, i_line_labels[i], color=colors[i], fontstyle='italic')
 
-        # --- PARALLELOGRAM (FULL) ---
-        p_end = comp1 + comp2
-
-        ax.plot([comp1.real, p_end.real],
-                [comp1.imag, p_end.imag],
-                linestyle='--', color=COL[i], alpha=0.7)
-
-        ax.plot([comp2.real, p_end.real],
-                [comp2.imag, p_end.imag],
-                linestyle='--', color=COL[i], alpha=0.7)
-
-        # --- RESULTANT LINE CURRENT ---
-        ax.annotate('', xy=(res.real, res.imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='-|>',
-                                    color=COL[i], lw=3))
-        ax.text(res.real*1.1, res.imag*1.1,
-                il_labels[i], color=COL[i], weight='bold')
-
-        # --- VOLTAGE (REFERENCE) ---
-        ax.annotate('', xy=(Vph[i].real, Vph[i].imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='-',
-                                    color='black', lw=1.5, alpha=0.5))
-        ax.text(Vph[i].real*1.1, Vph[i].imag*1.1,
-                v_labels[i], color='black', alpha=0.6)
-
-    # --- ANGLES ---
-    draw_angle(ax, Vph[0], Iline[0], v_mag*0.6, "Φ", "red")
-    draw_angle(ax, Iph[0], Iline[0], v_mag*0.4, "30°", "blue")
-
-    ax.set_title("Delta: Ia = Iab - Ica (30° lag)", fontsize=13, weight='bold')
+    ax.set_title(title, fontsize=14, fontweight='bold')
     ax.set_aspect('equal')
     ax.axis('off')
-
-
-# --- STAR DRAW (CLEAN) ---
-def draw_star(ax, Vph, Vline, Iline):
-
-    limit = max(v_mag, i_mag) * 2
-    ax.set_xlim(-limit, limit)
-    ax.set_ylim(-limit, limit)
-
-    ax.axhline(0, lw=0.5, color='gray')
-    ax.axvline(0, lw=0.5, color='gray')
-
-    labels = ["Vab", "Vbc", "Vca"]
-
-    for i in range(3):
-
-        comp1 = Vph[i]
-        comp2 = -Vph[(i+1)%3]
-        res = Vline[i]
-
-        # parallelogram
-        p_end = comp1 + comp2
-
-        ax.plot([comp1.real, p_end.real],
-                [comp1.imag, p_end.imag],
-                '--', color=COL[i])
-
-        ax.plot([comp2.real, p_end.real],
-                [comp2.imag, p_end.imag],
-                '--', color=COL[i])
-
-        # line voltage
-        ax.annotate('', xy=(res.real, res.imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='-|>',
-                                    color=COL[i], lw=3))
-
-        ax.text(res.real*1.1, res.imag*1.1,
-                labels[i], color=COL[i])
-
-        # current
-        ax.annotate('', xy=(Iline[i].real, Iline[i].imag), xytext=(0,0),
-                    arrowprops=dict(arrowstyle='->',
-                                    linestyle='--',
-                                    color=COL[i], lw=2))
-
-    draw_angle(ax, Vph[0], Vline[0], v_mag*0.4, "30°", "blue")
-    draw_angle(ax, Vph[0], Iline[0], v_mag*0.6, "Φ", "red")
-
-    ax.set_title("Star: Vline = √3 Vph (30° lead)", fontsize=13, weight='bold')
-    ax.set_aspect('equal')
-    ax.axis('off')
-
 
 # --- CALCULATIONS ---
-Van = v_mag * np.exp(1j * 0)
-Vbn = v_mag * np.exp(-1j * rad120)
-Vcn = v_mag * np.exp(1j * rad120)
-Vph = [Van, Vbn, Vcn]
+# Voltages (Reference V_RY at 0 degrees as per image b)
+V_RY = v_mag * np.exp(1j * 0)
+V_YB = v_mag * np.exp(-1j * rad120)
+V_BR = v_mag * np.exp(1j * rad120)
+v_vecs = [V_RY, V_YB, V_BR]
 
-# STAR
-Vline_star = [Van-Vbn, Vbn-Vcn, Vcn-Van]
-Iline_star = [
-    i_mag*np.exp(-1j*(0+phi)),
-    i_mag*np.exp(-1j*(rad120+phi)),
-    i_mag*np.exp(1j*(rad120-phi))
-]
+# Phase Currents (lagging voltage by phi)
+I_R = i_mag * np.exp(-1j * phi)
+I_Y = i_mag * np.exp(-1j * (rad120 + phi))
+I_B = i_mag * np.exp(1j * (rad120 - phi))
+i_ph_vecs = [I_R, I_Y, I_B]
 
-# DELTA
-Iph_delta = [
-    i_mag*np.exp(-1j*phi),
-    i_mag*np.exp(-1j*(rad120+phi)),
-    i_mag*np.exp(1j*(rad120-phi))
-]
+# Line Currents for Delta (I1 = IR - IB, I2 = IY - IR, I3 = IB - IY)
+I1, I2, I3 = I_R - I_B, I_Y - I_R, I_B - I_Y
+i_line_delta = [I1, I2, I3]
 
-Iline_delta = [
-    Iph_delta[0] - Iph_delta[2],
-    Iph_delta[1] - Iph_delta[0],
-    Iph_delta[2] - Iph_delta[1]
-]
+# Line Currents for Star (Line = Phase)
+i_line_star = i_ph_vecs
 
-# --- LAYOUT ---
-if desktop:
-    col1, col2 = st.columns(2)
-else:
-    col1 = st.container()
-    col2 = st.container()
+# --- UI LAYOUT ---
+col1, col2 = st.columns(2)
 
-# --- STAR ---
 with col1:
-    st.subheader("⭐ Star Connection")
-    fig1, ax1 = plt.subplots(figsize=(5,5))
-    draw_star(ax1, Vph, Vline_star, Iline_star)
+    st.subheader("Delta Configuration (Δ)")
+    st.write("Matches your provided diagram: $I_{Line}$ derived from $I_{Phase}$ subtraction.")
+    fig1, ax1 = plt.subplots(figsize=(6,6))
+    draw_phasor_diagram(ax1, v_vecs, i_ph_vecs, i_line_delta, "Delta: Line Current Formation", is_star=False)
     st.pyplot(fig1)
 
-# --- DELTA ---
 with col2:
-    st.subheader("🔺 Delta Connection")
-    fig2, ax2 = plt.subplots(figsize=(5,5))
-    draw_delta(ax2, Vph, Iph_delta, Iline_delta)
+    st.subheader("Star Configuration (Y)")
+    st.write("Currents overlap while Line Voltages (not shown for clarity) would shift.")
+    fig2, ax2 = plt.subplots(figsize=(6,6))
+    draw_phasor_diagram(ax2, v_vecs, i_ph_vecs, i_line_star, "Star: Line & Phase Current", is_star=True)
     st.pyplot(fig2)
 
-# --- FOOTER ---
 st.divider()
-st.info("""
-**Legend**
-- Thick solid → Line quantities  
-- Thin solid → Phase quantities  
-- Dashed → Negative vectors  
-- Dotted → Parallelogram construction  
-- Angles → 30° relation & power factor Φ
+st.markdown("""
+### 🔍 Key takeaways from your Phasor Diagram:
+- **Phase Current ($I_R, I_Y, I_B$):** Lags the respective phase voltage by angle $\phi$.
+- **Line Current ($I_1, I_2, I_3$):** In Delta, the line current is the vector difference. As seen in your image (b), $I_1$ is the resultant of $I_R$ and $-I_B$.
+- **30° Shift:** Note that the line current resultant is shifted by $30^\circ$ relative to the phase current.
 """)
