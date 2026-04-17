@@ -35,31 +35,29 @@ freq = st.sidebar.number_input(
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
 # -------------------------------
+import io
 
-st.subheader("🔌 RLC Series Circuit")
+st.subheader("🔌 RLC Series Circuit Diagram")
 
+# Create the drawing
 with schemdraw.Drawing(show=False) as d:
+    # Adding components in series
+    d += (V1 := elm.SourceSin().label("AC Source", loc='left'))
+    d += elm.Resistor().label(f"{R} Ω").right()
+    d += elm.Inductor().label(f"{L*1000:.0f} mH").right()
+    d += (C1 := elm.Capacitor().label(f"{C*1e6:.1f} μF").right())
+    
+    # Completing the loop
+    d += elm.Line().down().at(C1.end)
+    d += elm.Line().left().tox(V1.start)
+    d += elm.Line().up().to(V1.start)
 
-    # Start source
-    d += (V1 := elm.SourceSin().label(f"{V_rms} V", loc='left'))
-
-    # Series elements
-    d += elm.Resistor().label(f"{R} Ω")
-    d += elm.Inductor().label(f"{L*1000:.0f} mH")
-    d += (C1 := elm.Capacitor().label(f"{C*1e6:.1f} μF"))
-
-    # Return path (SAFE LOOP CLOSURE)
-    d += elm.Line().down().length(2)
-    d += elm.Ground()
-    d += elm.Line().left().length(6)
-    d += elm.Line().up().toy(V1.start)
-
-# Convert to image buffer
+# Save to buffer
 buf = io.BytesIO()
 d.save(buf)
-buf.seek(0)
+st.image(buf, caption="Dynamic Circuit Schematic", use_container_width=False)
 
-st.image(buf, caption="RLC Series Circuit")
+
 
 # -------------------------------
 # ⚡ CALCULATIONS
