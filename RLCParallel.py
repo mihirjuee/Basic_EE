@@ -10,7 +10,7 @@ import schemdraw.elements as elm
 import io
 
 # --- Page Config ---
-st.set_page_config(page_title="Parallel RLC Analyzer",page_icon="logo.png" layout="wide")
+st.set_page_config(page_title="Parallel RLC Analyzer",page_icon="logo.png", layout="wide")
 
 # --- Calculations ---
 def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
