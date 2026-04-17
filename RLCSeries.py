@@ -139,7 +139,8 @@ fig_p.update_layout(
              showarrow=True, arrowhead=3, arrowsize=1.5,
              arrowwidth=2, arrowcolor="black"),
     ],
-    height=450)
+    height=450
+)
     with tab2:
         # Drawing the Impedance Triangle (R, X, Z)
         fig_t = go.Figure()
