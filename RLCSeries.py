@@ -43,7 +43,7 @@ st.subheader("🔌 RLC Series Circuit Diagram")
 # Create the drawing
 with schemdraw.Drawing(show=False) as d:
     # Adding components in series
-    d += (V1 := elm.SourceSin().label("AC Source", loc='above'))
+    d += (V1 := elm.SourceSin().label("AC Source", loc='top'))
     d += elm.Resistor().label(f"{R} Ω").right()
     d += elm.Inductor().label(f"{L*1000:.0f} mH").right()
     d += (C1 := elm.Capacitor().label(f"{C*1e6:.1f} μF").right())
