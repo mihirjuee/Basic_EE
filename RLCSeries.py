@@ -29,29 +29,36 @@ freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
 # -------------------------------
+import matplotlib.pyplot as plt
 import schemdraw
 import schemdraw.elements as elm
 import streamlit as st
+import io
 
-st.subheader("🔌 RLC Series Circuit Diagram (Correct Loop)")
+st.subheader("🔌 RLC Series Circuit Diagram")
 
+# Create drawing
 d = schemdraw.Drawing()
 
-# Start at source
 d += elm.SourceSin().label("AC Source", loc='left')
-
-# Go in series
 d += elm.Resistor().label(f"R = {R} Ω")
 d += elm.Inductor().label(f"L = {L*1000:.0f} mH")
 d += elm.Capacitor().label(f"C = {C*1e6:.0f} μF")
-
-# Return path (IMPORTANT: closes loop properly)
-d += elm.Line().down().length(2)
+d += elm.Line().down()
 d += elm.Ground()
 d += elm.Line().left().length(4)
-d += elm.Line().up().to((0, 0))
+d += elm.Line().up()
 
-st.image(d.draw())
+# Convert to matplotlib figure (SAFE METHOD)
+fig = d.draw()
+
+# Save to buffer
+buf = io.BytesIO()
+fig.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+
+# Display in Streamlit
+st.image(buf)
 
 # -------------------------------
 # ⚡ CALCULATIONS
