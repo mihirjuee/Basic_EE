@@ -50,7 +50,7 @@ with schemdraw.Drawing(show=False) as d:
 # Save to buffer
 buf = io.BytesIO()
 d.save(buf)
-st.image(buf, caption="Dynamic Circuit Schematic", use_container_width=False)
+st.image(buf, caption=" ", use_container_width=False)
 
 # -------------------------------
 # ⚡ CALCULATIONS
