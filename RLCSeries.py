@@ -104,7 +104,7 @@ with col2:
 
 
 
-    fig_p = go.Figure()
+        fig_p = go.Figure()
 
 # Define your vectors in a list for cleaner iteration
     vectors = [
