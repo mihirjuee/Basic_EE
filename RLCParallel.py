@@ -33,21 +33,56 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     d = schemdraw.Drawing(show=False)
     d.config(unit=2)
 
-    # --- Main loop (SAFE sequential layout) ---
-    d += elm.SourceSin().label(f'{V}V', loc='left')
+    # -------------------------
+    # SOURCE (LEFT SIDE)
+    # -------------------------
+    src = elm.SourceSin().label(f'{V} V AC', loc='left')
+    d += src
+
+    # top node wire
     d += elm.Line().right().length(1)
 
-    d += elm.Resistor().down().label(f'{r_val} Ω', loc='right')
+    # save top node reference
+    top = d.here
+
+    # -------------------------
+    # R BRANCH
+    # -------------------------
+    d.push()
+    d += elm.Resistor().down().label(f'R = {r_val} Ω')
+    d += elm.Line().down().length(1)
+    d.pop()
+
+    # move right to next branch
     d += elm.Line().right().length(2)
 
-    d += elm.Inductor().up().label(f'{l_val} mH', loc='right')
-    d += elm.Line().left().length(2)
+    # -------------------------
+    # L BRANCH
+    # -------------------------
+    d.push()
+    d += elm.Inductor().down().label(f'L = {l_val} mH')
+    d += elm.Line().down().length(1)
+    d.pop()
 
-    d += elm.Capacitor().up().label(f'{c_val} μF', loc='right')
+    # move right
+    d += elm.Line().right().length(2)
 
-    d += elm.Line().left().length(1)
+    # -------------------------
+    # C BRANCH
+    # -------------------------
+    d.push()
+    d += elm.Capacitor().down().label(f'C = {c_val} μF')
+    d += elm.Line().down().length(1)
+    d.pop()
 
-    # --- Convert to image safely ---
+    # -------------------------
+    # BOTTOM RETURN BUS
+    # -------------------------
+    d += elm.Line().left().length(6)
+
+    # -------------------------
+    # OUTPUT BUFFER
+    # -------------------------
     buf = io.BytesIO()
     d.save(buf)
     buf.seek(0)
