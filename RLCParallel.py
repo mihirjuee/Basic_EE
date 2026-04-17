@@ -164,6 +164,8 @@ if view_mode == "Desktop (Side-by-Side)":
     with col1:
         st.subheader("Circuit Schematic")
         st.image(get_circuit_diagram(V_rms, R_in, L_in, C_in))
+        st.metric("Inductive Reactance(Xl)", f"{xl:.2f} Ω")
+        st.metric("Capacitive Reactance(Xl)", f"{xc:.2f} Ω")
         st.metric("Total Impedance (Z)", f"{z:.2f} Ω")
     with col2:
         st.subheader("Phasor Analysis")
@@ -173,6 +175,8 @@ else:
     # Mobile Stacked View
     st.subheader("Circuit Schematic")
     st.image(get_circuit_diagram(V_rms, R_in, L_in, C_in))
+    st.metric("Inductive Reactance(Xl)", f"{xl:.2f} Ω")
+    st.metric("Capacitive Reactance(Xl)", f"{xc:.2f} Ω")
     st.metric("Total Impedance (Z)", f"{z:.2f} Ω")
     
     st.divider()
