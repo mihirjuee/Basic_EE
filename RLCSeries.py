@@ -17,7 +17,7 @@ st.title("⚡ Series RLC Circuit Interactive Analyzer")
 st.markdown("Adjust parameters to visualize impedance, resonance, and phasors.")
 
 # -------------------------------
-# 🔧 SIDEBAR INPUTS
+# 🔧 INPUTS
 # -------------------------------
 st.sidebar.header("🔧 Circuit Parameters")
 
@@ -27,7 +27,7 @@ R = st.sidebar.slider("Resistance (Ω)", 1, 500, 50)
 L_mH = st.sidebar.slider("Inductance (mH)", 1, 1000, 100)
 C_uF = st.sidebar.slider("Capacitance (μF)", 1, 500, 50)
 
-# Unit conversion
+# Convert units
 L = L_mH / 1000
 C = C_uF / 1e6
 
@@ -45,12 +45,10 @@ phi_deg = np.degrees(phi)
 
 I_rms = V_rms / Z_mag
 
-# Component voltages
 Vr = I_rms * R
 Vl = I_rms * XL
 Vc = I_rms * XC
 
-# Resonance
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
 # -------------------------------
@@ -74,13 +72,13 @@ with col1:
 
     d = schemdraw.Drawing(show=False)
 
-    # Series RLC
-    d += elm.SourceSin().label("AC Source", loc='left')
+    # ❗ FIX: no loc parameter (prevents ValueError)
+    d += elm.SourceSin().label("AC Source")
     d += elm.Resistor().label(f"{R} Ω")
     d += elm.Inductor().label(f"{L_mH} mH")
     d += elm.Capacitor().label(f"{C_uF} μF")
 
-    # Return loop (correct + stable)
+    # Closed loop (safe)
     d += elm.Line().down().length(2)
     d += elm.Ground()
     d += elm.Line().left().length(6)
@@ -111,7 +109,7 @@ with col2:
 
     fig = go.Figure()
 
-    # Voltage components
+    # Vr
     fig.add_trace(go.Scatter(
         x=[0, Vr], y=[0, 0],
         mode='lines+markers',
@@ -119,6 +117,7 @@ with col2:
         line=dict(color='green', width=4)
     ))
 
+    # Vl
     fig.add_trace(go.Scatter(
         x=[0, 0], y=[0, Vl],
         mode='lines+markers',
@@ -126,6 +125,7 @@ with col2:
         line=dict(color='blue', width=4)
     ))
 
+    # Vc
     fig.add_trace(go.Scatter(
         x=[0, 0], y=[0, -Vc],
         mode='lines+markers',
@@ -133,7 +133,7 @@ with col2:
         line=dict(color='red', width=4)
     ))
 
-    # Resultant voltage (correct phasor sum)
+    # Resultant voltage
     Vx = Vr
     Vy = Vl - Vc
 
@@ -162,7 +162,7 @@ with col2:
     st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------
-# 📚 THEORY
+# 📚 FORMULAS
 # -------------------------------
 with st.expander("📘 Formulas"):
     st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
