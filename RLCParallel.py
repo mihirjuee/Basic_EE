@@ -40,7 +40,7 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     d += src
 
     # top node wire
-    d += elm.Line().right().length(2)
+    d += elm.Line().right().length(3)
 
     # save top node reference
     top = d.here
