@@ -78,7 +78,7 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     # -------------------------
     # BOTTOM RETURN BUS
     # -------------------------
-    d += elm.Line().left().length(6)
+    d += elm.Line().left().length(8)
     d.pop()
     # -------------------------
     # OUTPUT BUFFER
