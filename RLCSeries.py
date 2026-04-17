@@ -1,6 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import schemdraw
+import schemdraw.elements as elm
 
 # -------------------------------
 # ⚙️ PAGE CONFIG
@@ -24,9 +26,9 @@ L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000
 C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6
 freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 
-import schemdraw
-import schemdraw.elements as elm
-
+# -------------------------------
+# 🔌 CIRCUIT DIAGRAM
+# -------------------------------
 st.subheader("🔌 RLC Series Circuit Diagram")
 
 with schemdraw.Drawing() as d:
@@ -39,7 +41,8 @@ with schemdraw.Drawing() as d:
     d += elm.Line().left().length(6)
     d += elm.Line().up()
 
-st.pyplot(d.draw())
+fig_circuit = d.draw()
+st.pyplot(fig_circuit, use_container_width=True)
 
 # -------------------------------
 # ⚡ CALCULATIONS
@@ -81,21 +84,21 @@ fig_phasor = go.Figure()
 fig_phasor.add_trace(go.Scatter(
     x=[0, R*I], y=[0, 0],
     mode='lines+markers',
-    name='Vr (Resistive)',
+    name='Vr',
     line=dict(width=4)
 ))
 
 fig_phasor.add_trace(go.Scatter(
     x=[0, 0], y=[0, XL*I],
     mode='lines+markers',
-    name='Vl (Inductive)',
+    name='Vl',
     line=dict(width=4)
 ))
 
 fig_phasor.add_trace(go.Scatter(
     x=[0, 0], y=[0, -XC*I],
     mode='lines+markers',
-    name='Vc (Capacitive)',
+    name='Vc',
     line=dict(width=4)
 ))
 
@@ -110,7 +113,7 @@ st.plotly_chart(fig_phasor, use_container_width=True)
 # -------------------------------
 # 📈 FREQUENCY RESPONSE
 # -------------------------------
-st.subheader("📈 Frequency Response (Current vs Frequency)")
+st.subheader("📈 Frequency Response")
 
 freq_range = np.linspace(10, 500, 300)
 I_values = []
@@ -131,7 +134,6 @@ fig.add_trace(go.Scatter(
     line=dict(width=3)
 ))
 
-# Resonance Line
 fig.add_vline(
     x=f_res,
     line_dash="dash",
