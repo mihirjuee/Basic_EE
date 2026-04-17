@@ -1,6 +1,7 @@
 import matplotlib
-matplotlib.use('Agg')  # MUST be at the very top
+matplotlib.use('Agg') # MUST BE LINE 1
 import matplotlib.pyplot as plt
+
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -11,27 +12,14 @@ import io
 # --- Page Config ---
 st.set_page_config(page_title="Parallel RLC Analyzer", layout="wide")
 
-# --- UI Sidebar (Inputs) ---
-st.sidebar.header("Circuit Parameters")
-V_rms = st.sidebar.number_input("Source Voltage (Vrms)", value=120.0)
-freq = st.sidebar.number_input("Frequency (Hz)", value=60.0)
-R = st.sidebar.number_input("Resistance (Ω)", value=50.0)
-L_mH = st.sidebar.number_input("Inductance (mH)", value=150.0)
-C_uF = st.sidebar.number_input("Capacitance (μF)", value=40.0)
-
-# View Toggle
-view_mode = st.sidebar.radio("Display Mode", ["Mobile (Stacked)", "Desktop (Side-by-Side)"])
-
 # --- Calculations ---
 def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
     omega = 2 * np.pi * f
     L, C = l_mh / 1000, c_uf / 1e6
-    xl = omega * L if omega * L > 0 else 1e-9  # Prevent div by zero
+    xl = omega * L if (omega * L) > 0 else 1e-9
     xc = 1 / (omega * C) if (omega * C) > 0 else 1e9
     
-    ir = V / r
-    il = V / xl
-    ic = V / xc
+    ir, il, ic = V/r, V/xl, V/xc
     i_net_react = ic - il
     i_total = np.sqrt(ir**2 + i_net_react**2)
     z = V / i_total if i_total > 0 else 0
@@ -39,34 +27,32 @@ def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
     
     return ir, il, ic, i_total, z, phase
 
-ir, il, ic, itot, z, phase = calculate_parallel_rlc(V_rms, freq, R, L_mH, C_uF)
-
-# --- Circuit Diagram Function ---
-def get_circuit_diagram():
-    schemdraw.use('matplotlib') 
+# --- Diagram Generators ---
+def get_circuit_diagram(V, r_val, l_val, c_val):
+    # Use context manager for schemdraw
     with schemdraw.Drawing(show=False) as d:
-        d += elm.SourceSin().label(f'{V_rms}V')
+        d.config(unit=2)
+        d += elm.SourceSin().label(f'{V}V')
         d += elm.Line().right().length(1)
         d += (top := elm.Line().right().length(3))
-        d += elm.Resistor().at(top.start).down().label(f'R\n{R}Ω')
-        d += elm.Inductor().at(top.center).down().label(f'L\n{L_mH}mH')
-        d += elm.Capacitor().at(top.end).down().label(f'C\n{C_uF}μF')
+        d += elm.Resistor().at(top.start).down().label(f'{r_val}Ω')
+        d += elm.Inductor().at(top.center).down().label(f'{l_val}mH')
+        d += elm.Capacitor().at(top.end).down().label(f'{c_val}μF')
         d += elm.Line().at(d.here).left().length(3)
         d += elm.Line().left().length(1)
         
         buf = io.BytesIO()
         d.save(buf, format='png')
-        plt.close('all') 
-        buf.seek(0)      
+        plt.close('all') # Force close the figure
+        buf.seek(0)
         return buf
 
-# --- Phasor Diagram Function ---
-def get_phasor_diagram():
+def get_phasor_diagram(ir, il, ic):
     fig = go.Figure()
     vecs = [
-        (ir, 0, 'Ir', 'green'),
-        (0, ic, 'Ic', 'blue'),
-        (0, -il, 'Il', 'red'),
+        (ir, 0, 'Ir (Resistive)', 'green'),
+        (0, ic, 'Ic (Capacitive)', 'blue'),
+        (0, -il, 'Il (Inductive)', 'red'),
         (ir, ic - il, 'I Total', 'black')
     ]
     for x, y, name, color in vecs:
@@ -85,34 +71,42 @@ def get_phasor_diagram():
     )
     return fig
 
-# --- Main App Layout ---
+# --- Sidebar Inputs ---
+st.sidebar.header("Circuit Parameters")
+V_rms = st.sidebar.number_input("Source Voltage (Vrms)", value=120.0)
+freq = st.sidebar.number_input("Frequency (Hz)", value=60.0)
+R_in = st.sidebar.number_input("Resistance (Ω)", value=50.0)
+L_in = st.sidebar.number_input("Inductance (mH)", value=150.0)
+C_in = st.sidebar.number_input("Capacitance (μF)", value=40.0)
+view_mode = st.sidebar.radio("Display Mode", ["Mobile (Stacked)", "Desktop (Side-by-Side)"])
+
+# Run Calculations
+ir, il, ic, itot, z, phase = calculate_parallel_rlc(V_rms, freq, R_in, L_in, C_in)
+
+# --- Main UI ---
 st.title("⚡ Parallel RLC Analysis")
 
 if view_mode == "Desktop (Side-by-Side)":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Circuit Schematic")
-        st.image(get_circuit_diagram())
+        st.image(get_circuit_diagram(V_rms, R_in, L_in, C_in))
         st.metric("Total Impedance (Z)", f"{z:.2f} Ω")
     with col2:
         st.subheader("Phasor Analysis")
-        st.plotly_chart(get_phasor_diagram(), use_container_width=True)
+        st.plotly_chart(get_phasor_diagram(ir, il, ic), use_container_width=True)
         st.metric("Total Current (Itot)", f"{itot:.2f} A", delta=f"{phase:.1f}° Phase")
 else:
-    # Mobile View: Stacked
+    # Mobile Stacked View
     st.subheader("Circuit Schematic")
-    st.image(get_circuit_diagram())
+    st.image(get_circuit_diagram(V_rms, R_in, L_in, C_in))
+    st.metric("Total Impedance (Z)", f"{z:.2f} Ω")
+    
+    st.divider()
     
     st.subheader("Phasor Analysis")
-    st.plotly_chart(get_phasor_diagram(), use_container_width=True)
-    
-    col_m1, col_m2 = st.columns(2)
-    col_m1.metric("Impedance", f"{z:.2f} Ω")
-    col_m2.metric("Total Current", f"{itot:.2f} A")
+    st.plotly_chart(get_phasor_diagram(ir, il, ic), use_container_width=True)
+    st.metric("Total Current (Itot)", f"{itot:.2f} A", delta=f"{phase:.1f}° Phase")
 
-# Data Table
-with st.expander("View Full Calculations"):
-    st.table({
-        "Parameter": ["Resistive Current (Ir)", "Inductive Current (Il)", "Capacitive Current (Ic)", "Phase Angle"],
-        "Value": [f"{ir:.3f} A", f"{il:.3f} A", f"{ic:.3f} A", f"{phase:.2f}°"]
-    })
+with st.expander("Detailed Branch Currents"):
+    st.write(f"**Ir:** {ir:.3f} A | **Il:** {il:.3f} A | **Ic:** {ic:.3f} A")
