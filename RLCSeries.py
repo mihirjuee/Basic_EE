@@ -65,24 +65,6 @@ I = V_rms / Z
 # Resonance Frequency
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
-st.subheader("📘 ")
-col1, col2, col3 = st.columns(3)
-col1.metric("Applied Frequency", f"{freq:.2f} Hz")
-col2.metric("Inductive reactance (XL)", f"{XL:.2f} Ω")
-col3.metric("Inductive reactance (XC)", f"{XC:.2f} Ω")
-
-
-st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
-st.latex(r"X_L = \omega L,\quad X_C = \frac{1}{\omega C}")
-st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
-# -------------------------------
-# 📊 METRICS
-# -------------------------------
-col1, col2, col3 = st.columns(3)
-col1.metric("Impedance (Z)", f"{Z:.2f} Ω")
-col2.metric("Current (I)", f"{I:.2f} A")
-col3.metric("Resonant Frequency", f"{f_res:.2f} Hz")
-
 # -------------------------------
 # 📘 FORMULAS
 # -------------------------------
@@ -91,6 +73,22 @@ st.subheader("📘 Key Formulas")
 st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
 st.latex(r"X_L = \omega L,\quad X_C = \frac{1}{\omega C}")
 st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
+
+st.subheader("📘 Calculations ")
+col1, col2, col3 = st.columns(3)
+col1.metric("Applied Frequency", f"{freq:.2f} Hz")
+col2.metric("Inductive reactance (XL)", f"{XL:.2f} Ω")
+col3.metric("Inductive reactance (XC)", f"{XC:.2f} Ω")
+
+# -------------------------------
+# 📊 METRICS
+# -------------------------------
+col1, col2, col3 = st.columns(3)
+col1.metric("Impedance (Z)", f"{Z:.2f} Ω")
+col2.metric("Current (I)", f"{I:.2f} A")
+col3.metric("Resonant Frequency", f"{f_res:.2f} Hz")
+
+
 
 # -------------------------------
 # 📊 PHASOR DIAGRAM (IMPROVED)
