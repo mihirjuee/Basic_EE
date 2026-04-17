@@ -65,41 +65,27 @@ col1, col2 = st.columns([1, 1.2])
 
 with col1:
     st.subheader("🔌 Circuit Schematic")
-    
-    # Create drawing - Explicitly avoiding 'with' context for buffer stability
+
     d = schemdraw.Drawing(show=False)
-    
-    # Adding components - Simplified label syntax to prevent ValueErrors
-    V1 = elm.SourceSin().label("AC Source")
-    d += V1
-    
-    R_el = elm.Resistor().right().label(f"{R}Ω")
-    d += R_el
-    
-    L_el = elm.Inductor().right().label(f"{L_mH}mH")
-    d += L_el
-    
-    C_el = elm.Capacitor().right().label(f"{C_uF}μF")
-    d += C_el
-    
-    # Close the loop
-    d += elm.Line().down().at(C_el.end).length(2)
-    d += elm.Line().left().tox(V1.start)
-    d += elm.Line().up().to(V1.start)
-    
-    # Save to buffer
+
+    # Series chain (NO coordinate references)
+    d += elm.SourceSin().label("AC Source")
+    d += elm.Resistor().right().label(f"{R} Ω")
+    d += elm.Inductor().right().label(f"{L_mH} mH")
+    d += elm.Capacitor().right().label(f"{C_uF} μF")
+
+    # Return path (SAFE LOOP)
+    d += elm.Line().down().length(2)
+    d += elm.Ground()
+    d += elm.Line().left().length(6)
+    d += elm.Line().up()
+
+    # Render safely
     buf = io.BytesIO()
     d.save(buf)
     buf.seek(0)
-    st.image(buf)
 
-    # Operating Status
-    if abs(freq - f_res) < 1.5:
-        st.success("🎯 **Condition: Resonance**")
-    elif XL > XC:
-        st.info("🔵 **Condition: Inductive**")
-    else:
-        st.warning("🔴 **Condition: Capacitive**")
+    st.image(buf)
 
 with col2:
     st.subheader("📈 Phasor Diagram")
