@@ -9,7 +9,7 @@ from PIL import Image
 # -------------------------------
 # ⚙️ PAGE CONFIGURATION
 # -------------------------------
-st.set_page_config(page_title="Learn EE: RLC Smart Lab", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="Learn EE: RLC Smart Lab", layout="wide", page_icon="logo.png")
 
 # Custom CSS to make it look like a professional dashboard
 st.markdown("""
