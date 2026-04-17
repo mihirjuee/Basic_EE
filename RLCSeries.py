@@ -29,6 +29,8 @@ freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
 # -------------------------------
+import io
+
 st.subheader("🔌 RLC Series Circuit Diagram")
 
 d = schemdraw.Drawing()
@@ -42,8 +44,12 @@ d += elm.Ground()
 d += elm.Line().left().length(6)
 d += elm.Line().up()
 
-# ✅ Correct display (no error)
-st.image(d.draw())
+# ✅ Convert to image buffer (FIX)
+buf = io.BytesIO()
+d.save(buf)
+buf.seek(0)
+
+st.image(buf)
 
 # -------------------------------
 # ⚡ CALCULATIONS
