@@ -92,7 +92,6 @@ with col1:
 
 with col2:
     tab1, tab2 = st.tabs(["📈 Phasor Diagram", "📐 Impedance Triangle"])
-    
     with tab1:
         fig_p = go.Figure()
         fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, 0], mode='lines+markers', name='Vr', line=dict(color='green', width=4)))
@@ -104,7 +103,7 @@ with col2:
 limit = max(Vr, Vl, Vc) * 1.2
 fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
 st.plotly_chart(fig_p, use_container_width=True)
-        with tab2:
+with tab2:
         # Drawing the Impedance Triangle (R, X, Z)
         fig_t = go.Figure()
         fig_t.add_trace(go.Scatter(x=[0, R], y=[0, 0], mode='lines+markers', name='Resistance (R)', line=dict(color='green', width=5)))
