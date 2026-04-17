@@ -8,13 +8,13 @@ import io
 # -------------------------------
 # ⚙️ PAGE CONFIG
 # -------------------------------
-st.set_page_config(page_title="⚡ RLC Smart Lab", layout="wide")
+st.set_page_config(page_title="Learn EE: RLC Smart Lab", layout="wide")
 
 st.title("⚡ Series RLC Circuit Interactive Analyzer")
-st.markdown("Adjust parameters to visualize impedance, resonance, and phasors.")
+st.markdown("Developed for **Learn EE Interactive**. Adjust parameters to visualize impedance, resonance, and phasors.")
 
 # -------------------------------
-# 🔧 INPUTS
+# 🔧 SIDEBAR INPUTS
 # -------------------------------
 st.sidebar.header("🔧 Circuit Parameters")
 
@@ -24,7 +24,7 @@ R = st.sidebar.slider("Resistance (Ω)", 1, 500, 50)
 L_mH = st.sidebar.slider("Inductance (mH)", 1, 1000, 100)
 C_uF = st.sidebar.slider("Capacitance (μF)", 1, 500, 50)
 
-# Convert units
+# Unit Conversions
 L = L_mH / 1000
 C = C_uF / 1e6
 
@@ -34,139 +34,96 @@ C = C_uF / 1e6
 omega = 2 * np.pi * freq
 XL = omega * L
 XC = 1 / (omega * C)
-
 X_net = XL - XC
-Z = np.sqrt(R**2 + X_net**2)
+Z_mag = np.sqrt(R**2 + X_net**2)
 
-phi = np.arctan2(X_net, R)
-phi_deg = np.degrees(phi)
-
-I = V_rms / Z
-
+# Current and Voltages
+I = V_rms / Z_mag
 Vr = I * R
 Vl = I * XL
 Vc = I * XC
 
+# Phase and Resonance
+phi_rad = np.arctan2(X_net, R)
+phi_deg = np.degrees(phi_rad)
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
 # -------------------------------
-# 📊 METRICS
+# 📊 TOP METRICS
 # -------------------------------
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Current (A)", f"{I:.2f}")
-c2.metric("Impedance (Ω)", f"{Z:.2f}")
-c3.metric("Phase (°)", f"{phi_deg:.1f}")
-c4.metric("Resonant Freq (Hz)", f"{f_res:.1f}")
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Current (I)", f"{I:.2f} A")
+m2.metric("Impedance (Z)", f"{Z_mag:.2f} Ω")
+m3.metric("Phase Angle", f"{phi_deg:.1f}°")
+m4.metric("Resonant Freq", f"{f_res:.1f} Hz")
 
 st.divider()
 
 # -------------------------------
-# 🔌 CIRCUIT DIAGRAM (FIXED 100%)
+# 🔌 MAIN DASHBOARD
 # -------------------------------
 col1, col2 = st.columns([1, 1.2])
 
 with col1:
     st.subheader("🔌 Circuit Schematic")
-
+    
+    # Corrected Schemdraw Logic for Streamlit
     d = schemdraw.Drawing(show=False)
-
-    # IMPORTANT FIX:
-    # Always use explicit loc="right" to avoid Schemdraw errors
-
-    d += elm.SourceSin().label("AC Source", loc="right")
-    d += elm.Resistor().label(f"{R} Ω", loc="right")
-    d += elm.Inductor().label(f"{L_mH} mH", loc="right")
-    d += elm.Capacitor().label(f"{C_uF} μF", loc="right")
-
-    # Safe loop closure (no coordinates, no .start/.tox)
-    d += elm.Line().down().length(2)
-    d += elm.Ground()
-    d += elm.Line().left().length(6)
-    d += elm.Line().up()
-
-    # Render safely
+    
+    # Adding components with updated label logic
+    d += (V1 := elm.SourceSin().label("AC Source", loc='outside'))
+    d += elm.Resistor().label(f"{R}Ω").right().dot()
+    d += elm.Inductor().label(f"{L_mH}mH").right().dot()
+    d += (C1 := elm.Capacitor().label(f"{C_uF}μF").right().dot())
+    
+    # Closing the loop properly
+    d += elm.Line().down().at(C1.end).length(2)
+    d += elm.Line().left().tox(V1.start)
+    d += elm.Line().up().to(V1.start)
+    
+    # Render to BytesIO buffer
     buf = io.BytesIO()
     d.save(buf)
     buf.seek(0)
-
     st.image(buf)
 
-    # Operating mode
-    if abs(freq - f_res) < 1:
-        mode = "⚡ Resonance"
+    # Operating Mode Indicator
+    if abs(freq - f_res) < 1.5:
+        st.success("🎯 **Mode: Resonance** (Z is minimum)")
     elif XL > XC:
-        mode = "🔵 Inductive"
+        st.info("🔵 **Mode: Inductive** (Current lags Voltage)")
     else:
-        mode = "🔴 Capacitive"
+        st.warning("🔴 **Mode: Capacitive** (Current leads Voltage)")
 
-    st.info(f"Operating Mode: {mode}")
-
-# -------------------------------
-# 📈 PHASOR DIAGRAM
-# -------------------------------
 with col2:
     st.subheader("📈 Phasor Diagram")
-
+    
     fig = go.Figure()
 
-    # Vr
-    fig.add_trace(go.Scatter(
-        x=[0, Vr], y=[0, 0],
-        mode='lines+markers',
-        name='Vr',
-        line=dict(color='green', width=4)
-    ))
+    # Resistive Component (Ref)
+    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, 0], mode='lines+markers', name='Vr (Resistive)', line=dict(color='green', width=4)))
+    # Inductive Component (+90)
+    fig.add_trace(go.Scatter(x=[0, 0], y=[0, Vl], mode='lines+markers', name='Vl (Inductive)', line=dict(color='blue', width=4)))
+    # Capacitive Component (-90)
+    fig.add_trace(go.Scatter(x=[0, 0], y=[0, -Vc], mode='lines+markers', name='Vc (Capacitive)', line=dict(color='red', width=4)))
+    # Net Voltage (Resultant)
+    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net*I], mode='lines+markers', name='V Total', line=dict(color='black', width=3, dash='dash')))
 
-    # Vl
-    fig.add_trace(go.Scatter(
-        x=[0, 0], y=[0, Vl],
-        mode='lines+markers',
-        name='Vl',
-        line=dict(color='blue', width=4)
-    ))
-
-    # Vc
-    fig.add_trace(go.Scatter(
-        x=[0, 0], y=[0, -Vc],
-        mode='lines+markers',
-        name='Vc',
-        line=dict(color='red', width=4)
-    ))
-
-    # Resultant
-    Vx = Vr
-    Vy = Vl - Vc
-
-    fig.add_trace(go.Scatter(
-        x=[0, Vx], y=[0, Vy],
-        mode='lines+markers',
-        name='V Total',
-        line=dict(color='black', width=3, dash='dash')
-    ))
-
-    # Current reference
-    fig.add_trace(go.Scatter(
-        x=[0, Vr], y=[0, 0],
-        mode='lines',
-        name='I (Reference)',
-        line=dict(color='orange', width=2, dash='dot')
-    ))
-
+    # Axis Formatting to keep the center at 0,0
+    limit = max(Vr, Vl, Vc) * 1.2
     fig.update_layout(
+        xaxis=dict(title="Real (V)", range=[-limit/4, limit], zeroline=True),
+        yaxis=dict(title="Imaginary (V)", range=[-limit, limit], zeroline=True),
         height=450,
-        xaxis_title="Real Axis (V)",
-        yaxis_title="Imaginary Axis (V)",
-        showlegend=True
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
-
     st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------
-# 📚 FORMULAS
+# 📚 THEORY SECTION
 # -------------------------------
-with st.expander("📘 Formulas"):
-    st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
-    st.latex(r"X_L = 2\pi f L")
-    st.latex(r"X_C = \frac{1}{2\pi f C}")
-    st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
-    st.latex(r"\phi = \tan^{-1}\left(\frac{X_L - X_C}{R}\right)")
+with st.expander("📘 Mathematical Derivations (LaTeX)"):
+    st.write("The total impedance $Z$ in a series RLC circuit is given by:")
+    st.latex(r"Z = R + j\left(\omega L - \frac{1}{\omega C}\right)")
+    st.write("The magnitude and phase angle:")
+    st.latex(r"|Z| = \sqrt{R^2 + (X_L - X_C)^2} \quad \angle \theta = \tan^{-1}\left(\frac{X_L - X_C}{R}\right)")
