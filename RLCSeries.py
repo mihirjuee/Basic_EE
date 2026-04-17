@@ -143,7 +143,7 @@ fig_p.update_layout(
 limit = max(Vr, Vl, Vc) * 1.2
 fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
 st.plotly_chart(fig_p, use_container_width=True)
-    with tab2:
+with tab2:
         # Drawing the Impedance Triangle (R, X, Z)
         fig_t = go.Figure()
         fig_t.add_trace(go.Scatter(x=[0, R], y=[0, 0], mode='lines+markers', name='Resistance (R)', line=dict(color='green', width=5)))
