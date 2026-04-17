@@ -29,23 +29,30 @@ def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
 
 # --- Diagram Generators ---
 def get_circuit_diagram(V, r_val, l_val, c_val):
-    # Use context manager for schemdraw
-    with schemdraw.Drawing(show=False) as d:
-        d.config(unit=2)
-        d += elm.SourceSin().label(f'{V}V')
-        d += elm.Line().right().length(1)
-        d += (top := elm.Line().right().length(3))
-        d += elm.Resistor().at(top.start).down().label(f'{r_val}Ω')
-        d += elm.Inductor().at(top.center).down().label(f'{l_val}mH')
-        d += elm.Capacitor().at(top.end).down().label(f'{c_val}μF')
-        d += elm.Line().at(d.here).left().length(3)
-        d += elm.Line().left().length(1)
-        
-        buf = io.BytesIO()
-        d.save(buf, format='png')
-        plt.close('all') # Force close the figure
-        buf.seek(0)
-        return buf
+
+    d = schemdraw.Drawing(show=False)
+    d.config(unit=2)
+
+    # --- Main loop (SAFE sequential layout) ---
+    d += elm.SourceSin().label(f'{V}V', loc='left')
+    d += elm.Line().right().length(1)
+
+    d += elm.Resistor().down().label(f'{r_val} Ω', loc='right')
+    d += elm.Line().right().length(2)
+
+    d += elm.Inductor().up().label(f'{l_val} mH', loc='right')
+    d += elm.Line().left().length(2)
+
+    d += elm.Capacitor().up().label(f'{c_val} μF', loc='right')
+
+    d += elm.Line().left().length(1)
+
+    # --- Convert to image safely ---
+    buf = io.BytesIO()
+    d.save(buf)
+    buf.seek(0)
+
+    return buf
 
 def get_phasor_diagram(ir, il, ic):
     fig = go.Figure()
