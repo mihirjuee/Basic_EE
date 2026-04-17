@@ -24,7 +24,13 @@ V_rms = st.sidebar.slider("Source Voltage (Vrms)", 10, 230, 220)
 R = st.sidebar.slider("Resistance (Ω)", 1, 500, 50)
 L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000
 C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6
-freq = st.sidebar.slider("Frequency (Hz)", 10.0, 500.0, 50.0,step=0.01)
+freq = st.sidebar.number_input(
+    "Frequency (Hz)",
+    min_value=10.0,
+    max_value=500.0,
+    value=50.0,
+    step=0.01
+)
 
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
