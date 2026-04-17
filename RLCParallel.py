@@ -50,7 +50,7 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     # -------------------------
     d.push()
     d += elm.Resistor().down().label(f'R = {r_val} Ω')
-    d += elm.Line().down().length(1)
+    d += elm.Line().down().length(2)
     d.pop()
 
     # move right to next branch
