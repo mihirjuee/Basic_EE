@@ -37,6 +37,9 @@ ir, il, ic, itot, z, phase = calculate_parallel_rlc(V_rms, freq, R, L_mH, C_uF)
 
 # --- Circuit Diagram Function ---
 def get_circuit_diagram():
+    # Force use of Matplotlib backend for SchemDraw
+    schemdraw.use('matplotlib') 
+    
     with schemdraw.Drawing(show=False) as d:
         d += elm.SourceSin().label(f'{V_rms}V')
         d += elm.Line().right().length(1)
@@ -46,8 +49,10 @@ def get_circuit_diagram():
         d += elm.Capacitor().at(top.end).down().label(f'C\n{C_uF}μF')
         d += elm.Line().at(d.here).left().length(3)
         d += elm.Line().left().length(1)
+        
         buf = io.BytesIO()
         d.save(buf, format='png')
+        buf.seek(0) # Ensure the pointer is at the start of the buffer
         return buf
 
 # --- Phasor Diagram Function ---
