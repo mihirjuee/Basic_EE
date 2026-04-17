@@ -154,7 +154,7 @@ C_in = st.sidebar.number_input("Capacitance (μF)", value=40.0)
 view_mode = st.sidebar.radio("Display Mode", ["Mobile (Stacked)", "Desktop (Side-by-Side)"])
 
 # Run Calculations
-ir, il, ic, itot, z, phase = calculate_parallel_rlc(V_rms, freq, R_in, L_in, C_in)
+ir, il, ic, itot, z, phase, xl, xc = calculate_parallel_rlc(V_rms, freq, R_in, L_in, C_in)
 
 # --- Main UI ---
 st.title("⚡ Parallel RLC Analysis")
