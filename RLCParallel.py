@@ -65,7 +65,7 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     d.pop()
 
     # move right
-    d += elm.Line().right().length(2)
+    d += elm.Line().right().length(4)
 
     # -------------------------
     # C BRANCH
