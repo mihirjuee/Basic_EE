@@ -29,27 +29,29 @@ freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
 # -------------------------------
-import io
+import schemdraw
+import schemdraw.elements as elm
+import streamlit as st
 
-st.subheader("🔌 RLC Series Circuit Diagram")
+st.subheader("🔌 RLC Series Circuit Diagram (Correct Loop)")
 
 d = schemdraw.Drawing()
 
+# Start at source
 d += elm.SourceSin().label("AC Source", loc='left')
-d += elm.Resistor().label(f"R = {R}Ω")
+
+# Go in series
+d += elm.Resistor().label(f"R = {R} Ω")
 d += elm.Inductor().label(f"L = {L*1000:.0f} mH")
 d += elm.Capacitor().label(f"C = {C*1e6:.0f} μF")
-d += elm.Line().down()
+
+# Return path (IMPORTANT: closes loop properly)
+d += elm.Line().down().length(2)
 d += elm.Ground()
-d += elm.Line().left().length(6)
-d += elm.Line().up()
+d += elm.Line().left().length(4)
+d += elm.Line().up().to((0, 0))
 
-# ✅ Convert to image buffer (FIX)
-buf = io.BytesIO()
-d.save(buf)
-buf.seek(0)
-
-st.image(buf)
+st.image(d.draw())
 
 # -------------------------------
 # ⚡ CALCULATIONS
