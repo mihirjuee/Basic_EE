@@ -217,7 +217,7 @@ st.plotly_chart(fig, use_container_width=True)
 # -------------------------------
 # 🔬 ADVANCED ANALYSIS
 # -------------------------------
-st.subheader("🔬 Advanced Analysis")
+st.subheader("🔬 ")
 
 power_factor = np.cos(phase)
 
