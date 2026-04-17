@@ -142,7 +142,7 @@ fig_p.update_layout(
 
 st.plotly_chart(fig_p, use_container_width=True)
 
-    limit = max(Vr, Vl, Vc) * 1.2
+limit = max(Vr, Vl, Vc) * 1.2
     fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
     st.plotly_chart(fig_p, use_container_width=True)
     with tab2:
