@@ -25,7 +25,7 @@ def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
     z = V / i_total if i_total > 0 else 0
     phase = np.degrees(np.arctan2(i_net_react, ir))
     
-    return ir, il, ic, i_total, z, phase
+    return ir, il, ic, i_total, z, phase, xl, xc
 
 # --- Diagram Generators ---
 def get_circuit_diagram(V, r_val, l_val, c_val):
