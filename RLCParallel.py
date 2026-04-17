@@ -91,25 +91,55 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
 
 def get_phasor_diagram(ir, il, ic):
     fig = go.Figure()
+    
+    # Primary Vectors
     vecs = [
-        (ir, 0, 'Ir (Resistive)', 'green'),
-        (0, ic, 'Ic (Capacitive)', 'blue'),
-        (0, -il, 'Il (Inductive)', 'red'),
+        (ir, 0, 'Ir', 'green'),
+        (0, ic, 'Ic', 'blue'),
+        (0, -il, 'Il', 'red'),
         (ir, ic - il, 'I Total', 'black')
     ]
+    
     for x, y, name, color in vecs:
         fig.add_annotation(
             ax=0, ay=0, axref='x', ayref='y',
             x=x, y=y, xref='x', yref='y',
             showarrow=True, arrowhead=3, arrowsize=1.2, arrowwidth=4, arrowcolor=color,
-            text=name, standoff=5
+            text=f"<b>{name}</b>", standoff=5
         )
+
+    # Added: Dotted line to show the net reactive component (Ic - Il)
+    # This helps visualize how I_Total is formed
+    fig.add_trace(go.Scatter(
+        x=[ir, ir], 
+        y=[0, ic - il],
+        mode='lines',
+        line=dict(color='gray', width=1, dash='dot'),
+        showlegend=False
+    ))
+
     limit = max(ir, il, ic, abs(ic-il)) * 1.3
+    
     fig.update_layout(
-        xaxis=dict(range=[-limit/3, limit*1.2], title="In-phase (A)", zeroline=True),
-        yaxis=dict(range=[-limit, limit], title="Quadrature (A)", zeroline=True),
-        height=450, margin=dict(l=20, r=20, t=40, b=20),
-        title="Current Phasor Diagram"
+        xaxis=dict(
+            range=[-limit/3, limit*1.2], 
+            title="In-phase Current (Amps)", 
+            zeroline=True, 
+            zerolinewidth=2, 
+            zerolinecolor='black'
+        ),
+        yaxis=dict(
+            range=[-limit, limit], 
+            title="Quadrature Current (Amps)", 
+            zeroline=True, 
+            zerolinewidth=2, 
+            zerolinecolor='black'
+        ),
+        height=450, 
+        margin=dict(l=20, r=20, t=40, b=20),
+        title="Current Phasor Diagram (Parallel RLC)",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
     )
     return fig
 
