@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import schemdraw
 import schemdraw.elements as elm
 import io
+from PIL import Image
 
 # -------------------------------
 # ⚙️ PAGE CONFIGURATION
@@ -11,10 +12,10 @@ import io
 st.set_page_config(page_title="Learn EE: RLC Smart Lab", layout="wide")
 
 st.title("⚡ Series RLC Circuit Interactive Analyzer")
-st.markdown("Developed for **Learn EE Interactive**. Adjust sliders to explore resonance and phasors.")
+st.markdown("Developed for **Learn EE Interactive**")
 
 # -------------------------------
-# 🔧 SIDEBAR INPUTS
+# 🔧 INPUTS
 # -------------------------------
 st.sidebar.header("🔧 Circuit Parameters")
 
@@ -29,37 +30,36 @@ L = L_mH / 1000
 C = C_uF / 1e6
 
 # -------------------------------
-# ⚡ ELECTRICAL CALCULATIONS
+# ⚡ CALCULATIONS
 # -------------------------------
 omega = 2 * np.pi * freq
 XL = omega * L
 XC = 1 / (omega * C)
 X_net = XL - XC
+
 Z_mag = np.sqrt(R**2 + X_net**2)
 
-# Ohm's Law
 I = V_rms / Z_mag
 Vr = I * R
 Vl = I * XL
 Vc = I * XC
 
-# Phase and Resonance
 phi_deg = np.degrees(np.arctan2(X_net, R))
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
 # -------------------------------
-# 📊 TOP METRICS BAR
+# 📊 METRICS
 # -------------------------------
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Current (I)", f"{I:.2f} A")
-m2.metric("Impedance (Z)", f"{Z_mag:.2f} Ω")
-m3.metric("Phase Angle", f"{phi_deg:.1f}°")
-m4.metric("Resonant Freq", f"{f_res:.1f} Hz")
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Current (A)", f"{I:.2f}")
+c2.metric("Impedance (Ω)", f"{Z_mag:.2f}")
+c3.metric("Phase (°)", f"{phi_deg:.1f}")
+c4.metric("Resonant Freq", f"{f_res:.1f}")
 
 st.divider()
 
 # -------------------------------
-# 🔌 MAIN CONTENT: SCHEMATIC & PHASOR
+# 🔌 CIRCUIT (FIXED PROPER LOOP)
 # -------------------------------
 col1, col2 = st.columns([1, 1.2])
 
@@ -68,57 +68,70 @@ with col1:
 
     d = schemdraw.Drawing(show=False)
 
-    # ✔️ SAFE labels (this fixes your error)
-    d += elm.SourceSin().label("AC Source", loc="right")
-    d += elm.Resistor().right().label(f"{R} Ω", loc="right")
-    d += elm.Inductor().right().label(f"{L_mH} mH", loc="right")
-    d += elm.Capacitor().right().label(f"{C_uF} μF", loc="right")
+    # ✔️ Proper closed-loop RLC (NO loc issues, NO crashes)
 
-    # Return path (safe loop)
+    d += elm.SourceSin().label("AC Source", loc="left")
+    d += elm.Resistor().right().label(f"{R} Ω")
+    d += elm.Inductor().right().label(f"{L_mH} mH")
+    d += elm.Capacitor().right().label(f"{C_uF} μF")
+
+    # Return path (stable loop)
     d += elm.Line().down().length(2)
     d += elm.Ground()
     d += elm.Line().left().length(6)
     d += elm.Line().up()
 
-    # Render safely
+    # Convert to image safely (IMPORTANT FIX)
     buf = io.BytesIO()
     d.save(buf)
     buf.seek(0)
 
-    st.image(buf)
+    img = Image.open(buf)
+    st.image(img)
 
+# -------------------------------
+# 📈 PHASOR
+# -------------------------------
 with col2:
     st.subheader("📈 Phasor Diagram")
-    
+
     fig = go.Figure()
 
-    # Vr (Reference along X-axis)
-    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, 0], mode='lines+markers', name='Vr (Resistive)', line=dict(color='green', width=4)))
-    
-    # Vl (+90 degrees)
-    fig.add_trace(go.Scatter(x=[0, 0], y=[0, Vl], mode='lines+markers', name='Vl (Inductive)', line=dict(color='blue', width=4)))
-    
-    # Vc (-90 degrees)
-    fig.add_trace(go.Scatter(x=[0, 0], y=[0, -Vc], mode='lines+markers', name='Vc (Capacitive)', line=dict(color='red', width=4)))
-    
-    # Total V Source (Resultant)
-    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net*I], mode='lines+markers', name='V Total', line=dict(color='black', width=3, dash='dash')))
+    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, 0],
+                             mode='lines+markers',
+                             name='Vr',
+                             line=dict(color='green', width=4)))
 
-    # Keep diagram centered and scaled
+    fig.add_trace(go.Scatter(x=[0, 0], y=[0, Vl],
+                             mode='lines+markers',
+                             name='Vl',
+                             line=dict(color='blue', width=4)))
+
+    fig.add_trace(go.Scatter(x=[0, 0], y=[0, -Vc],
+                             mode='lines+markers',
+                             name='Vc',
+                             line=dict(color='red', width=4)))
+
+    fig.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net * I],
+                             mode='lines+markers',
+                             name='V total',
+                             line=dict(color='black', width=3, dash='dash')))
+
     limit = max(Vr, Vl, Vc) * 1.2
+
     fig.update_layout(
-        xaxis=dict(title="Real (V)", range=[-limit/3, limit], zeroline=True),
-        yaxis=dict(title="Imaginary (V)", range=[-limit, limit], zeroline=True),
-        height=450,
-        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
+        xaxis=dict(title="Real (V)", range=[-limit, limit]),
+        yaxis=dict(title="Imaginary (V)", range=[-limit, limit]),
+        height=450
     )
+
     st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------
-# 📚 THEORY SECTION
+# 📚 THEORY
 # -------------------------------
-with st.expander("📘 Educational Resources (LaTeX)"):
-    st.write("In a series RLC circuit, total impedance is represented as:")
+with st.expander("📘 Theory"):
     st.latex(r"Z = R + j(X_L - X_C)")
-    st.write("The resonance occurs when $X_L = X_C$, leading to minimum impedance:")
+    st.latex(r"X_L = 2\pi f L")
+    st.latex(r"X_C = \frac{1}{2\pi f C}")
     st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
