@@ -103,17 +103,17 @@ with col2:
 # PARALLELOGRAM LINES
 # -------------------------
         fig_p.add_trace(go.Scatter(
-        x=[Vr, Vr], y=[0, Vx],
-        mode='lines',
-        line=dict(color='gray', width=2, dash='dot'),
-        showlegend=False
+            x=[Vr, Vr], y=[0, Vx],
+            mode='lines',
+            line=dict(color='gray', width=2, dash='dot'),
+            showlegend=False
     ))
 
     fig_p.add_trace(go.Scatter(
-    x=[0, Vr], y=[Vx, Vx],
-    mode='lines',
-    line=dict(color='gray', width=2, dash='dot'),
-    showlegend=False
+        x=[0, Vr], y=[Vx, Vx],
+        mode='lines',
+        line=dict(color='gray', width=2, dash='dot'),
+        showlegend=False
     ))
 
         
