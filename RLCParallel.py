@@ -73,13 +73,13 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     d.push()
     d += elm.Capacitor().down().label(f'C = {c_val} μF')
     d += elm.Line().down().length(1)
-    d.pop()
+    
 
     # -------------------------
     # BOTTOM RETURN BUS
     # -------------------------
-    d += elm.Line().left().length(7)
-
+    d += elm.Line().left().length(6)
+    d.pop()
     # -------------------------
     # OUTPUT BUFFER
     # -------------------------
