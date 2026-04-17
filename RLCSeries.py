@@ -104,7 +104,42 @@ with col2:
         limit = max(Vr, Vl, Vc) * 1.2
         fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
         st.plotly_chart(fig_p, use_container_width=True)
+# -------------------------
+# ARROWS (KEY PART)
+# -------------------------
+fig_p.update_layout(
+    annotations=[
+        # Vr arrow
+        dict(x=Vr, y=0, ax=0, ay=0,
+             xref="x", yref="y",
+             showarrow=True, arrowhead=3, arrowsize=1.5,
+             arrowwidth=2, arrowcolor="green"),
 
+        # Vl arrow
+        dict(x=0, y=Vl, ax=0, ay=0,
+             xref="x", yref="y",
+             showarrow=True, arrowhead=3, arrowsize=1.5,
+             arrowwidth=2, arrowcolor="blue"),
+
+        # Vc arrow
+        dict(x=0, y=-Vc, ax=0, ay=0,
+             xref="x", yref="y",
+             showarrow=True, arrowhead=3, arrowsize=1.5,
+             arrowwidth=2, arrowcolor="red"),
+
+        # Current arrow
+        dict(x=I, y=0, ax=0, ay=0,
+             xref="x", yref="y",
+             showarrow=True, arrowhead=3, arrowsize=1.5,
+             arrowwidth=2, arrowcolor="orange"),
+
+        # Total voltage arrow
+        dict(x=Vr, y=X_net * I, ax=0, ay=0,
+             xref="x", yref="y",
+             showarrow=True, arrowhead=3, arrowsize=1.5,
+             arrowwidth=2, arrowcolor="black"),
+    ],
+    height=450)
     with tab2:
         # Drawing the Impedance Triangle (R, X, Z)
         fig_t = go.Figure()
