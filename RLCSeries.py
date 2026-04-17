@@ -35,6 +35,9 @@ freq = st.sidebar.number_input(
 # -------------------------------
 # 🔌 CIRCUIT DIAGRAM (FIXED)
 # -------------------------------
+import streamlit as st
+import schemdraw
+import schemdraw.elements as elm
 import io
 
 st.subheader("🔌 RLC Series Circuit Diagram")
