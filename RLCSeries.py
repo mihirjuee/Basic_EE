@@ -73,7 +73,7 @@ with col1:
     d += (C1 := elm.Capacitor().right().label(f"{C_uF}μF"))
     
     # Return path
-    d += elm.Line().down().at(C1.end).length(2)
+    d += elm.Line().down().at(C1.end).length(3)
     d += elm.Line().left().tox(V1.start)
     d += elm.Line().up().to(V1.start)
 
