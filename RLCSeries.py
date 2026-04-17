@@ -2,51 +2,157 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Learn EE: RLC Series Lab", layout="wide")
+# -------------------------------
+# ⚙️ PAGE CONFIG
+# -------------------------------
+st.set_page_config(page_title="⚡ RLC Smart Lab", layout="wide")
 
+# -------------------------------
+# 🎯 TITLE
+# -------------------------------
 st.title("⚡ RLC Series Circuit Interactive Lab")
-st.write("Adjust the parameters to see how the circuit behaves at different frequencies.")
+st.markdown("Explore impedance, resonance, and current behavior in an RLC circuit.")
 
-# --- Sidebar Inputs ---
-st.sidebar.header("Circuit Parameters")
+# -------------------------------
+# 🔧 SIDEBAR INPUTS
+# -------------------------------
+st.sidebar.header("🔧 Circuit Parameters")
+
 V_rms = st.sidebar.slider("Source Voltage (Vrms)", 10, 230, 220)
 R = st.sidebar.slider("Resistance (Ω)", 1, 500, 50)
-L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000 # Convert to H
-C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6    # Convert to F
+L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000
+C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6
 freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 
-# --- Calculations ---
+# -------------------------------
+# ⚡ CALCULATIONS
+# -------------------------------
 omega = 2 * np.pi * freq
 XL = omega * L
 XC = 1 / (omega * C)
-Z_mag = np.sqrt(R**2 + (XL - XC)**2)
-phase_rad = np.arctan((XL - XC) / R)
-I_rms = V_rms / Z_mag
+Z = np.sqrt(R**2 + (XL - XC)**2)
+phase = np.arctan((XL - XC) / R)
+I = V_rms / Z
 
-# Resonance Freq
+# Resonance Frequency
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
-# --- Dashboard Layout ---
+# -------------------------------
+# 📊 METRICS
+# -------------------------------
 col1, col2, col3 = st.columns(3)
-col1.metric("Impedance (Z)", f"{Z_mag:.2f} Ω")
-col2.metric("Current (I)", f"{I_rms:.2f} A")
-col3.metric("Resonant Freq", f"{f_res:.2f} Hz")
+col1.metric("Impedance (Z)", f"{Z:.2f} Ω")
+col2.metric("Current (I)", f"{I:.2f} A")
+col3.metric("Resonance Frequency", f"{f_res:.2f} Hz")
 
-# --- Phasor Diagram ---
-st.subheader("📊 Live Phasor Diagram")
-# Creating Phasor vectors
+# -------------------------------
+# 📘 FORMULAS
+# -------------------------------
+st.subheader("📘 Key Formulas")
+
+st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
+st.latex(r"X_L = \omega L,\quad X_C = \frac{1}{\omega C}")
+st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
+
+# -------------------------------
+# 📊 PHASOR DIAGRAM
+# -------------------------------
+st.subheader("📊 Phasor Diagram")
+
 fig_phasor = go.Figure()
-fig_phasor.add_trace(go.Scatter(x=[0, R*I_rms], y=[0, 0], name='Vr (Resistive)', line=dict(color='green', width=4)))
-fig_phasor.add_trace(go.Scatter(x=[0, 0], y=[0, XL*I_rms], name='Vl (Inductive)', line=dict(color='blue', width=4)))
-fig_phasor.add_trace(go.Scatter(x=[0, 0], y=[0, -XC*I_rms], name='Vc (Capacitive)', line=dict(color='red', width=4)))
 
-fig_phasor.update_layout(xaxis=dict(range=[-100, 300]), yaxis=dict(range=[-300, 300]), height=400)
+fig_phasor.add_trace(go.Scatter(
+    x=[0, R*I], y=[0, 0],
+    mode='lines+markers',
+    name='Vr (Resistive)',
+    line=dict(width=4)
+))
+
+fig_phasor.add_trace(go.Scatter(
+    x=[0, 0], y=[0, XL*I],
+    mode='lines+markers',
+    name='Vl (Inductive)',
+    line=dict(width=4)
+))
+
+fig_phasor.add_trace(go.Scatter(
+    x=[0, 0], y=[0, -XC*I],
+    mode='lines+markers',
+    name='Vc (Capacitive)',
+    line=dict(width=4)
+))
+
+fig_phasor.update_layout(
+    height=400,
+    xaxis_title="Real Axis",
+    yaxis_title="Imaginary Axis"
+)
+
 st.plotly_chart(fig_phasor, use_container_width=True)
 
-# --- Educational Insight ---
+# -------------------------------
+# 📈 FREQUENCY RESPONSE
+# -------------------------------
+st.subheader("📈 Frequency Response (Current vs Frequency)")
+
+freq_range = np.linspace(10, 500, 300)
+I_values = []
+
+for f in freq_range:
+    w = 2 * np.pi * f
+    XL_f = w * L
+    XC_f = 1 / (w * C)
+    Z_f = np.sqrt(R**2 + (XL_f - XC_f)**2)
+    I_values.append(V_rms / Z_f)
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(
+    x=freq_range,
+    y=I_values,
+    name="Current",
+    line=dict(width=3)
+))
+
+# Resonance Line
+fig.add_vline(
+    x=f_res,
+    line_dash="dash",
+    annotation_text="Resonance"
+)
+
+fig.update_layout(
+    xaxis_title="Frequency (Hz)",
+    yaxis_title="Current (A)",
+    height=400
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------------
+# 🔬 ADVANCED ANALYSIS
+# -------------------------------
+st.subheader("🔬 Advanced Analysis")
+
+power_factor = np.cos(phase)
+
+st.write(f"**Power Factor:** {power_factor:.3f}")
+st.write(f"**Phase Angle (rad):** {phase:.3f}")
+
+# -------------------------------
+# 🎯 INSIGHT
+# -------------------------------
+st.subheader("🎯 Concept Insight")
+
 if abs(freq - f_res) < 2:
-    st.success("🎯 **RESONANCE ACHIEVED!** The circuit is purely resistive. Current is at its maximum.")
+    st.success("🎯 Resonance: Circuit behaves purely resistive. Current is MAX ⚡")
 elif XL > XC:
-    st.info("🔄 **Inductive Nature:** The current lags the voltage.")
+    st.info("🔄 Inductive Circuit: Current lags voltage")
 else:
-    st.warning("🔄 **Capacitive Nature:** The current leads the voltage.")
+    st.warning("🔄 Capacitive Circuit: Current leads voltage")
+
+# -------------------------------
+# 📢 FOOTER
+# -------------------------------
+st.markdown("---")
+st.markdown("⚡ Built for Electrical Engineering Students | Learn by Visualization 🚀")
