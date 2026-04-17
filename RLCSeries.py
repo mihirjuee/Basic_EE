@@ -10,9 +10,6 @@ import io
 # -------------------------------
 st.set_page_config(page_title="⚡ RLC Smart Lab", layout="wide")
 
-# -------------------------------
-# 🎯 TITLE
-# -------------------------------
 st.title("⚡ Series RLC Circuit Interactive Analyzer")
 st.markdown("Adjust parameters to visualize impedance, resonance, and phasors.")
 
@@ -37,17 +34,18 @@ C = C_uF / 1e6
 omega = 2 * np.pi * freq
 XL = omega * L
 XC = 1 / (omega * C)
-X_net = XL - XC
 
-Z_mag = np.sqrt(R**2 + X_net**2)
+X_net = XL - XC
+Z = np.sqrt(R**2 + X_net**2)
+
 phi = np.arctan2(X_net, R)
 phi_deg = np.degrees(phi)
 
-I_rms = V_rms / Z_mag
+I = V_rms / Z
 
-Vr = I_rms * R
-Vl = I_rms * XL
-Vc = I_rms * XC
+Vr = I * R
+Vl = I * XL
+Vc = I * XC
 
 f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
@@ -55,15 +53,15 @@ f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 # 📊 METRICS
 # -------------------------------
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Current (A)", f"{I_rms:.2f}")
-c2.metric("Impedance (Ω)", f"{Z_mag:.2f}")
+c1.metric("Current (A)", f"{I:.2f}")
+c2.metric("Impedance (Ω)", f"{Z:.2f}")
 c3.metric("Phase (°)", f"{phi_deg:.1f}")
 c4.metric("Resonant Freq (Hz)", f"{f_res:.1f}")
 
 st.divider()
 
 # -------------------------------
-# 🔌 CIRCUIT DIAGRAM (FIXED)
+# 🔌 CIRCUIT DIAGRAM (FIXED 100%)
 # -------------------------------
 col1, col2 = st.columns([1, 1.2])
 
@@ -72,13 +70,15 @@ with col1:
 
     d = schemdraw.Drawing(show=False)
 
-    # ❗ FIX: no loc parameter (prevents ValueError)
-    d += elm.SourceSin().label("AC Source")
-    d += elm.Resistor().label(f"{R} Ω")
-    d += elm.Inductor().label(f"{L_mH} mH")
-    d += elm.Capacitor().label(f"{C_uF} μF")
+    # IMPORTANT FIX:
+    # Always use explicit loc="right" to avoid Schemdraw errors
 
-    # Closed loop (safe)
+    d += elm.SourceSin().label("AC Source", loc="right")
+    d += elm.Resistor().label(f"{R} Ω", loc="right")
+    d += elm.Inductor().label(f"{L_mH} mH", loc="right")
+    d += elm.Capacitor().label(f"{C_uF} μF", loc="right")
+
+    # Safe loop closure (no coordinates, no .start/.tox)
     d += elm.Line().down().length(2)
     d += elm.Ground()
     d += elm.Line().left().length(6)
@@ -91,7 +91,7 @@ with col1:
 
     st.image(buf)
 
-    # Mode detection
+    # Operating mode
     if abs(freq - f_res) < 1:
         mode = "⚡ Resonance"
     elif XL > XC:
@@ -133,7 +133,7 @@ with col2:
         line=dict(color='red', width=4)
     ))
 
-    # Resultant voltage
+    # Resultant
     Vx = Vr
     Vy = Vl - Vc
 
