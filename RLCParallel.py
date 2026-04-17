@@ -36,24 +36,41 @@ def calculate_parallel_rlc(V, f, r, l_mh, c_uf):
 ir, il, ic, itot, z, phase = calculate_parallel_rlc(V_rms, freq, R, L_mH, C_uF)
 
 # --- Circuit Diagram Function ---
+import matplotlib
+matplotlib.use('Agg')  # CRITICAL: Must be the very first line after imports
+import matplotlib.pyplot as plt
+
+import streamlit as st
+import schemdraw
+import schemdraw.elements as elm
+import io
+
+# ... [Keep your calculation functions here] ...
+
 def get_circuit_diagram():
-    # Force use of Matplotlib backend for SchemDraw
+    # Explicitly tell schemdraw to use the matplotlib backend
     schemdraw.use('matplotlib') 
     
-    with schemdraw.Drawing(show=False) as d:
-        d += elm.SourceSin().label(f'{V_rms}V')
-        d += elm.Line().right().length(1)
-        d += (top := elm.Line().right().length(3))
-        d += elm.Resistor().at(top.start).down().label(f'R\n{R}Ω')
-        d += elm.Inductor().at(top.center).down().label(f'L\n{L_mH}mH')
-        d += elm.Capacitor().at(top.end).down().label(f'C\n{C_uF}μF')
-        d += elm.Line().at(d.here).left().length(3)
-        d += elm.Line().left().length(1)
-        
-        buf = io.BytesIO()
-        d.save(buf, format='png')
-        buf.seek(0) # Ensure the pointer is at the start of the buffer
-        return buf
+    # Create the drawing
+    d = schemdraw.Drawing(show=False)
+    d += elm.SourceSin().label(f'{V_rms}V')
+    d += elm.Line().right().length(1)
+    d += (top := elm.Line().right().length(3))
+    d += elm.Resistor().at(top.start).down().label(f'R\n{R}Ω')
+    d += elm.Inductor().at(top.center).down().label(f'L\n{L_mH}mH')
+    d += elm.Capacitor().at(top.end).down().label(f'C\n{C_uF}μF')
+    d += elm.Line().at(d.here).left().length(3)
+    d += elm.Line().left().length(1)
+    
+    # Save to buffer
+    buf = io.BytesIO()
+    d.save(buf, format='png')
+    plt.close('all') # Clean up memory
+    buf.seek(0)      # Move cursor to start of buffer so st.image can read it
+    return buf
+
+# In your UI section:
+st.image(get_circuit_diagram())
 
 # --- Phasor Diagram Function ---
 def get_phasor_diagram():
