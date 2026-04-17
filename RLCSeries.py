@@ -68,13 +68,13 @@ with col1:
 
     d = schemdraw.Drawing(show=False)
 
-    # Series chain (NO coordinate references)
-    d += elm.SourceSin().label("AC Source")
-    d += elm.Resistor().right().label(f"{R} Ω")
-    d += elm.Inductor().right().label(f"{L_mH} mH")
-    d += elm.Capacitor().right().label(f"{C_uF} μF")
+    # ✔️ SAFE labels (this fixes your error)
+    d += elm.SourceSin().label("AC Source", loc="right")
+    d += elm.Resistor().right().label(f"{R} Ω", loc="right")
+    d += elm.Inductor().right().label(f"{L_mH} mH", loc="right")
+    d += elm.Capacitor().right().label(f"{C_uF} μF", loc="right")
 
-    # Return path (SAFE LOOP)
+    # Return path (safe loop)
     d += elm.Line().down().length(2)
     d += elm.Ground()
     d += elm.Line().left().length(6)
