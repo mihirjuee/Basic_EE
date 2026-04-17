@@ -94,54 +94,13 @@ with col2:
     tab1, tab2 = st.tabs(["📈 Phasor Diagram", "📐 Impedance Triangle"])
     
     with tab1:
-       # fig_p = go.Figure()
-       # fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, 0], mode='lines+markers', name='Vr', line=dict(color='green', width=4)))
-        #fig_p.add_trace(go.Scatter(x=[0, 0], y=[0, Vl], mode='lines+markers', name='Vl', line=dict(color='blue', width=4)))
-       # fig_p.add_trace(go.Scatter(x=[0, 0], y=[0, -Vc], mode='lines+markers', name='Vc', line=dict(color='red', width=4)))
-       # fig_p.add_trace(go.Scatter(x=[0, I], y=[0, 0], mode='lines+markers', name='I', line=dict(color='orange', width=4)))
-       # fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net*I], mode='lines+markers', name='V Total', line=dict(color='black', width=3, dash='dash')))
-        
-
-
-
-        fig_p = go.Figure()
-
-# Define your vectors in a list for cleaner iteration
-    vectors = [
-        {'x': Vr, 'y': 0, 'name': 'Vr', 'color': 'green'},
-        {'x': 0, 'y': Vl, 'name': 'Vl', 'color': 'blue'},
-        {'x': 0, 'y': -Vc, 'name': 'Vc', 'color': 'red'},
-        {'x': I, 'y': 0, 'name': 'I', 'color': 'orange'},
-        {'x': Vr, 'y': X_net*I, 'name': 'V Total', 'color': 'black', 'dash': 'dash'}
-    ]
-
-    for v in vectors:
-        fig_p.add_annotation(
-            ax=0, ay=0,             # Arrow start point (origin)
-            axref='x', ayref='y',   # Coordinate system for the start
-            x=v['x'], y=v['y'],     # Arrow head point
-            xref='x', yref='y',     # Coordinate system for the head
-            showarrow=True,
-            arrowhead=3,            # Arrow style (1-7)
-            arrowsize=1.5,
-            arrowwidth=3,
-            arrowcolor=v['color'],
-            text=v['name'],         # Label next to the arrow
-            standoff=5,             # Distance from the head to the coordinate
-            clicktoshow='onoff'
-        )
-
-# Keeping your limits logic
-limit = max(Vr, Vl, Vc) * 1.2
-fig_p.update_layout(
-    xaxis=dict(range=[-limit/4, limit], zeroline=True, gridcolor='lightgray'),
-    yaxis=dict(range=[-limit, limit], zeroline=True, gridcolor='lightgray'),
-    height=450,
-    showlegend=False # Annotations don't show in legend automatically
-)
-
-st.plotly_chart(fig_p, use_container_width=True)
-
+      fig_p = go.Figure()
+      fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, 0], mode='lines+markers', name='Vr', line=dict(color='green', width=4)))
+     fig_p.add_trace(go.Scatter(x=[0, 0], y=[0, Vl], mode='lines+markers', name='Vl', line=dict(color='blue', width=4)))
+      fig_p.add_trace(go.Scatter(x=[0, 0], y=[0, -Vc], mode='lines+markers', name='Vc', line=dict(color='red', width=4)))
+      fig_p.add_trace(go.Scatter(x=[0, I], y=[0, 0], mode='lines+markers', name='I', line=dict(color='orange', width=4)))
+     fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net*I], mode='lines+markers', name='V Total', line=dict(color='black', width=3, dash='dash')))
+          
 limit = max(Vr, Vl, Vc) * 1.2
     fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
     st.plotly_chart(fig_p, use_container_width=True)
