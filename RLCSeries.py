@@ -75,35 +75,79 @@ st.latex(r"X_L = \omega L,\quad X_C = \frac{1}{\omega C}")
 st.latex(r"f_r = \frac{1}{2\pi\sqrt{LC}}")
 
 # -------------------------------
-# 📊 PHASOR DIAGRAM
+# 📊 PHASOR DIAGRAM (IMPROVED)
 # -------------------------------
 st.subheader("📊 Phasor Diagram")
 
 fig_phasor = go.Figure()
 
+Vr = R * I
+Vl = XL * I
+Vc = XC * I
+
+# Vr
 fig_phasor.add_trace(go.Scatter(
-    x=[0, R*I], y=[0, 0],
-    mode='lines+markers',
+    x=[0, Vr], y=[0, 0],
+    mode='lines+markers+text',
     name='Vr',
+    text=["", "Vr"],
+    textposition="top center",
     line=dict(width=4)
 ))
 
+# Vl
 fig_phasor.add_trace(go.Scatter(
-    x=[0, 0], y=[0, XL*I],
-    mode='lines+markers',
+    x=[0, 0], y=[0, Vl],
+    mode='lines+markers+text',
     name='Vl',
+    text=["", "Vl"],
+    textposition="top center",
     line=dict(width=4)
 ))
+
+# Vc
+fig_phasor.add_trace(go.Scatter(
+    x=[0, 0], y=[0, -Vc],
+    mode='lines+markers+text',
+    name='Vc',
+    text=["", "Vc"],
+    textposition="bottom center",
+    line=dict(width=4)
+))
+
+# Resultant Voltage
+Vx = Vr
+Vy = Vl - Vc
 
 fig_phasor.add_trace(go.Scatter(
-    x=[0, 0], y=[0, -XC*I],
-    mode='lines+markers',
-    name='Vc',
-    line=dict(width=4)
+    x=[0, Vx], y=[0, Vy],
+    mode='lines+markers+text',
+    name='V',
+    text=["", "V"],
+    textposition="top right",
+    line=dict(width=4, dash='dash')
 ))
 
+# Current vector (reference)
+fig_phasor.add_trace(go.Scatter(
+    x=[0, max(Vr, 1)], y=[0, 0],
+    mode='lines+text',
+    name='I',
+    text=["", "I"],
+    textposition="bottom center",
+    line=dict(width=2, dash='dot')
+))
+
+# Arrowheads
 fig_phasor.update_layout(
-    height=400,
+    annotations=[
+        dict(x=Vr, y=0, ax=0, ay=0, arrowhead=3),
+        dict(x=0, y=Vl, ax=0, ay=0, arrowhead=3),
+        dict(x=0, y=-Vc, ax=0, ay=0, arrowhead=3),
+        dict(x=Vx, y=Vy, ax=0, ay=0, arrowhead=3),
+        dict(x=max(Vr, 1), y=0, ax=0, ay=0, arrowhead=2),
+    ],
+    height=450,
     xaxis_title="Real Axis",
     yaxis_title="Imaginary Axis"
 )
