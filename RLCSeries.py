@@ -1,175 +1,52 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
-import schemdraw
-import schemdraw.elements as elm
-import io
+import plotly.graph_objects as go
 
-# --- Page Config ---
-st.set_page_config(page_title="⚡ Full AC Lab", page_icon="logo.png", layout="wide")
+st.set_page_config(page_title="Learn EE: RLC Series Lab", layout="wide")
 
-# --- Title ---
-# 1. Create two columns (adjust ratio as needed)
-col1, col2 = st.columns([1, 5])
+st.title("⚡ RLC Series Circuit Interactive Lab")
+st.write("Adjust the parameters to see how the circuit behaves at different frequencies.")
 
-with col1:
-    # Use a local file path or a URL
-    st.image("logo.png", width=80) 
+# --- Sidebar Inputs ---
+st.sidebar.header("Circuit Parameters")
+V_rms = st.sidebar.slider("Source Voltage (Vrms)", 10, 230, 220)
+R = st.sidebar.slider("Resistance (Ω)", 1, 500, 50)
+L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000 # Convert to H
+C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6    # Convert to F
+freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 
-with col2:
-    st.title("⚡ RLC Series Circuits Virtual Lab")
+# --- Calculations ---
+omega = 2 * np.pi * freq
+XL = omega * L
+XC = 1 / (omega * C)
+Z_mag = np.sqrt(R**2 + (XL - XC)**2)
+phase_rad = np.arctan((XL - XC) / R)
+I_rms = V_rms / Z_mag
 
-st.divider()
+# Resonance Freq
+f_res = 1 / (2 * np.pi * np.sqrt(L * C))
 
-# ------------------ SCHEMATIC ------------------
-import os
+# --- Dashboard Layout ---
+col1, col2, col3 = st.columns(3)
+col1.metric("Impedance (Z)", f"{Z_mag:.2f} Ω")
+col2.metric("Current (I)", f"{I_rms:.2f} A")
+col3.metric("Resonant Freq", f"{f_res:.2f} Hz")
 
-def draw_circuit(R, L, C, V):
-    d = schemdraw.Drawing()
-    d.config(unit=3)
+# --- Phasor Diagram ---
+st.subheader("📊 Live Phasor Diagram")
+# Creating Phasor vectors
+fig_phasor = go.Figure()
+fig_phasor.add_trace(go.Scatter(x=[0, R*I_rms], y=[0, 0], name='Vr (Resistive)', line=dict(color='green', width=4)))
+fig_phasor.add_trace(go.Scatter(x=[0, 0], y=[0, XL*I_rms], name='Vl (Inductive)', line=dict(color='blue', width=4)))
+fig_phasor.add_trace(go.Scatter(x=[0, 0], y=[0, -XC*I_rms], name='Vc (Capacitive)', line=dict(color='red', width=4)))
 
-   
-    V1 = d.add(elm.SourceSin().label(f'{V}V\n{f}Hz', loc='top', ofst=0.2))
-    d.add(elm.Resistor().right().label(f'R\n{R}Ω'))
-    d.add(elm.Inductor().right().label(f'L\n{L*1000:.0f} mH'))
-    d.add(elm.Capacitor().right().label(f'C\n{C*1e6:.0f} µF'))
+fig_phasor.update_layout(xaxis=dict(range=[-100, 300]), yaxis=dict(range=[-300, 300]), height=400)
+st.plotly_chart(fig_phasor, use_container_width=True)
 
-    d.add(elm.Line().down())
-    d.add(elm.Line().left().to(V1.start))
-    d.add(elm.Line().up())
-
-    # 👉 Save to file (SAFE METHOD)
-    filename = "circuit.png"
-    d.save(filename)
-
-    return filename
-
-# ------------------ PHASOR ------------------
-def phasor_plot(VR, VL, VC, V):
-    fig, ax = plt.subplots(figsize=(5,5))
-
-    ax.axhline(0)
-    ax.axvline(0)
-
-    ax.quiver(0,0,VR,0, angles='xy', scale_units='xy', scale=1, label='Vr')
-    ax.quiver(0,0,0,VL, angles='xy', scale_units='xy', scale=1, label='Vl')
-    ax.quiver(0,0,0,-VC, angles='xy', scale_units='xy', scale=1, label='Vc')
-    ax.quiver(0,0,VR,(VL-VC), angles='xy', scale_units='xy', scale=1, label='Vs')
-
-    ax.set_title("Phasor Diagram")
-    ax.grid()
-    ax.legend()
-
-    return fig
-
-# ------------------ POWER TRIANGLE ------------------
-def power_triangle(V, I, phi):
-    P = V * I * np.cos(phi)
-    Q = V * I * np.sin(phi)
-    S = V * I
-
-    fig, ax = plt.subplots()
-
-    ax.plot([0, P], [0, 0])
-    ax.plot([P, P], [0, Q])
-    ax.plot([0, P], [0, Q])
-
-    ax.set_title("Power Triangle")
-    ax.set_xlabel("Real Power (P)")
-    ax.set_ylabel("Reactive Power (Q)")
-    ax.grid()
-
-    return fig, P, Q, S
-
-# ------------------ FREQUENCY SWEEP ------------------
-def freq_response(R, L, C):
-    f = np.linspace(1, 500, 500)
-    w = 2*np.pi*f
-
-    XL = w * L
-    XC = 1/(w*C)
-    Z = np.sqrt(R**2 + (XL-XC)**2)
-    I = 1/Z
-
-    fig, ax = plt.subplots()
-    ax.plot(f, I)
-    ax.set_title("Frequency Response (Resonance Curve)")
-    ax.set_xlabel("Frequency (Hz)")
-    ax.set_ylabel("Current (A)")
-    ax.grid()
-
-    return fig
-
-# ------------------ SIDEBAR ------------------
-with st.sidebar:
-    st.header("Controls")
-
-    V = st.slider("Voltage (Vrms)", 10, 500, 230)
-    f = st.slider("Frequency (Hz)", 1, 200, 50)
-
-    R = st.number_input("Resistance (Ω)", value=100.0)
-    L_mH = st.number_input("Inductance (mH)", value=200.0)
-    C_uF = st.number_input("Capacitance (µF)", value=50.0)
-
-# --- Convert Units ---
-L = L_mH / 1000
-C = C_uF / 1e6
-
-w = 2*np.pi*f
-
-XL = w * L
-XC = 1/(w*C)
-X = XL - XC
-
-Z = np.sqrt(R**2 + X**2)
-I = V / Z
-
-phi = np.arctan2(X, R)
-
-VR = I * R
-VL = I * XL
-VC = I * XC
-
-# ------------------ TABS ------------------
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["🔌 Circuit", "📈 Phasor", "⚡ Power", "📊 Resonance", "🧠 Theory"]
-)
-
-# --- Circuit ---
-with tab1:
-    st.subheader("Circuit Diagram")
-    st.image(draw_circuit(R, L, C, V))
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Impedance", f"{Z:.2f} Ω")
-    col2.metric("Current", f"{I:.3f} A")
-    col3.metric("Phase Angle", f"{np.degrees(phi):.2f}°")
-
-# --- Phasor ---
-with tab2:
-    st.subheader("Phasor Diagram")
-    st.pyplot(phasor_plot(VR, VL, VC, V))
-
-# --- Power ---
-with tab3:
-    st.subheader("Power Triangle")
-    fig, P, Q, S = power_triangle(V, I, phi)
-    st.pyplot(fig)
-
-    st.write(f"Real Power (P): {P:.2f} W")
-    st.write(f"Reactive Power (Q): {Q:.2f} VAR")
-    st.write(f"Apparent Power (S): {S:.2f} VA")
-
-# --- Resonance ---
-with tab4:
-    st.subheader("Frequency Sweep")
-    st.pyplot(freq_response(R, L, C))
-
-# --- Theory ---
-with tab5:
-    st.latex(r"X_L = 2\pi f L")
-    st.latex(r"X_C = \frac{1}{2\pi f C}")
-    st.latex(r"Z = \sqrt{R^2 + (X_L - X_C)^2}")
-    st.latex(r"P = VI\cos\phi")
-    st.latex(r"Q = VI\sin\phi")
-    st.latex(r"S = VI")
+# --- Educational Insight ---
+if abs(freq - f_res) < 2:
+    st.success("🎯 **RESONANCE ACHIEVED!** The circuit is purely resistive. Current is at its maximum.")
+elif XL > XC:
+    st.info("🔄 **Inductive Nature:** The current lags the voltage.")
+else:
+    st.warning("🔄 **Capacitive Nature:** The current leads the voltage.")
