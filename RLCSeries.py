@@ -100,10 +100,10 @@ with col2:
         fig_p.add_trace(go.Scatter(x=[0, I], y=[0, 0], mode='lines+markers', name='I', line=dict(color='orange', width=4)))
         fig_p.add_trace(go.Scatter(x=[0, Vr], y=[0, X_net*I], mode='lines+markers', name='V Total', line=dict(color='black', width=3, dash='dash')))
           
-limit = max(Vr, Vl, Vc) * 1.2
-fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
-st.plotly_chart(fig_p, use_container_width=True)
-with tab2:
+        limit = max(Vr, Vl, Vc) * 1.2
+        fig_p.update_layout(xaxis=dict(range=[-limit/4, limit]), yaxis=dict(range=[-limit, limit]), height=450)
+        st.plotly_chart(fig_p, use_container_width=True)
+    with tab2:
         # Drawing the Impedance Triangle (R, X, Z)
         fig_t = go.Figure()
         fig_t.add_trace(go.Scatter(x=[0, R], y=[0, 0], mode='lines+markers', name='Resistance (R)', line=dict(color='green', width=5)))
