@@ -61,7 +61,7 @@ def get_circuit_diagram(V, r_val, l_val, c_val):
     # -------------------------
     d.push()
     d += elm.Inductor().down().label(f'L = {l_val} mH')
-    d += elm.Line().down().length(1)
+    d += elm.Line().down().length(2)
     d.pop()
 
     # move right
