@@ -24,6 +24,23 @@ L = st.sidebar.slider("Inductance (mH)", 1, 1000, 100) / 1000
 C = st.sidebar.slider("Capacitance (μF)", 1, 500, 50) / 1e6
 freq = st.sidebar.slider("Frequency (Hz)", 10, 500, 50)
 
+import schemdraw
+import schemdraw.elements as elm
+
+st.subheader("🔌 RLC Series Circuit Diagram")
+
+with schemdraw.Drawing() as d:
+    d += elm.SourceSin().label("AC Source", loc='left')
+    d += elm.Resistor().label(f"R = {R}Ω")
+    d += elm.Inductor().label(f"L = {L*1000:.0f} mH")
+    d += elm.Capacitor().label(f"C = {C*1e6:.0f} μF")
+    d += elm.Line().down()
+    d += elm.Ground()
+    d += elm.Line().left().length(6)
+    d += elm.Line().up()
+
+st.pyplot(d.draw())
+
 # -------------------------------
 # ⚡ CALCULATIONS
 # -------------------------------
