@@ -59,66 +59,71 @@ def get_circuit_drawing():
 
     # ================= R LINE =================
     d += elm.Line().right().label("R", loc='left')
-
-    # W1 Current Coil (few turns)
-    d += elm.Inductor(loops=3).label("CC1", loc='bottom')
-
-    r_node = elm.Dot()
-    d += r_node
-
+    d += elm.Inductor(loops=3).label("CC1", loc='bottom')  # Current coil
     d += elm.Line().right()
-    d += elm.Resistor().down().label("Load R")
+    r_top = d.here
+    d += elm.Resistor().down().label("Zr")
 
     # ================= Y LINE =================
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("Y", loc='left')
-    y_node = elm.Dot()
-    d += y_node
-
+    y_top = d.here
     d += elm.Line().right()
-    d += elm.Resistor().down().label("Load Y")
+    d += elm.Resistor().down().label("Zy")
 
     # ================= B LINE =================
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("B", loc='left')
-
-    # W2 Current Coil (few turns)
-    d += elm.Inductor(loops=3).label("CC2", loc='bottom')
-
-    b_node = elm.Dot()
-    d += b_node
-
+    d += elm.Inductor(loops=3).label("CC2", loc='bottom')  # Current coil
     d += elm.Line().right()
-    d += elm.Resistor().down().label("Load B")
+    b_top = d.here
+    d += elm.Resistor().down().label("Zb")
 
-    # ================= COMMON RETURN =================
-    d += elm.Line().left(2)
-    d += elm.Line().down()
-    d += elm.Line().right(4)
+    # ================= STAR POINT (NEUTRAL) =================
+    neutral = d += elm.Dot().label("N", loc='bottom')
+
+    # Connect all loads to neutral
+    d.push()
+    d.at(r_top)
+    d += elm.Line().down(2)
+    d += elm.Line().to(neutral)
+    d.pop()
+
+    d.push()
+    d.at(y_top)
+    d += elm.Line().down(2)
+    d += elm.Line().to(neutral)
+    d.pop()
+
+    d.push()
+    d.at(b_top)
+    d += elm.Line().down(2)
+    d += elm.Line().to(neutral)
+    d.pop()
 
     # ================= POTENTIAL COILS =================
 
-    # --- W1 PC across R-Y (more turns) ---
-    # --- W1 PC across R-Y ---
+    # W1 PC (R-Y)
     d.push()
+    d.at(r_top)
     d += elm.Line().up()
     d += elm.Inductor(loops=7).label("PC1", loc='right')
-    d += elm.Line().left(2)   # adjust based on spacing
+    d += elm.Line().to(y_top)
     d.pop()
 
-    # --- W2 PC across B-Y ---
+    # W2 PC (B-Y)
     d.push()
+    d.at(b_top)
     d += elm.Line().down()
     d += elm.Inductor(loops=7).label("PC2", loc='right')
-    d += elm.Line().left(2)
+    d += elm.Line().to(y_top)
     d.pop()
 
     return d
-
 # --- MAIN TITLE ---
 st.title("⚡ Two-Wattmeter Power Measurement Lab")
 
