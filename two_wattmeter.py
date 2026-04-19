@@ -1,4 +1,4 @@
-# 🔥 MUST BE FIRST (prevents Streamlit backend issues)
+# 🔥 MUST BE FIRST
 import matplotlib
 matplotlib.use('Agg')
 
@@ -10,12 +10,12 @@ import schemdraw.elements as elm
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="Learn EE Interactive",
+    page_title="Two Wattmeter Lab",
     page_icon="⚡",
     layout="wide"
 )
 
-# --- CUSTOM CSS ---
+# --- CSS ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -29,42 +29,39 @@ st.markdown("""
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("Learn EE Interactive")
+    st.title("⚡ Learn EE")
 
-    st.header("⚙️ Supply Settings")
-    V_supply = st.slider("Supply Line Voltage (V)", 100, 440, 400)
+    st.header("Supply")
+    V_supply = st.slider("Line Voltage (V)", 100, 440, 400)
 
-    st.divider()
-
-    st.header("🏷️ Load Nameplate Data")
+    st.header("Load")
     V_rated = st.slider("Rated Voltage (V)", 200, 440, 400)
     I_rated = st.slider("Rated Current (A)", 1, 50, 10)
     P_rated = st.slider("Rated Power (kW)", 1.0, 50.0, 5.0)
 
 # --- CALCULATIONS ---
 pf = (P_rated * 1000) / (np.sqrt(3) * V_rated * I_rated)
-pf = np.clip(pf, 0.0, 1.0)
+pf = np.clip(pf, 0, 1)
 
 I_actual = I_rated * (V_supply / V_rated)
 phi = np.arccos(pf)
 
-# Two-wattmeter method
 W1 = V_supply * I_actual * np.cos(np.radians(30) - phi)
 W2 = V_supply * I_actual * np.cos(np.radians(30) + phi)
 P_total = W1 + W2
 
-# --- CIRCUIT DRAWING FUNCTION ---
-def get_circuit_drawing():
+# --- DRAWING FUNCTION ---
+def get_circuit():
     d = schemdraw.Drawing(unit=2)
 
-    # ================= R LINE =================
+    # -------- R PHASE --------
     d += elm.Line().right().label("R", loc='left')
-    d += elm.Inductor(loops=3).label("CC1", loc='bottom')  # Current coil
-    d += elm.Line().right()
+    d += elm.Inductor(loops=3).label("CC1", loc='bottom')   # Current coil
     r_top = d.here
+    d += elm.Line().right()
     d += elm.Resistor().down().label("Zr")
 
-    # ================= Y LINE =================
+    # -------- Y PHASE --------
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
@@ -73,20 +70,21 @@ def get_circuit_drawing():
     d += elm.Line().right()
     d += elm.Resistor().down().label("Zy")
 
-    # ================= B LINE =================
+    # -------- B PHASE --------
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("B", loc='left')
-    d += elm.Inductor(loops=3).label("CC2", loc='bottom')  # Current coil
-    d += elm.Line().right()
+    d += elm.Inductor(loops=3).label("CC2", loc='bottom')   # Current coil
     b_top = d.here
+    d += elm.Line().right()
     d += elm.Resistor().down().label("Zb")
 
-    # ================= STAR POINT (NEUTRAL) =================
-    neutral = d += elm.Dot().label("N", loc='bottom')
+    # -------- STAR POINT (NEUTRAL) --------
+    neutral = elm.Dot().label("N", loc='bottom')
+    d += neutral
 
-    # Connect all loads to neutral
+    # Connect loads to neutral
     d.push()
     d.at(r_top)
     d += elm.Line().down(2)
@@ -105,7 +103,7 @@ def get_circuit_drawing():
     d += elm.Line().to(neutral)
     d.pop()
 
-    # ================= POTENTIAL COILS =================
+    # -------- POTENTIAL COILS --------
 
     # W1 PC (R-Y)
     d.push()
@@ -124,19 +122,18 @@ def get_circuit_drawing():
     d.pop()
 
     return d
-# --- MAIN TITLE ---
-st.title("⚡ Two-Wattmeter Power Measurement Lab")
+
+# --- UI LAYOUT ---
+st.title("⚡ Two-Wattmeter Method (Star Connected Load)")
 
 col1, col2 = st.columns([1.5, 1])
 
-# --- CIRCUIT DIAGRAM ---
+# --- CIRCUIT ---
 with col1:
-    st.subheader("🔌 Two Wattmeter Method Connection")
+    st.subheader("🔌 Circuit Diagram")
 
-    d = get_circuit_drawing()
-
-    d.draw()
-    fig = plt.gcf()
+    d = get_circuit()
+    fig = d.draw()
     st.pyplot(fig)
     plt.clf()
 
@@ -145,8 +142,8 @@ with col2:
     st.subheader("📊 Results")
 
     st.metric("Line Current", f"{I_actual:.2f} A")
-    st.metric("Wattmeter W1", f"{W1:.1f} W")
-    st.metric("Wattmeter W2", f"{W2:.1f} W")
+    st.metric("W1", f"{W1:.1f} W")
+    st.metric("W2", f"{W2:.1f} W")
     st.metric("Total Power", f"{P_total:.1f} W")
 
     st.divider()
@@ -154,7 +151,7 @@ with col2:
     st.metric("Power Factor", f"{pf:.3f}")
 
     if pf < 0.5:
-        st.info("Low Power Factor (Highly Inductive Load)")
+        st.info("Low Power Factor")
     elif pf < 0.9:
         st.warning("Moderate Power Factor")
     else:
@@ -163,8 +160,8 @@ with col2:
     st.divider()
 
     if V_supply > V_rated:
-        st.warning("⚠️ High Voltage: Risk of insulation damage.")
+        st.warning("⚠️ Overvoltage")
     elif V_supply < V_rated:
-        st.warning("⚠️ Low Voltage: Reduced performance.")
+        st.warning("⚠️ Undervoltage")
     else:
-        st.success("✅ Nominal Operation")
+        st.success("✅ Normal Operation")
