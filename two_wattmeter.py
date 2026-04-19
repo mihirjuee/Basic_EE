@@ -54,18 +54,24 @@ col1, col2 = st.columns([1.5, 1])
 with col1:
     st.subheader("🔌 Connection Schematic")
     d = schemdraw.Drawing()
-        
+    
     # 3-Phase Source
     d += elm.SourceV().label("Line A").up()
-        
-     # Wattmeter 1 (Using standard Meter element)
-    d += elm.Meter().label("W1").right() 
-        
-    d += elm.Line().down().length(1)
+    # Using a generic Circle/Meter element that is more stable
+    d += elm.Circle().label("W1")
+    d += elm.Line().right().length(1)
     d += elm.Resistor().label("Load A").down()
-        
-    # ... (rest of your connections)
-        
+    
+    d += elm.Line().at((0,0)).right().length(1)
+    d += elm.SourceV().at((1,0)).label("Line B").up()
+    d += elm.Circle().label("W2")
+    d += elm.Line().right().length(1)
+    d += elm.Resistor().label("Load B").down()
+    
+    d += elm.SourceV().at((2,0)).label("Line C").up()
+    d += elm.Line().up().length(0.5)
+    d += elm.Resistor().label("Load C").down()
+    
     st.pyplot(d.draw().fig)
     
 
