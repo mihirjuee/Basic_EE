@@ -61,20 +61,21 @@ col1, col2 = st.columns([1.5, 1])
 # --- CIRCUIT DIAGRAM ---
 
 def get_circuit_drawing():
-    # Initialize the drawing object
     d = schemdraw.Drawing()
     
-    # Add elements to the drawing explicitly
+    # R-Phase
     d.add(elm.Line().label("R", loc='left').length(1))
-    d.add(elm.Circle().label("W1"))
+    d.add(elm.Meter().label("W1"))  # Using the dedicated Meter element
     d.add(elm.Line().right().length(1))
     d.add(elm.Resistor().label("Load").right())
     
+    # Y-Phase
     d.add(elm.Line().at((0,-2)).label("Y", loc='left').length(1))
     d.add(elm.Dot())
     
+    # B-Phase
     d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
-    d.add(elm.Circle().label("W2"))
+    d.add(elm.Meter().label("W2"))  # Using the dedicated Meter element
     d.add(elm.Line().right().length(1))
     d.add(elm.Resistor().label("Load").right())
     
