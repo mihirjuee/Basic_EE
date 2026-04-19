@@ -53,46 +53,55 @@ W1 = V_supply * I_actual * np.cos(np.radians(30) - phi)
 W2 = V_supply * I_actual * np.cos(np.radians(30) + phi)
 P_total = W1 + W2
 
+# --- CIRCUIT DRAWING FUNCTION ---
+def get_circuit_drawing():
+    d = schemdraw.Drawing()
+
+    # -------- R PHASE --------
+    d += elm.Line().label("R", loc='left').length(1)
+    d += elm.Resistor().label("W1")
+    d += elm.Line().right().length(1)
+    d += elm.Resistor().down().label("Load R")
+
+    d += elm.Line().left(3)
+    d += elm.Line().down(2)
+
+    # -------- Y PHASE --------
+    d += elm.Line().label("Y", loc='left').length(1)
+    d += elm.Line().right().length(1)
+    d += elm.Resistor().down().label("Load Y")
+
+    d += elm.Line().left(2)
+    d += elm.Line().down(2)
+
+    # -------- B PHASE --------
+    d += elm.Line().label("B", loc='left').length(1)
+    d += elm.Resistor().label("W2")
+    d += elm.Line().right().length(1)
+    d += elm.Resistor().down().label("Load B")
+
+    # -------- COMMON RETURN --------
+    d += elm.Line().left(2)
+    d += elm.Line().down()
+    d += elm.Line().right(4)
+
+    return d
+
 # --- MAIN TITLE ---
 st.title("⚡ Two-Wattmeter Power Measurement Lab")
 
 col1, col2 = st.columns([1.5, 1])
 
 # --- CIRCUIT DIAGRAM ---
+with col1:
+    st.subheader("🔌 Two Wattmeter Method Connection")
 
-def get_circuit_drawing():
-    d = schemdraw.Drawing()
-    
-    # R-Phase
-    d.add(elm.Line().label("R", loc='left').length(1))
-    d.add(elm.Resistor().label("W1")) # Circles work in almost all versions
-    d.add(elm.Line().right().length(1))
-    d.add(elm.Resistor().label("Load").right())
-    
-    # Y-Phase
-    d.add(elm.Line().at((0,-2)).label("Y", loc='left').length(1))
-    d.add(elm.Dot())
-    
-    # B-Phase
-    d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
-    d.add(elm.Resistor().label("W2")) # Using Circle instead of Meter
-    d.add(elm.Line().right().length(1))
-    d.add(elm.Resistor().label("Load").right())
-    
-    return d
+    d = get_circuit_drawing()
 
-# --- Streamlit Display ---
-st.subheader("🔌 2-Wattmeter Method Schematic")
-
-# Generate the drawing object
-drawing = get_circuit_drawing()
-
-# Convert the drawing to a matplotlib figure
-fig = drawing.draw()
-
-# Pass the figure directly to st.pyplot
-st.pyplot(fig)
-
+    d.draw()
+    fig = plt.gcf()
+    st.pyplot(fig)
+    plt.clf()
 
 # --- RESULTS ---
 with col2:
@@ -116,7 +125,6 @@ with col2:
 
     st.divider()
 
-    # Voltage condition alerts
     if V_supply > V_rated:
         st.warning("⚠️ High Voltage: Risk of insulation damage.")
     elif V_supply < V_rated:
