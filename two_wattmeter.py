@@ -60,41 +60,54 @@ col1, col2 = st.columns([1.5, 1])
 
 # --- CIRCUIT DIAGRAM ---
 with col1:
-    st.subheader("🔌 Two Wattmeter Method Connection")
+    st.subheader("🔌 Two Wattmeter Method (Correct Connection)")
 
     d = schemdraw.Drawing()
 
-    # -------- LINE A --------
-    d += elm.SourceV().up().label("Line A")
-    d += elm.Line().right()
-    d += elm.Resistor().label("W1")
-    d += elm.Line().right()
-    d += elm.Resistor().down().label("Load A")
+    # ----------- TOP BUS (LINE A, B, C) -----------
+    d += elm.Dot().label("A")
+    d += elm.Line().right(3)
+    d += elm.Dot().label("B")
+    d += elm.Line().right(3)
+    d += elm.Dot().label("C")
 
-    d += elm.Line().left(3)
+    # ----------- CURRENT COIL W1 (LINE A) -----------
+    d.push()
     d += elm.Line().down(2)
-
-    # -------- LINE B --------
-    d += elm.SourceV().up().label("Line B")
-    d += elm.Line().right()
-    d += elm.Resistor().label("W2")
-    d += elm.Line().right()
-    d += elm.Resistor().down().label("Load B")
-
-    d += elm.Line().left(3)
+    d += elm.Resistor().label("W1 (CC)")
     d += elm.Line().down(2)
+    d.pop()
 
-    # -------- LINE C --------
-    d += elm.SourceV().up().label("Line C")
-    d += elm.Line().right()
-    d += elm.Resistor().down().label("Load C")
+    # ----------- CURRENT COIL W2 (LINE B) -----------
+    d.push()
+    d += elm.Line().at((3, 0)).down(2)
+    d += elm.Resistor().label("W2 (CC)")
+    d += elm.Line().down(2)
+    d.pop()
 
-    # -------- COMMON RETURN --------
-    d += elm.Line().left(2)
-    d += elm.Line().down()
-    d += elm.Line().right(4)
+    # ----------- LINE C DIRECT TO LOAD -----------
+    d.push()
+    d += elm.Line().at((6, 0)).down(4)
+    d.pop()
 
-    # 🔥 FIXED RENDERING (IMPORTANT)
+    # ----------- LOAD (COMMON POINT) -----------
+    d += elm.Line().at((0, -4)).right(6)
+    d += elm.Dot().label("Load")
+
+    # ----------- VOLTAGE COILS -----------
+    # W1 voltage coil between A and B
+    d += elm.Line().at((0, 0)).up(1)
+    d += elm.Line().right(3)
+    d += elm.Resistor().label("W1 (PC)")
+    d += elm.Line().down(1)
+
+    # W2 voltage coil between B and C
+    d += elm.Line().at((3, 0)).up(1)
+    d += elm.Line().right(3)
+    d += elm.Resistor().label("W2 (PC)")
+    d += elm.Line().down(1)
+
+    # ----------- RENDER FIX -----------
     d.draw()
     fig = plt.gcf()
     st.pyplot(fig)
