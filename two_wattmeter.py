@@ -1,4 +1,4 @@
-# 🔥 MUST BE FIRST
+# 🔥 MUST BE FIRST (Streamlit + matplotlib safety)
 import matplotlib
 matplotlib.use('Agg')
 
@@ -38,14 +38,14 @@ W1 = V_supply * I_actual * np.cos(np.radians(30) - phi)
 W2 = V_supply * I_actual * np.cos(np.radians(30) + phi)
 P_total = W1 + W2
 
-# --- TEXTBOOK DIAGRAM FUNCTION ---
+# --- TEXTBOOK CIRCUIT FUNCTION ---
 def get_circuit():
     d = schemdraw.Drawing(unit=2)
 
-    # ===== TOP BUS =====
+    # ================= TOP BUS =================
     d += elm.Line().right(6)
 
-    # ===== R PHASE =====
+    # ================= R PHASE =================
     d.push()
     d.move(-6, 0)
     d += elm.Dot().label("R", loc='left')
@@ -54,7 +54,7 @@ def get_circuit():
     d += elm.Resistor().down(2).label("Zr")
     d.pop()
 
-    # ===== Y PHASE =====
+    # ================= Y PHASE =================
     d.push()
     d.move(-3, 0)
     d += elm.Dot().label("Y", loc='left')
@@ -62,7 +62,7 @@ def get_circuit():
     d += elm.Resistor().down(2).label("Zy")
     d.pop()
 
-    # ===== B PHASE =====
+    # ================= B PHASE =================
     d.push()
     d.move(0, 0)
     d += elm.Dot().label("B", loc='left')
@@ -71,34 +71,32 @@ def get_circuit():
     d += elm.Resistor().down(2).label("Zb")
     d.pop()
 
-    # ===== STAR POINT =====
+    # ================= STAR NEUTRAL =================
     d.push()
     d.move(-3, -4)
     d += elm.Dot().label("N", loc='bottom')
     d.pop()
 
-    # ===== LOAD CONNECTIONS =====
-    # R to N
+    # ================= LOAD CONNECTIONS =================
     d.push()
     d.move(-4, -2)
     d += elm.Line().down(2)
     d += elm.Line().right(1)
     d.pop()
 
-    # Y to N
     d.push()
     d.move(-1, -2)
     d += elm.Line().down(2)
     d.pop()
 
-    # B to N
     d.push()
     d.move(2, -2)
     d += elm.Line().down(2)
     d += elm.Line().left(1)
     d.pop()
 
-    # ===== POTENTIAL COILS =====
+    # ================= POTENTIAL COILS =================
+
     # W1 (R-Y)
     d.push()
     d.move(-4, 0)
@@ -122,15 +120,17 @@ st.title("⚡ Two-Wattmeter Method (Star Connected Load)")
 
 col1, col2 = st.columns([1.5, 1])
 
-# --- DIAGRAM ---
+# --- CIRCUIT DIAGRAM ---
 with col1:
     st.subheader("🔌 Circuit Diagram (Textbook Style)")
-    d = get_circuit()
-    fig = d.draw()
-    st.pyplot(fig)
-    plt.clf()
 
-# --- RESULTS ---
+    d = get_circuit()
+    d.draw()                 # IMPORTANT FIX
+    fig = plt.gcf()          # get matplotlib figure
+    st.pyplot(fig)           # show in Streamlit
+    plt.clf()                # clear for rerun safety
+
+# --- RESULTS PANEL ---
 with col2:
     st.subheader("📊 Results")
 
