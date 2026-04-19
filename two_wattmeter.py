@@ -53,25 +53,39 @@ col1, col2 = st.columns([1.5, 1])
 # Circuit Diagram section update
 with col1:
     st.subheader("🔌 Connection Schematic")
+
+    import schemdraw
+    import schemdraw.elements as elm
+
     d = schemdraw.Drawing()
-    
-    # 3-Phase Source
-    d += elm.SourceV().label("Line A").up()
-    # Using a generic Circle/Meter element that is more stable
+
+    # --- LINE A ---
+    d += elm.SourceV().up().label("Line A")
+    d += elm.Line().right()
     d += elm.Circle().label("W1")
-    d += elm.Line().right().length(1)
-    d += elm.Resistor().label("Load A").down()
-    
-    d += elm.Line().at((0,0)).right().length(1)
-    d += elm.SourceV().at((1,0)).label("Line B").up()
+    d += elm.Line().right()
+    d += elm.Resistor().down().label("Load A")
+
+    # Return to base line
+    d += elm.Line().left(3)
+    d += elm.Line().down(2)
+
+    # --- LINE B ---
+    d += elm.SourceV().up().label("Line B")
+    d += elm.Line().right()
     d += elm.Circle().label("W2")
-    d += elm.Line().right().length(1)
-    d += elm.Resistor().label("Load B").down()
-    
-    d += elm.SourceV().at((2,0)).label("Line C").up()
-    d += elm.Line().up().length(0.5)
-    d += elm.Resistor().label("Load C").down()
-    
+    d += elm.Line().right()
+    d += elm.Resistor().down().label("Load B")
+
+    # Return again
+    d += elm.Line().left(3)
+    d += elm.Line().down(2)
+
+    # --- LINE C ---
+    d += elm.SourceV().up().label("Line C")
+    d += elm.Line().right()
+    d += elm.Resistor().down().label("Load C")
+
     st.pyplot(d.draw().fig)
     
 
