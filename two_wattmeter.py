@@ -74,7 +74,8 @@ def get_circuit_drawing():
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("Y", loc='left')
-    y_node = d += elm.Dot()
+    y_node = elm.Dot()
+    d += y_node
 
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load Y")
