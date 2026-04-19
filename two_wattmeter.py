@@ -59,39 +59,40 @@ st.title("⚡ Two-Wattmeter Power Measurement Lab")
 col1, col2 = st.columns([1.5, 1])
 
 # --- CIRCUIT DIAGRAM ---
-import streamlit as st
-import schemdraw
-import schemdraw.elements as elm
 
-def draw_circuit():
-    # Use with statement for context management
-    with schemdraw.Drawing() as d:
-        d.config(unit=2)
-        
-        # Define elements explicitly
-        w1 = elm.Circle().label("W1")
-        w2 = elm.Circle().label("W2")
-        
-        # Add elements to the drawing
-        d.add(elm.Line().label("R", loc='left').length(1))
-        d.add(w1)
-        d.add(elm.Line().right().length(1))
-        d.add(elm.Resistor().label("Load").right())
-        
-        d.add(elm.Line().at((0,-2)).label("Y", loc='left').length(1))
-        d.add(elm.Dot())
-        
-        d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
-        d.add(w2)
-        d.add(elm.Line().right().length(1))
-        d.add(elm.Resistor().label("Load").right())
-        
+def get_circuit_drawing():
+    # Initialize the drawing object
+    d = schemdraw.Drawing()
+    
+    # Add elements to the drawing explicitly
+    d.add(elm.Line().label("R", loc='left').length(1))
+    d.add(elm.Circle().label("W1"))
+    d.add(elm.Line().right().length(1))
+    d.add(elm.Resistor().label("Load").right())
+    
+    d.add(elm.Line().at((0,-2)).label("Y", loc='left').length(1))
+    d.add(elm.Dot())
+    
+    d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
+    d.add(elm.Circle().label("W2"))
+    d.add(elm.Line().right().length(1))
+    d.add(elm.Resistor().label("Load").right())
+    
     return d
 
-# Streamlit display
+# --- Streamlit Display ---
 st.subheader("🔌 2-Wattmeter Method Schematic")
-fig = draw_circuit().draw()
+
+# Generate the drawing object
+drawing = get_circuit_drawing()
+
+# Convert the drawing to a matplotlib figure
+fig = drawing.draw()
+
+# Pass the figure directly to st.pyplot
 st.pyplot(fig)
+
+
 # --- RESULTS ---
 with col2:
     st.subheader("📊 Results")
