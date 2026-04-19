@@ -75,7 +75,7 @@ def get_circuit_drawing():
     
     # B-Phase
     d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
-    d.add(elm.Circle().label("W2")) # Using Circle instead of Meter
+    d.add(elm.Resistor().label("W2")) # Using Circle instead of Meter
     d.add(elm.Line().right().length(1))
     d.add(elm.Resistor().label("Load").right())
     
