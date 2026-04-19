@@ -15,26 +15,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS ---
-st.markdown("""
-<style>
-[data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-}
-[data-testid="stSidebar"] {
-    background-color: #f8f9fa;
-}
-</style>
-""", unsafe_allow_html=True)
-
 # --- SIDEBAR ---
 with st.sidebar:
     st.title("⚡ Learn EE")
 
-    st.header("Supply")
     V_supply = st.slider("Line Voltage (V)", 100, 440, 400)
-
-    st.header("Load")
     V_rated = st.slider("Rated Voltage (V)", 200, 440, 400)
     I_rated = st.slider("Rated Current (A)", 1, 50, 10)
     P_rated = st.slider("Rated Power (kW)", 1.0, 50.0, 5.0)
@@ -50,94 +35,79 @@ W1 = V_supply * I_actual * np.cos(np.radians(30) - phi)
 W2 = V_supply * I_actual * np.cos(np.radians(30) + phi)
 P_total = W1 + W2
 
-# --- DRAWING FUNCTION ---
+# --- DRAWING FUNCTION (VERSION SAFE) ---
 def get_circuit():
     d = schemdraw.Drawing(unit=2)
 
-    # -------- R PHASE --------
+    # ========= R PHASE =========
     d += elm.Line().right().label("R", loc='left')
-    d += elm.Inductor(loops=3).label("CC1", loc='bottom')   # Current coil
-    r_top = d.here
+    d += elm.Inductor(loops=3).label("CC1", loc='bottom')
+
+    # PC1 branch (R-Y)
+    d.push()
+    d += elm.Line().up()
+    d += elm.Inductor(loops=7).label("PC1", loc='right')
+    d += elm.Line().right(2)
+    d.pop()
+
     d += elm.Line().right()
     d += elm.Resistor().down().label("Zr")
 
-    # -------- Y PHASE --------
+    # ========= Y PHASE =========
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("Y", loc='left')
-    y_top = d.here
+
+    d.push()
+    d += elm.Line().up(2)   # connection point for PC
+    d.pop()
+
     d += elm.Line().right()
     d += elm.Resistor().down().label("Zy")
 
-    # -------- B PHASE --------
+    # ========= B PHASE =========
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
     d += elm.Line().right().label("B", loc='left')
-    d += elm.Inductor(loops=3).label("CC2", loc='bottom')   # Current coil
-    b_top = d.here
+    d += elm.Inductor(loops=3).label("CC2", loc='bottom')
+
+    # PC2 branch (B-Y)
+    d.push()
+    d += elm.Line().down()
+    d += elm.Inductor(loops=7).label("PC2", loc='right')
+    d += elm.Line().right(2)
+    d.pop()
+
     d += elm.Line().right()
     d += elm.Resistor().down().label("Zb")
 
-    # -------- STAR POINT (NEUTRAL) --------
+    # ========= STAR CONNECTION =========
+    d += elm.Line().left(2)
+    d += elm.Line().down()
     neutral = elm.Dot().label("N", loc='bottom')
     d += neutral
 
-    # Connect loads to neutral
+    # Connect three loads to neutral (visually aligned)
     d.push()
-    d.at(r_top)
-    d += elm.Line().down(2)
-    d += elm.Line().to(neutral)
-    d.pop()
-
-    d.push()
-    d.at(y_top)
-    d += elm.Line().down(2)
-    d += elm.Line().to(neutral)
-    d.pop()
-
-    d.push()
-    d.at(b_top)
-    d += elm.Line().down(2)
-    d += elm.Line().to(neutral)
-    d.pop()
-
-    # -------- POTENTIAL COILS --------
-
-    # W1 PC (R-Y)
-    d.push()
-    d.at(r_top)
-    d += elm.Line().up()
-    d += elm.Inductor(loops=7).label("PC1", loc='right')
-    d += elm.Line().to(y_top)
-    d.pop()
-
-    # W2 PC (B-Y)
-    d.push()
-    d.at(b_top)
-    d += elm.Line().down()
-    d += elm.Inductor(loops=7).label("PC2", loc='right')
-    d += elm.Line().to(y_top)
+    d += elm.Line().left(2)
     d.pop()
 
     return d
 
-# --- UI LAYOUT ---
-st.title("⚡ Two-Wattmeter Method (Star Connected Load)")
+# --- UI ---
+st.title("⚡ Two-Wattmeter Method (Version-Safe)")
 
 col1, col2 = st.columns([1.5, 1])
 
-# --- CIRCUIT ---
 with col1:
     st.subheader("🔌 Circuit Diagram")
-
     d = get_circuit()
     fig = d.draw()
     st.pyplot(fig)
     plt.clf()
 
-# --- RESULTS ---
 with col2:
     st.subheader("📊 Results")
 
