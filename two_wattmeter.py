@@ -1,12 +1,17 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 import schemdraw
 import schemdraw.elements as elm
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Learn EE Interactive",page_icon="logo.png", layout="wide")
+st.set_page_config(
+    page_title="Learn EE Interactive",
+    page_icon="⚡",
+    layout="wide"
+)
 
-# --- CUSTOM CSS FOR BRANDING ---
+# --- CUSTOM CSS ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -18,94 +23,102 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR BRANDING & INPUTS ---
+# --- SIDEBAR ---
 with st.sidebar:
-    # Replace the URL with your actual logo image URL
-   # st.image("https://github.com/mihirjuee/Basic_EE/blob/main/logo.png", width=200)
     st.title("Learn EE Interactive")
-    
-    st.header("⚙️ Supply Settings")
-    V_supply = st.slider("Supply Line Voltage (V) [V]", 100, 440, 400)
-    
-    st.divider()
-    
-    st.header("🏷️ Load Nameplate Data")
-    V_rated = st.slider("Rated Voltage (V) [V]", 200, 440, 400)
-    I_rated = st.slider("Rated Current (I) [A]", 1, 50, 10)
-    P_rated = st.slider("Rated Active Power (P) [kW]", 1.0, 50.0, 5.0)
 
-# --- LOGIC ---
+    st.header("⚙️ Supply Settings")
+    V_supply = st.slider("Supply Line Voltage (V)", 100, 440, 400)
+
+    st.divider()
+
+    st.header("🏷️ Load Nameplate Data")
+    V_rated = st.slider("Rated Voltage (V)", 200, 440, 400)
+    I_rated = st.slider("Rated Current (A)", 1, 50, 10)
+    P_rated = st.slider("Rated Power (kW)", 1.0, 50.0, 5.0)
+
+# --- CALCULATIONS ---
 pf = (P_rated * 1000) / (np.sqrt(3) * V_rated * I_rated)
 pf = np.clip(pf, 0.0, 1.0)
+
 I_actual = I_rated * (V_supply / V_rated)
 phi = np.arccos(pf)
 
-# Two-wattmeter formulas
-W1 = (V_supply * I_actual * np.cos(np.radians(30) - phi))
-W2 = (V_supply * I_actual * np.cos(np.radians(30) + phi))
+# Two-wattmeter method
+W1 = V_supply * I_actual * np.cos(np.radians(30) - phi)
+W2 = V_supply * I_actual * np.cos(np.radians(30) + phi)
 P_total = W1 + W2
 
-# --- MAIN CONTENT ---
-st.title("⚡ 2-Wattmeter Power Measurement Lab")
+# --- MAIN TITLE ---
+st.title("⚡ Two-Wattmeter Power Measurement Lab")
+
 col1, col2 = st.columns([1.5, 1])
 
-# CIRCUIT DIAGRAM
-# Circuit Diagram section update
+# --- CIRCUIT DIAGRAM ---
 with col1:
     st.subheader("🔌 Two Wattmeter Method Connection")
 
-    import schemdraw
-    import schemdraw.elements as elm
-
     d = schemdraw.Drawing()
 
-    # ---------------- LINE A ----------------
+    # -------- LINE A --------
     d += elm.SourceV().up().label("Line A")
     d += elm.Line().right()
-    d += elm.Resistor().label("W1")   # Wattmeter (symbolic)
+    d += elm.Resistor().label("W1")
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load A")
 
-    # Return to base
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # ---------------- LINE B ----------------
+    # -------- LINE B --------
     d += elm.SourceV().up().label("Line B")
     d += elm.Line().right()
-    d += elm.Resistor().label("W2")   # Wattmeter (symbolic)
+    d += elm.Resistor().label("W2")
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load B")
 
-    # Return to base
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # ---------------- LINE C ----------------
+    # -------- LINE C --------
     d += elm.SourceV().up().label("Line C")
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load C")
 
-    # ---------------- COMMON RETURN ----------------
+    # -------- COMMON RETURN --------
     d += elm.Line().left(2)
     d += elm.Line().down()
     d += elm.Line().right(4)
 
     fig = d.draw()
-    st.pyplot(fig)
-    
+    st.pyplot(fig, clear_figure=True)
 
-# READINGS
+# --- RESULTS ---
 with col2:
     st.subheader("📊 Results")
-    st.metric("Actual Line Current", f"{I_actual:.2f} A")
-    st.metric("Wattmeter 1 (W1)", f"{W1:.1f} W")
-    st.metric("Wattmeter 2 (W2)", f"{W2:.1f} W")
+
+    st.metric("Line Current", f"{I_actual:.2f} A")
+    st.metric("Wattmeter W1", f"{W1:.1f} W")
+    st.metric("Wattmeter W2", f"{W2:.1f} W")
     st.metric("Total Power", f"{P_total:.1f} W")
-    
-    if V_supply > V_rated:
-        st.warning("⚠️ High Voltage: Check insulation.")
-    elif V_supply < V_rated:
-        st.warning("⚠️ Low Voltage: Load performance reduced.")
+
+    st.divider()
+
+    st.metric("Power Factor", f"{pf:.3f}")
+
+    if pf < 0.5:
+        st.info("Low Power Factor (Highly Inductive Load)")
+    elif pf < 0.9:
+        st.warning("Moderate Power Factor")
     else:
-        st.success("✅ Nominal Operation.")
+        st.success("Good Power Factor")
+
+    st.divider()
+
+    # Voltage condition alerts
+    if V_supply > V_rated:
+        st.warning("⚠️ High Voltage: Risk of insulation damage.")
+    elif V_supply < V_rated:
+        st.warning("⚠️ Low Voltage: Reduced performance.")
+    else:
+        st.success("✅ Nominal Operation")
