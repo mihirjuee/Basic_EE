@@ -55,35 +55,65 @@ P_total = W1 + W2
 
 # --- CIRCUIT DRAWING FUNCTION ---
 def get_circuit_drawing():
-    d = schemdraw.Drawing()
+    d = schemdraw.Drawing(unit=2)
 
-    # -------- R PHASE --------
-    d += elm.Line().label("R", loc='left').length(1)
-    d += elm.Resistor().label("W1")
-    d += elm.Line().right().length(1)
+    # ================= R LINE =================
+    d += elm.Line().right().label("R", loc='left')
+
+    # W1 Current Coil (few turns)
+    d += elm.Inductor(loops=3).label("CC1", loc='bottom')
+
+    r_node = d += elm.Dot()
+
+    d += elm.Line().right()
     d += elm.Resistor().down().label("Load R")
 
+    # ================= Y LINE =================
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # -------- Y PHASE --------
-    d += elm.Line().label("Y", loc='left').length(1)
-    d += elm.Line().right().length(1)
+    d += elm.Line().right().label("Y", loc='left')
+    y_node = d += elm.Dot()
+
+    d += elm.Line().right()
     d += elm.Resistor().down().label("Load Y")
 
-    d += elm.Line().left(2)
+    # ================= B LINE =================
+    d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # -------- B PHASE --------
-    d += elm.Line().label("B", loc='left').length(1)
-    d += elm.Resistor().label("W2")
-    d += elm.Line().right().length(1)
+    d += elm.Line().right().label("B", loc='left')
+
+    # W2 Current Coil (few turns)
+    d += elm.Inductor(loops=3).label("CC2", loc='bottom')
+
+    b_node = d += elm.Dot()
+
+    d += elm.Line().right()
     d += elm.Resistor().down().label("Load B")
 
-    # -------- COMMON RETURN --------
+    # ================= COMMON RETURN =================
     d += elm.Line().left(2)
     d += elm.Line().down()
     d += elm.Line().right(4)
+
+    # ================= POTENTIAL COILS =================
+
+    # --- W1 PC across R-Y (more turns) ---
+    d.push()
+    d.move_from(r_node)
+    d += elm.Line().up()
+    d += elm.Inductor(loops=7).label("PC1", loc='right')
+    d += elm.Line().to(y_node)
+    d.pop()
+
+    # --- W2 PC across B-Y (more turns) ---
+    d.push()
+    d.move_from(b_node)
+    d += elm.Line().down()
+    d += elm.Inductor(loops=7).label("PC2", loc='right')
+    d += elm.Line().to(y_node)
+    d.pop()
 
     return d
 
