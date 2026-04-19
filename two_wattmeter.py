@@ -1,3 +1,7 @@
+# 🔥 MUST BE FIRST (prevents Streamlit backend issues)
+import matplotlib
+matplotlib.use('Agg')
+
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
@@ -90,8 +94,11 @@ with col1:
     d += elm.Line().down()
     d += elm.Line().right(4)
 
-    fig = d.draw()
-    st.pyplot(fig, clear_figure=True)
+    # 🔥 FIXED RENDERING (IMPORTANT)
+    d.draw()
+    fig = plt.gcf()
+    st.pyplot(fig)
+    plt.clf()
 
 # --- RESULTS ---
 with col2:
