@@ -21,7 +21,7 @@ st.markdown("""
 # --- SIDEBAR BRANDING & INPUTS ---
 with st.sidebar:
     # Replace the URL with your actual logo image URL
-    st.image("https://github.com/mihirjuee/Basic_EE/blob/main/logo.png", width=200)
+   # st.image("https://github.com/mihirjuee/Basic_EE/blob/main/logo.png", width=200)
     st.title("Learn EE Interactive")
     
     st.header("⚙️ Supply Settings")
