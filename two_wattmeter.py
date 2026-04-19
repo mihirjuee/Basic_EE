@@ -65,7 +65,7 @@ def get_circuit_drawing():
     
     # R-Phase
     d.add(elm.Line().label("R", loc='left').length(1))
-    d.add(elm.Circle().label("W1")) # Circles work in almost all versions
+    d.add(elm.Resistor().label("W1")) # Circles work in almost all versions
     d.add(elm.Line().right().length(1))
     d.add(elm.Resistor().label("Load").right())
     
