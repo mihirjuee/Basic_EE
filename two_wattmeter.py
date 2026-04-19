@@ -63,7 +63,8 @@ def get_circuit_drawing():
     # W1 Current Coil (few turns)
     d += elm.Inductor(loops=3).label("CC1", loc='bottom')
 
-    r_node = d += elm.Dot()
+    r_node = elm.Dot()
+    d += r_node
 
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load R")
@@ -87,7 +88,8 @@ def get_circuit_drawing():
     # W2 Current Coil (few turns)
     d += elm.Inductor(loops=3).label("CC2", loc='bottom')
 
-    b_node = d += elm.Dot()
+    b_node = elm.Dot()
+    d += b_node
 
     d += elm.Line().right()
     d += elm.Resistor().down().label("Load B")
