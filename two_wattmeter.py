@@ -52,41 +52,69 @@ col1, col2 = st.columns([1.5, 1])
 # CIRCUIT DIAGRAM
 # Circuit Diagram section update
 with col1:
-    st.subheader("🔌 Connection Schematic")
+    st.subheader("🔌 Two Wattmeter Method Connection")
 
     import schemdraw
     import schemdraw.elements as elm
 
     d = schemdraw.Drawing()
 
-    # --- LINE A ---
+    # ---------------- LINE A ----------------
     d += elm.SourceV().up().label("Line A")
     d += elm.Line().right()
-    d += elm.Circle().label("W1")
+
+    # Wattmeter W1 (Current Coil)
+    d += elm.Meter().label("W1")
     d += elm.Line().right()
+
+    # Load A
     d += elm.Resistor().down().label("Load A")
 
-    # Return to base line
+    # Return to base
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # --- LINE B ---
+    # ---------------- LINE B ----------------
     d += elm.SourceV().up().label("Line B")
     d += elm.Line().right()
-    d += elm.Circle().label("W2")
+
+    # Wattmeter W2 (Current Coil)
+    d += elm.Meter().label("W2")
     d += elm.Line().right()
+
+    # Load B
     d += elm.Resistor().down().label("Load B")
 
-    # Return again
+    # Return to base
     d += elm.Line().left(3)
     d += elm.Line().down(2)
 
-    # --- LINE C ---
+    # ---------------- LINE C ----------------
     d += elm.SourceV().up().label("Line C")
     d += elm.Line().right()
+
+    # Load C (No wattmeter in line C)
     d += elm.Resistor().down().label("Load C")
 
-    st.pyplot(d.draw().fig)
+    # ---------------- COMMON RETURN (LOAD SIDE CONNECTION) ----------------
+    d += elm.Line().left(2)
+    d += elm.Line().down()
+    d += elm.Line().right(4)
+
+    # ---------------- VOLTAGE (PRESSURE) COILS ----------------
+    # W1 voltage coil (between Line A and Line B)
+    d += elm.Line().at((1, 0)).up(1)
+    d += elm.Line().right(1)
+    d += elm.Resistor().label("V1 Coil").down()
+
+    # W2 voltage coil (between Line B and Line C)
+    d += elm.Line().at((2, -2)).up(1)
+    d += elm.Line().right(1)
+    d += elm.Resistor().label("V2 Coil").down()
+
+    # Draw the figure
+    fig = d.draw()
+    st.pyplot(fig)
     
 
 # READINGS
