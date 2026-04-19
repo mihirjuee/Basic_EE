@@ -62,12 +62,8 @@ with col1:
     # ---------------- LINE A ----------------
     d += elm.SourceV().up().label("Line A")
     d += elm.Line().right()
-
-    # Wattmeter W1 (Current Coil)
-    d += elm.Meter().label("W1")
+    d += elm.Resistor().label("W1")   # Wattmeter (symbolic)
     d += elm.Line().right()
-
-    # Load A
     d += elm.Resistor().down().label("Load A")
 
     # Return to base
@@ -77,12 +73,8 @@ with col1:
     # ---------------- LINE B ----------------
     d += elm.SourceV().up().label("Line B")
     d += elm.Line().right()
-
-    # Wattmeter W2 (Current Coil)
-    d += elm.Meter().label("W2")
+    d += elm.Resistor().label("W2")   # Wattmeter (symbolic)
     d += elm.Line().right()
-
-    # Load B
     d += elm.Resistor().down().label("Load B")
 
     # Return to base
@@ -92,27 +84,13 @@ with col1:
     # ---------------- LINE C ----------------
     d += elm.SourceV().up().label("Line C")
     d += elm.Line().right()
-
-    # Load C (No wattmeter in line C)
     d += elm.Resistor().down().label("Load C")
 
-    # ---------------- COMMON RETURN (LOAD SIDE CONNECTION) ----------------
+    # ---------------- COMMON RETURN ----------------
     d += elm.Line().left(2)
     d += elm.Line().down()
     d += elm.Line().right(4)
 
-    # ---------------- VOLTAGE (PRESSURE) COILS ----------------
-    # W1 voltage coil (between Line A and Line B)
-    d += elm.Line().at((1, 0)).up(1)
-    d += elm.Line().right(1)
-    d += elm.Resistor().label("V1 Coil").down()
-
-    # W2 voltage coil (between Line B and Line C)
-    d += elm.Line().at((2, -2)).up(1)
-    d += elm.Line().right(1)
-    d += elm.Resistor().label("V2 Coil").down()
-
-    # Draw the figure
     fig = d.draw()
     st.pyplot(fig)
     
