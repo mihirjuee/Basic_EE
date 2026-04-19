@@ -103,19 +103,18 @@ def get_circuit_drawing():
     # ================= POTENTIAL COILS =================
 
     # --- W1 PC across R-Y (more turns) ---
+    # --- W1 PC across R-Y ---
     d.push()
-    d.move_from(r_node)
     d += elm.Line().up()
     d += elm.Inductor(loops=7).label("PC1", loc='right')
-    d += elm.Line().to(y_node)
+    d += elm.Line().left(2)   # adjust based on spacing
     d.pop()
 
-    # --- W2 PC across B-Y (more turns) ---
+    # --- W2 PC across B-Y ---
     d.push()
-    d.move_from(b_node)
     d += elm.Line().down()
     d += elm.Inductor(loops=7).label("PC2", loc='right')
-    d += elm.Line().to(y_node)
+    d += elm.Line().left(2)
     d.pop()
 
     return d
