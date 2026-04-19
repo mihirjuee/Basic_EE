@@ -59,60 +59,39 @@ st.title("⚡ Two-Wattmeter Power Measurement Lab")
 col1, col2 = st.columns([1.5, 1])
 
 # --- CIRCUIT DIAGRAM ---
-with col1:
-    st.subheader("🔌 Two Wattmeter Method (Correct Connection)")
+import streamlit as st
+import schemdraw
+import schemdraw.elements as elm
 
-    d = schemdraw.Drawing()
+def draw_circuit():
+    # Use with statement for context management
+    with schemdraw.Drawing() as d:
+        d.config(unit=2)
+        
+        # Define elements explicitly
+        w1 = elm.Circle().label("W1")
+        w2 = elm.Circle().label("W2")
+        
+        # Add elements to the drawing
+        d.add(elm.Line().label("R", loc='left').length(1))
+        d.add(w1)
+        d.add(elm.Line().right().length(1))
+        d.add(elm.Resistor().label("Load").right())
+        
+        d.add(elm.Line().at((0,-2)).label("Y", loc='left').length(1))
+        d.add(elm.Dot())
+        
+        d.add(elm.Line().at((0,-4)).label("B", loc='left').length(1))
+        d.add(w2)
+        d.add(elm.Line().right().length(1))
+        d.add(elm.Resistor().label("Load").right())
+        
+    return d
 
-    # ----------- TOP BUS (LINE A, B, C) -----------
-    d += elm.Dot().label("A")
-    d += elm.Line().right(3)
-    d += elm.Dot().label("B")
-    d += elm.Line().right(3)
-    d += elm.Dot().label("C")
-
-    # ----------- CURRENT COIL W1 (LINE A) -----------
-    d.push()
-    d += elm.Line().down(2)
-    d += elm.Resistor().label("W1 (CC)")
-    d += elm.Line().down(2)
-    d.pop()
-
-    # ----------- CURRENT COIL W2 (LINE B) -----------
-    d.push()
-    d += elm.Line().at((3, 0)).down(2)
-    d += elm.Resistor().label("W2 (CC)")
-    d += elm.Line().down(2)
-    d.pop()
-
-    # ----------- LINE C DIRECT TO LOAD -----------
-    d.push()
-    d += elm.Line().at((6, 0)).down(4)
-    d.pop()
-
-    # ----------- LOAD (COMMON POINT) -----------
-    d += elm.Line().at((0, -4)).right(6)
-    d += elm.Dot().label("Load")
-
-    # ----------- VOLTAGE COILS -----------
-    # W1 voltage coil between A and B
-    d += elm.Line().at((0, 0)).up(1)
-    d += elm.Line().right(3)
-    d += elm.Resistor().label("W1 (PC)")
-    d += elm.Line().down(1)
-
-    # W2 voltage coil between B and C
-    d += elm.Line().at((3, 0)).up(1)
-    d += elm.Line().right(3)
-    d += elm.Resistor().label("W2 (PC)")
-    d += elm.Line().down(1)
-
-    # ----------- RENDER FIX -----------
-    d.draw()
-    fig = plt.gcf()
-    st.pyplot(fig)
-    plt.clf()
-
+# Streamlit display
+st.subheader("🔌 2-Wattmeter Method Schematic")
+fig = draw_circuit().draw()
+st.pyplot(fig)
 # --- RESULTS ---
 with col2:
     st.subheader("📊 Results")
