@@ -5,95 +5,53 @@ import schemdraw
 import schemdraw.elements as elm
 
 # --- PAGE CONFIG ---
-st.set_page_config(
-    page_title="Two Wattmeter Method",
-    page_icon="⚡",
-    layout="wide"
-)
-
-# --- SIDEBAR ---
-with st.sidebar:
-    st.title("⚡ Settings")
-    st.header("Supply")
-    V_supply = st.slider("Line Voltage (V)", 100, 440, 400)
-
-    st.header("Load (Rated)")
-    V_rated = st.slider("Rated Voltage (V)", 200, 440, 400)
-    I_rated = st.slider("Rated Current (A)", 1, 50, 10)
-    P_rated = st.slider("Rated Power (kW)", 1.0, 50.0, 5.0)
+st.set_page_config(page_title="Two Wattmeter Method", page_icon="⚡", layout="wide")
 
 # --- CALCULATIONS ---
-# Impedance calculation based on rated values
+V_supply = st.sidebar.slider("Line Voltage (V)", 100, 440, 400)
+V_rated = st.sidebar.slider("Rated Voltage (V)", 200, 440, 400)
+I_rated = st.sidebar.slider("Rated Current (A)", 1, 50, 10)
+P_rated = st.sidebar.slider("Rated Power (kW)", 1.0, 50.0, 5.0)
+
 Z = (V_rated / np.sqrt(3)) / I_rated
 I_actual = (V_supply / np.sqrt(3)) / Z
-pf = (P_rated * 1000) / (np.sqrt(3) * V_rated * I_rated)
-pf = np.clip(pf, 0, 1)
+pf = np.clip((P_rated * 1000) / (np.sqrt(3) * V_rated * I_rated), 0, 1)
 phi = np.arccos(pf)
-
-# Two Wattmeter Formulas
 W1 = (V_supply * I_actual) * np.cos(np.radians(30) - phi)
 W2 = (V_supply * I_actual) * np.cos(np.radians(30) + phi)
-P_total = W1 + W2
 
-# --- CIRCUIT DIAGRAM FUNCTION ---
-def draw_circuit(ax):
+# --- IMPROVED TEXTBOOK CIRCUIT ---
+def draw_textbook_circuit(ax):
     d = schemdraw.Drawing(canvas=ax)
-    d += elm.Line().right(6)
     
-    # R Phase
-    d.push()
-    d.move(-6, 0)
-    d += elm.Dot().label("R", loc='left')
-    d += elm.Inductor(loops=3).label("CC1", loc='bottom')
-    d += elm.Line().right(2)
+    # Lines
+    d += (L1 := elm.Line().length(4).label("R", 'left'))
+    d += (L2 := elm.Line().up(2).at(L1.start))
+    d += (L3 := elm.Line().down(2).at(L1.start))
+    
+    # Wattmeter 1 (R-Y)
+    d += elm.CurrentComp(loops=3).at(L1.end).label("CC1", 'bottom')
+    d += (P1 := elm.Line().right(2))
     d += elm.Resistor().down(2).label("Zr")
-    d.pop()
+    d += elm.Line().left(2)
+    d += elm.Line().up(2).at(P1.end).label("PC1", 'right').dot()
+    d += elm.Voltmeter().up(2)
     
-    # Y Phase
-    d.push()
-    d.move(-3, 0)
-    d += elm.Dot().label("Y", loc='left')
-    d += elm.Line().right(2)
-    d += elm.Resistor().down(2).label("Zy")
-    d.pop()
-    
-    # B Phase
-    d.push()
-    d.move(0, 0)
-    d += elm.Dot().label("B", loc='left')
-    d += elm.Inductor(loops=3).label("CC2", loc='bottom')
-    d += elm.Line().right(2)
+    # Wattmeter 2 (B-Y)
+    d.move(-4, -4)
+    d += (LB := elm.Line().right(4).label("B", 'left'))
+    d += elm.CurrentComp(loops=3).at(LB.end).label("CC2", 'bottom')
+    d += (P2 := elm.Line().right(2))
     d += elm.Resistor().down(2).label("Zb")
-    d.pop()
-    
+    d += elm.Line().left(2)
+    d += elm.Line().up(2).at(P2.end).label("PC2", 'right').dot()
+    d += elm.Voltmeter().up(2)
+
     d.draw()
 
-# --- MAIN UI ---
-st.title("⚡ Two-Wattmeter Method (Star Connected Load)")
-
-col1, col2 = st.columns([1.5, 1])
-
-with col1:
-    st.subheader("🔌 Circuit Diagram")
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.axis('off')
-    draw_circuit(ax)
-    st.pyplot(fig)
-    plt.close(fig)
-
-with col2:
-    st.subheader("📊 Results")
-    st.metric("Line Current", f"{I_actual:.2f} A")
-    st.metric("Wattmeter W1", f"{W1:.1f} W")
-    st.metric("Wattmeter W2", f"{W2:.1f} W")
-    st.metric("Total Power", f"{P_total:.1f} W")
-    
-    st.divider()
-    st.metric("Power Factor", f"{pf:.3f}")
-    
-    if phi > np.radians(60):
-        st.error("⚠️ Wattmeter W2 is reading negative (Inductive Load PF < 0.5)")
-    elif pf < 0.9:
-        st.warning("Moderate Power Factor")
-    else:
-        st.success("Good Power Factor")
+st.title("⚡ Two-Wattmeter Method")
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.axis('off')
+draw_textbook_circuit(ax)
+st.pyplot(fig)
+plt.close(fig)
