@@ -37,9 +37,10 @@ st.sidebar.header("🔧 Circuit Parameters")
 
 R = st.sidebar.slider("Resistance (Ω)", 1.0, 100.0, 10.0)
 L = st.sidebar.slider("Inductance (H)", 0.001, 1.0, 0.1)
-C = st.sidebar.slider("Capacitance (F)", 1e-6, 1e-2, 1e-4, format="%.6f")
+C_uF = st.sidebar.slider("Capacitance (F)", 1, 10000, 100, format="%.6f")
 V = st.sidebar.slider("Supply Voltage (V)", 10.0, 500.0, 230.0)
-
+# Convert to Farads for calculation
+C = C_uF * 1e-6
 # =========================
 # ⚡ RESONANCE
 # =========================
