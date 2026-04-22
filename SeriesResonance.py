@@ -112,16 +112,30 @@ c3.metric("Bandwidth (Hz)", f"{BW:.2f}")
 # =========================
 st.subheader("🔌 RLC Circuit")
 
-d = schemdraw.Drawing(unit=2.5)
-d += elm.SourceSin().label("V")
-d += elm.Resistor().right().label("R")
-d += elm.Inductor().right().label("L")
-d += elm.Capacitor().right().label("C")
-d += elm.Line().down()
-d += elm.Line().left().length(6)
+d = schemdraw.Drawing(unit=3)  # bigger size
+
+# Source
+d += elm.SourceSin().label("V", fontsize=12)
+
+# Resistor
+d += elm.Resistor().right().label("R", fontsize=12).linewidth(2)
+
+# Inductor
+d += elm.Inductor().right().label("L", fontsize=12).linewidth(2)
+
+# Capacitor
+d += elm.Capacitor().right().label("C", fontsize=12).linewidth(2)
+
+# Return path
+d += elm.Line().down().linewidth(2)
+d += elm.Line().left().length(7).linewidth(2)
 d += elm.Ground()
 
+# Draw
 fig_circuit = d.draw()
+
+# Improve rendering
+fig_circuit.set_size_inches(10, 3)
 st.pyplot(fig_circuit)
 
 # =========================
