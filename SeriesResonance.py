@@ -37,7 +37,7 @@ st.sidebar.header("🔧 Circuit Parameters")
 
 R = st.sidebar.slider("Resistance (Ω)", 1.0, 100.0, 10.0)
 L = st.sidebar.slider("Inductance (H)", 0.001, 1.0, 0.1)
-C_uF = st.sidebar.slider("Capacitance (F)", 1, 1000, 100, format="%.2f")
+C_uF = st.sidebar.slider("Capacitance (uF)", 1, 1000, 100, format="%.2f")
 
 # Convert to Farads for calculation
 C = C_uF * 1e-6
