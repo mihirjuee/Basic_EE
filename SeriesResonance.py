@@ -36,10 +36,11 @@ st.title("⚡ RLC Series Resonance Lab")
 st.sidebar.header("🔧 Circuit Parameters")
 
 R = st.sidebar.slider("Resistance (Ω)", 1.0, 100.0, 10.0)
-L = st.sidebar.slider("Inductance (H)", 0.001, 1.0, 0.1)
+L_mH = st.sidebar.slider("Inductance (mH)", 1, 100, 10)
 C_uF = st.sidebar.slider("Capacitance (uF)", 1, 1000, 100, format="%.2f")
 
 # Convert to Farads for calculation
+L = L_mH * 1e-3
 C = C_uF * 1e-6
 # =========================
 # ⚡ RESONANCE
