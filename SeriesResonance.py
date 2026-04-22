@@ -126,8 +126,8 @@ d += elm.Capacitor().right().label("C")
 
 # Return path
 d += elm.Line().down()
-d += elm.Line().left().length(7)
-d += elm.Ground()
+d += elm.Line().left().length(9)
+
 
 # 🔥 Convert to image buffer (IMPORTANT FIX)
 buf = io.BytesIO()
