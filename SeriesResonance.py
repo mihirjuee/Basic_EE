@@ -137,8 +137,7 @@ buf.seek(0)
 # Display in Streamlit
 st.image(buf)
 
-# ✅ Directly render drawing (NO fig manipulation)
-st.pyplot(d.draw())
+
 
 # =========================
 # 📈 FREQUENCY RESPONSE
