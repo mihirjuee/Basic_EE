@@ -144,24 +144,31 @@ st.image(buf)
 # =========================
 st.subheader("📈 Frequency Response")
 
-fig, ax = plt.subplots()
+fig, ax1 = plt.subplots()
 
-ax.plot(f, Z, label="Impedance")
-ax.plot(f, I, label="Current")
-#ax.plot(f, P, label="Power")
+# --- Impedance (Left Axis) ---
+ax1.plot(f, Z, label="Impedance (Ω)", linestyle='-')
+ax1.set_xlabel("Frequency (Hz)")
+ax1.set_ylabel("Impedance (Ω)")
+ax1.grid()
 
-ax.axvline(f_res, linestyle='--', label="Resonance")
-ax.axvline(f1, linestyle=':', label="f1")
-ax.axvline(f2, linestyle=':', label="f2")
+# --- Current (Right Axis) ---
+ax2 = ax1.twinx()
+ax2.plot(f, I, linestyle='--', label="Current (A)")
+ax2.set_ylabel("Current (A)")
+
+# --- Resonance & Limits ---
+ax1.axvline(f_res, linestyle='--', label="Resonance")
+ax1.axvline(f1, linestyle=':', label="f1")
+ax1.axvline(f2, linestyle=':', label="f2")
 
 # Operating point
-ax.axvline(f_input, linewidth=2, label="Operating Point")
+ax1.axvline(f_input, linewidth=2, label="Operating Point")
 
-ax.fill_between(f, 0, max(I), where=(f >= f1) & (f <= f2), alpha=0.2)
-
-ax.set_xlabel("Frequency (Hz)")
-ax.legend()
-ax.grid()
+# --- Combine Legends ---
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines1 + lines2, labels1 + labels2)
 
 st.pyplot(fig)
 
