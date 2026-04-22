@@ -120,7 +120,7 @@ d = schemdraw.Drawing(unit=3)
 d += elm.SourceSin().label("V")
 
 # Elements
-d += elm.Resistor().right().label(f"R = {R:.1f} Ω")
+d += elm.Resistor().right().label(f"{R:.1f} Ω")
 d += elm.Inductor().right().label("L")
 d += elm.Capacitor().right().label("C")
 
