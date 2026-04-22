@@ -38,7 +38,7 @@ st.sidebar.header("🔧 Circuit Parameters")
 R = st.sidebar.slider("Resistance (Ω)", 1.0, 100.0, 10.0)
 L = st.sidebar.slider("Inductance (H)", 0.001, 1.0, 0.1)
 C_uF = st.sidebar.slider("Capacitance (F)", 1, 1000, 100, format="%.2f")
-V = st.sidebar.slider("Supply Voltage (V)", 10.0, 500.0, 230.0)
+
 # Convert to Farads for calculation
 C = C_uF * 1e-6
 # =========================
@@ -51,6 +51,7 @@ w_res = 2 * np.pi * f_res
 # 🔄 VARIABLE FREQUENCY SUPPLY
 # =========================
 st.sidebar.subheader("🔄 Variable Frequency Supply")
+V = st.sidebar.slider("Supply Voltage (V)", 10.0, 500.0, 230.0)
 
 f_input = st.sidebar.slider(
     "Supply Frequency (Hz)",
