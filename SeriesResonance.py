@@ -117,7 +117,7 @@ st.subheader("🔌 RLC Circuit")
 d = schemdraw.Drawing(unit=3)
 
 # Source
-d += elm.SourceSin().label("V")
+d += elm.SourceSin().label(f"{V:.2f} V\n{f_input:.2f} Hz")
 
 # Elements
 d += elm.Resistor().right().label(f"{R:.2f} Ω")
