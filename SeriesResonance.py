@@ -236,26 +236,38 @@ VR = I_ph * R
 VL = I_ph * Xl_ph
 VC = I_ph * Xc_ph
 
+# 🔥 Normalize for better visualization
+scale = max(VR, VL, VC)
+VR_n = VR / scale
+VL_n = VL / scale
+VC_n = VC / scale
+
 fig2, ax2 = plt.subplots()
 
+# Thin arrows + small heads
+arrow_style = dict(head_width=0.05, head_length=0.08, linewidth=1.5)
+
 # VR
-ax2.arrow(0, 0, VR, 0, head_width=0.5)
-ax2.text(VR, 0, "VR")
+ax2.arrow(0, 0, VR_n, 0, color='blue', **arrow_style)
+ax2.text(VR_n, 0, "VR", fontsize=10)
 
 # VL
-ax2.arrow(0, 0, 0, VL, head_width=0.5)
-ax2.text(0, VL, "VL")
+ax2.arrow(0, 0, 0, VL_n, color='green', **arrow_style)
+ax2.text(0, VL_n, "VL", fontsize=10)
 
 # VC
-ax2.arrow(0, 0, 0, -VC, head_width=0.5)
-ax2.text(0, -VC, "VC")
+ax2.arrow(0, 0, 0, -VC_n, color='red', **arrow_style)
+ax2.text(0, -VC_n, "VC", fontsize=10)
 
 # Resultant voltage
-ax2.arrow(0, 0, VR, VL - VC, head_width=0.5, color='black')
-ax2.text(VR, VL - VC, "V")
+ax2.arrow(0, 0, VR_n, VL_n - VC_n, color='black', **arrow_style)
+ax2.text(VR_n, VL_n - VC_n, "V", fontsize=10)
 
-ax2.set_title("Voltage Phasor")
+# Formatting
+ax2.set_title("Voltage Phasor Diagram")
 ax2.set_aspect('equal')
+ax2.set_xlim(-1.2, 1.2)
+ax2.set_ylim(-1.2, 1.2)
 ax2.grid()
 
 st.pyplot(fig2)
