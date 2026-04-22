@@ -146,29 +146,56 @@ st.subheader("📈 Frequency Response")
 
 fig, ax1 = plt.subplots()
 
-# --- Impedance (Left Axis) ---
-ax1.plot(f, Z, label="Impedance (Ω)", linestyle='-')
+# =========================
+# 🎯 CENTER AROUND RESONANCE
+# =========================
+f_min = max(1, f_res - 2*BW)
+f_max = f_res + 2*BW
+
+mask = (f >= f_min) & (f <= f_max)
+
+f_plot = f[mask]
+Z_plot = Z[mask]
+I_plot = I[mask]
+
+# =========================
+# 🎨 IMPEDANCE (LEFT AXIS)
+# =========================
+line1, = ax1.plot(f_plot, Z_plot, color='blue', linewidth=2, label="Impedance (Ω)")
 ax1.set_xlabel("Frequency (Hz)")
-ax1.set_ylabel("Impedance (Ω)")
+ax1.set_ylabel("Impedance (Ω)", color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
 ax1.grid()
 
-# --- Current (Right Axis) ---
+# =========================
+# 🎨 CURRENT (RIGHT AXIS)
+# =========================
 ax2 = ax1.twinx()
-ax2.plot(f, I, linestyle='--', label="Current (A)")
-ax2.set_ylabel("Current (A)")
+line2, = ax2.plot(f_plot, I_plot, color='red', linestyle='--', linewidth=2, label="Current (A)")
+ax2.set_ylabel("Current (A)", color='red')
+ax2.tick_params(axis='y', labelcolor='red')
 
-# --- Resonance & Limits ---
-ax1.axvline(f_res, linestyle='--', label="Resonance")
-ax1.axvline(f1, linestyle=':', label="f1")
-ax1.axvline(f2, linestyle=':', label="f2")
+# =========================
+# ⚡ RESONANCE & LIMITS
+# =========================
+line3 = ax1.axvline(f_res, color='green', linestyle='--', linewidth=2, label="Resonance")
+line4 = ax1.axvline(f1, color='purple', linestyle=':', linewidth=2, label="f1")
+line5 = ax1.axvline(f2, color='orange', linestyle=':', linewidth=2, label="f2")
 
 # Operating point
-ax1.axvline(f_input, linewidth=2, label="Operating Point")
+line6 = ax1.axvline(f_input, color='black', linewidth=2, label="Operating Point")
 
-# --- Combine Legends ---
-lines1, labels1 = ax1.get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax1.legend(lines1 + lines2, labels1 + labels2)
+# =========================
+# 🎨 COLORFUL LEGEND
+# =========================
+lines = [line1, line2, line3, line4, line5, line6]
+labels = [l.get_label() for l in lines]
+
+legend = ax1.legend(lines, labels, loc='upper right', fontsize=10)
+
+# Make legend text colored
+for text, line in zip(legend.get_texts(), lines):
+    text.set_color(line.get_color())
 
 st.pyplot(fig)
 
