@@ -110,22 +110,32 @@ c3.metric("Bandwidth (Hz)", f"{BW:.2f}")
 # =========================
 # 🔌 CIRCUIT DIAGRAM
 # =========================
+import io
+
 st.subheader("🔌 RLC Circuit")
 
 d = schemdraw.Drawing(unit=3)
 
 # Source
-d += elm.SourceSin().label("V", fontsize=12)
+d += elm.SourceSin().label("V")
 
 # Elements
-d += elm.Resistor().right().label("R", fontsize=12)
-d += elm.Inductor().right().label("L", fontsize=12)
-d += elm.Capacitor().right().label("C", fontsize=12)
+d += elm.Resistor().right().label("R")
+d += elm.Inductor().right().label("L")
+d += elm.Capacitor().right().label("C")
 
 # Return path
 d += elm.Line().down()
 d += elm.Line().left().length(7)
 d += elm.Ground()
+
+# 🔥 Convert to image buffer (IMPORTANT FIX)
+buf = io.BytesIO()
+d.save(buf)   # Save drawing as image
+buf.seek(0)
+
+# Display in Streamlit
+st.image(buf)
 
 # ✅ Directly render drawing (NO fig manipulation)
 st.pyplot(d.draw())
