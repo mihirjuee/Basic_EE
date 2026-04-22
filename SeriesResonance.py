@@ -148,7 +148,7 @@ fig, ax = plt.subplots()
 
 ax.plot(f, Z, label="Impedance")
 ax.plot(f, I, label="Current")
-ax.plot(f, P, label="Power")
+#ax.plot(f, P, label="Power")
 
 ax.axvline(f_res, linestyle='--', label="Resonance")
 ax.axvline(f1, linestyle=':', label="f1")
@@ -157,7 +157,7 @@ ax.axvline(f2, linestyle=':', label="f2")
 # Operating point
 ax.axvline(f_input, linewidth=2, label="Operating Point")
 
-ax.fill_between(f, 0, max(P), where=(f >= f1) & (f <= f2), alpha=0.1)
+ax.fill_between(f, 0, max(I), where=(f >= f1) & (f <= f2), alpha=0.1)
 
 ax.set_xlabel("Frequency (Hz)")
 ax.legend()
