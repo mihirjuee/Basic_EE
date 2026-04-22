@@ -1,0 +1,125 @@
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+import schemdraw
+import schemdraw.elements as elm
+
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="RLC Transient Lab", layout="wide")
+
+st.title("⚡ RLC Transient Analysis")
+
+
+st.subheader("🔌 RLC Circuit (Series)")
+
+# --- DRAW CIRCUIT ---
+d = schemdraw.Drawing(unit=2.5)
+
+# Source with voltage + frequency
+d += elm.SourceSin().label(f"{V:.1f} V")
+
+# Resistor with value
+d += elm.Resistor().right().label(f"R = {R:.1f} Ω")
+
+# Inductor with value
+d += elm.Inductor().right().label(f"L = {L:.3f} H")
+
+# Capacitor with microfarad display
+d += elm.Capacitor().right().label(f"C = {C_micro:.1f} μF")
+
+# Closing loop
+d += elm.Line().down()
+d += elm.Line().left().length(6)
+d += elm.Ground()
+
+# --- FIX: Convert to matplotlib figure properly ---
+fig_circuit = d.draw()
+
+# Resize safely (avoid error)
+fig_circuit.set_size_inches(10, 3)
+
+st.pyplot(fig_circuit)
+# --- SIDEBAR INPUTS ---
+st.sidebar.header("Circuit Parameters")
+
+R = st.sidebar.slider("Resistance (Ω)", 0.1, 100.0, 10.0)
+L = st.sidebar.slider("Inductance (H)", 0.001, 1.0, 0.1)
+C_micro = st.sidebar.slider("Capacitance (μF)", 1.0, 1000.0, 100.0)
+C = C_micro * 1e-6
+
+V = st.sidebar.slider("Step Voltage (V)", 1.0, 500.0, 100.0)
+
+# --- CALCULATIONS ---
+alpha = R / (2 * L)
+omega_0 = 1 / np.sqrt(L * C)
+
+# Time axis
+t = np.linspace(0, 0.1, 1000)
+
+# --- RESPONSE CALCULATION ---
+if alpha < omega_0:
+    # Underdamped
+    omega_d = np.sqrt(omega_0**2 - alpha**2)
+    i = (V / L) * (1/omega_d) * np.exp(-alpha*t) * np.sin(omega_d*t)
+    response_type = "🟢 Underdamped"
+
+elif alpha == omega_0:
+    # Critically damped
+    i = (V / L) * t * np.exp(-alpha*t)
+    response_type = "🟡 Critically Damped"
+
+else:
+    # Overdamped
+    s1 = -alpha + np.sqrt(alpha**2 - omega_0**2)
+    s2 = -alpha - np.sqrt(alpha**2 - omega_0**2)
+    i = (V / L) * (np.exp(s1*t) - np.exp(s2*t)) / (s1 - s2)
+    response_type = "🔴 Overdamped"
+
+# --- ENERGY ---
+W_L = 0.5 * L * i**2
+v_c = V * (1 - np.exp(-alpha*t))  # approx
+W_C = 0.5 * C * v_c**2
+
+# --- DISPLAY METRICS ---
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Damping Factor (α)", f"{alpha:.2f}")
+col2.metric("Natural Frequency (ω₀)", f"{omega_0:.2f}")
+col3.metric("Response Type", response_type)
+
+# --- CURRENT PLOT ---
+st.subheader("📈 Current Response")
+
+fig1, ax1 = plt.subplots()
+ax1.plot(t, i)
+ax1.set_xlabel("Time (s)")
+ax1.set_ylabel("Current (A)")
+ax1.set_title("Transient Current Response")
+ax1.grid()
+
+st.pyplot(fig1)
+
+# --- ENERGY PLOT ---
+st.subheader("⚡ Energy Exchange")
+
+fig2, ax2 = plt.subplots()
+ax2.plot(t, W_L, label="Inductor Energy")
+ax2.plot(t, W_C, label="Capacitor Energy")
+
+ax2.set_xlabel("Time (s)")
+ax2.set_ylabel("Energy (J)")
+ax2.set_title("Energy Storage in L and C")
+ax2.legend()
+ax2.grid()
+
+st.pyplot(fig2)
+
+# --- INTERPRETATION ---
+st.subheader("🧠 Interpretation")
+
+if alpha < omega_0:
+    st.success("System is oscillatory (Underdamped). Energy oscillates between L and C.")
+elif alpha == omega_0:
+    st.warning("Fastest response without oscillation (Critical damping).")
+else:
+    st.error("No oscillation. Slow response (Overdamped).")
