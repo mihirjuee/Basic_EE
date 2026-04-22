@@ -179,8 +179,8 @@ ax2.tick_params(axis='y', labelcolor='red')
 # ⚡ RESONANCE & LIMITS
 # =========================
 line3 = ax1.axvline(f_res, color='green', linestyle='--', linewidth=2, label="Resonance")
-line4 = ax1.axvline(f1, color='purple', linestyle=':', linewidth=2, label="f1")
-line5 = ax1.axvline(f2, color='orange', linestyle=':', linewidth=2, label="f2")
+line4 = ax1.axvline(f1, color='purple', linestyle=':', linewidth=2, label="fL")
+line5 = ax1.axvline(f2, color='orange', linestyle=':', linewidth=2, label="fH")
 
 # Operating point
 line6 = ax1.axvline(f_input, color='black', linewidth=2, label="Operating Point")
