@@ -31,7 +31,7 @@ def draw_textbook_circuit(ax):
     d = schemdraw.Drawing(canvas=ax)
     
     # R-Phase
-    d += elm.Circle().label("W1")
+
     d += elm.Dot().label("R", 'left')
     d.push()
     d += (CC1 := elm.Inductor(loops=2).label("CC1", 'top'))
