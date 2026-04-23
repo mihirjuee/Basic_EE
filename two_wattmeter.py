@@ -5,7 +5,7 @@ import schemdraw
 import schemdraw.elements as elm
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Two Wattmeter Method", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Two Wattmeter Method", page_icon="logo.png", layout="wide")
 
 # --- CALCULATIONS ---
 V_supply = st.sidebar.slider("Line Voltage (V)", 100, 440, 400)
@@ -50,7 +50,6 @@ def draw_textbook_circuit(ax):
     d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
     d += elm.Line().right(3)
-    d += elm.Dot()
     d += elm.Resistor().label("ZY").right(2)
     d.push()
     d += elm.Resistor().label("ZR").theta(60)
