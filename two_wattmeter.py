@@ -24,30 +24,35 @@ W2 = (V_supply * I_actual) * np.cos(np.radians(30) + phi)
 # --- TEXTBOOK CIRCUIT DIAGRAM ---
 
 
+import schemdraw
+import schemdraw.elements as elm
+
 def draw_textbook_circuit(ax):
     d = schemdraw.Drawing(canvas=ax)
     
-    # R-Phase: CC in series, PC connected to Y
-    d += (R := elm.Dot().label("R", 'left'))
+    # R-Phase
+    d += elm.Dot().label("R", 'left')
     d += (CC1 := elm.Inductor(loops=3).label("CC1", 'top'))
     d += (P1 := elm.Dot())
-    d += (PC1 := elm.Resistor().label("PC1", 'right').down().at(P1.start))
-    d += (Y_node := elm.Dot().label("Y", 'right'))
-    d += (LoadR := elm.Resistor().label("Zr").right().at(P1.end))
+    # Connect PC1 to the node between CC and Load
+    d += elm.Resistor().label("PC1", 'right').down(1.5)
+    d += (Y_mid := elm.Dot()) 
+    d += elm.Resistor().label("Zr").right().at(P1.end)
     
-    # Y-Phase: Direct line
+    # Y-Phase (Common)
     d.move(0, -3)
-    d += elm.Dot().label("Y", 'left')
-    d += elm.Line().length(4)
-    d += (LoadY := elm.Resistor().label("Zy").up(3).at(Y_node))
+    d += (Y_line := elm.Dot().label("Y", 'left'))
+    d += elm.Line().right(2)
+    # Connect the common return point to the Y line
+    d += elm.Line().up(1.5).at(Y_mid.center) 
     
-    # B-Phase: CC in series, PC connected to Y
+    # B-Phase
     d.move(0, -3)
-    d += (B := elm.Dot().label("B", 'left'))
+    d += elm.Dot().label("B", 'left')
     d += (CC2 := elm.Inductor(loops=3).label("CC2", 'top'))
     d += (P2 := elm.Dot())
-    d += (PC2 := elm.Resistor().label("PC2", 'right').up().at(P2.start))
-    d += (LoadB := elm.Resistor().label("Zb").right().at(P2.end))
+    d += elm.Resistor().label("PC2", 'right').up(1.5)
+    d += elm.Resistor().label("Zb").right().at(P2.end)
     
     d.draw()
 
