@@ -33,6 +33,7 @@ def draw_textbook_circuit(ax):
     # R-Phase
     d += elm.Dot().label("R", 'left')
     d += (CC1 := elm.Inductor(loops=3).label("CC1", 'top'))
+    d += elm.Line().right(2)
     d += (P1 := elm.Dot())
     # Connect PC1 to the node between CC and Load
     d += elm.Resistor().label("PC1", 'right').down(1.5)
