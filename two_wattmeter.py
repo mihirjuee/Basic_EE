@@ -22,32 +22,32 @@ W1 = (V_supply * I_actual) * np.cos(np.radians(30) - phi)
 W2 = (V_supply * I_actual) * np.cos(np.radians(30) + phi)
 
 # --- TEXTBOOK CIRCUIT DIAGRAM ---
+
+
 def draw_textbook_circuit(ax):
     d = schemdraw.Drawing(canvas=ax)
     
-    # R-Phase (Wattmeter 1)
-    d += elm.Dot().label("R", 'left')
-    d += (L1 := elm.Inductor(loops=3).label("CC1", 'bottom'))
-    d += (P1 := elm.Line().right(2))
-    d += elm.Line().at(P1.end).up(2).label("PC1", 'right')
-    d += elm.Resistor().label("Zr").down(2)
-    d += elm.Line().left(2)
-   
+    # R-Phase: CC in series, PC connected to Y
+    d += (R := elm.Dot().label("R", 'left'))
+    d += (CC1 := elm.Inductor(loops=3).label("CC1", 'top'))
+    d += (P1 := elm.Dot())
+    d += (PC1 := elm.Resistor().label("PC1", 'right').down().at(P1.start))
+    d += (Y_node := elm.Dot().label("Y", 'right'))
+    d += (LoadR := elm.Resistor().label("Zr").right().at(P1.end))
     
-    # Y-Phase (Common)
-    d.move(0, -4)
+    # Y-Phase: Direct line
+    d.move(0, -3)
     d += elm.Dot().label("Y", 'left')
-    d += elm.Line().right(2)
-    d += elm.Resistor().label("Zy").down(2)
+    d += elm.Line().length(4)
+    d += (LoadY := elm.Resistor().label("Zy").up(3).at(Y_node))
     
-    # B-Phase (Wattmeter 2)
-    d.move(0, 2)
-    d += elm.Dot().label("B", 'left')
-    d += (L2 := elm.Inductor(loops=3).label("CC2", 'bottom'))
-    d += (P2 := elm.Line().right(2))
-    d += elm.Resistor().label("Zb").down(2)
-    d += elm.Line().left(2)
-    d += elm.Line().at(P2.end).up(2).label("PC2", 'right')
+    # B-Phase: CC in series, PC connected to Y
+    d.move(0, -3)
+    d += (B := elm.Dot().label("B", 'left'))
+    d += (CC2 := elm.Inductor(loops=3).label("CC2", 'top'))
+    d += (P2 := elm.Dot())
+    d += (PC2 := elm.Resistor().label("PC2", 'right').up().at(P2.start))
+    d += (LoadB := elm.Resistor().label("Zb").right().at(P2.end))
     
     d.draw()
 
