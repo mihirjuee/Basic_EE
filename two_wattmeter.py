@@ -57,7 +57,7 @@ def draw_textbook_circuit(ax):
     d.pop()
     
     #B-PHASE
-    d.move(0, -32)
+    d.move(0, -3)
     d += (Y_line := elm.Dot().label("B", 'left'))
     d += (CC2 := elm.Inductor(loops=3).label("CC2", 'top'))
     d.push()
