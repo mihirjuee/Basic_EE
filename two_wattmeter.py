@@ -43,13 +43,15 @@ def draw_textbook_circuit(ax):
     d.pop()
     d += elm.Resistor().label("ZR").down()
     d.pop()
+    
     #Y-PHASE
     d.move(0, -2)
     d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
     d += elm.Line().right(3)
-    d += elm.Resistor().label("ZY").theta(215)
+    d += elm.Resistor().label("ZY").right(2)
     d.pop()
+    
     #B-PHASE
     d.move(0, -2)
     d += (Y_line := elm.Dot().label("B", 'left'))
@@ -60,27 +62,8 @@ def draw_textbook_circuit(ax):
     d += elm.Line().up(1)
     d.pop()
     d += elm.Line().right(2)
-    d += elm.Resistor().label("ZB").right(2)
-    
-    #d += (P1 := elm.Dot())
-    # Connect PC1 to the node between CC and Load
-    #
-    #d += (Y_mid := elm.Dot()) 
-   
-    
-    # Y-Phase (Common)
+    d += elm.Resistor().label("ZB").theta(215)
 
-    #d += elm.Line().right(2)
-    # Connect the common return point to the Y line
-   # d += elm.Line().up(1.5).at(Y_mid.center) 
-    
-    # B-Phase
-   # d.move(0, -3)
-    #d += elm.Dot().label("B", 'left')
-    #d += (CC2 := elm.Inductor(loops=3).label("CC2", 'top'))
-    #d += (P2 := elm.Dot())
-    #d += elm.Resistor().label("PC2", 'right').up(1.5)
-    #d += elm.Resistor().label("ZB").right().at(P2.end)
     
     d.draw()
 
