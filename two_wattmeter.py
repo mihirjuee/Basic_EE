@@ -48,7 +48,7 @@ def draw_textbook_circuit(ax):
     d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
     d += elm.Line().right(3)
-    d += elm.Resistor().label("ZY").theta(45)
+    d += elm.Resistor().label("ZY").theta(215)
     d.pop()
     #B-PHASE
     d.move(0, -2)
@@ -60,7 +60,7 @@ def draw_textbook_circuit(ax):
     d += elm.Line().up(1)
     d.pop()
     d += elm.Line().right(2)
-    d += elm.Resistor().label("ZB").theta(135)
+    d += elm.Resistor().label("ZB").right(2)
     
     #d += (P1 := elm.Dot())
     # Connect PC1 to the node between CC and Load
