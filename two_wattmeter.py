@@ -51,7 +51,7 @@ def draw_textbook_circuit(ax):
     d.move(0, -3)
     d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
-    d += elm.Line().right(3)
+    d += elm.Line().right(2)
     d += elm.Resistor().label("ZY")
     d.push()
     d += elm.Resistor().label("ZR").theta(60)
