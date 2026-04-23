@@ -38,10 +38,18 @@ def draw_textbook_circuit(ax):
     d += elm.Line().right(0.5)
     d += elm.Resistor().label("ZR").right()
     d.pop()
+    
     d.move(0, -2)
+    d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
     d += elm.Line().right(2)
     d += elm.Resistor().label("ZY").right()
+    d.pop()
+    d.move(0, -2)
+    d += (Y_line := elm.Dot().label("B", 'left'))
+    d += elm.Line().right(2)
+    d += elm.Resistor().label("ZB").right()
+    
     #d += (P1 := elm.Dot())
     # Connect PC1 to the node between CC and Load
     #d += elm.Resistor().label("PC1", 'right').down(1.5)
