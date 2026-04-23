@@ -41,7 +41,7 @@ def draw_textbook_circuit(ax):
     d += elm.Resistor().label("PC1", 'right').left(1.5)
     d += elm.Line().down(1)
     d.pop()
-    d += elm.Resistor().label("ZR").right()
+    d += elm.Resistor().label("ZR").down()
     d.pop()
     #Y-PHASE
     d.move(0, -2)
