@@ -43,6 +43,7 @@ def draw_textbook_circuit(ax):
     d.pop()
     d += elm.Line().right(3.5)
     d += elm.Line().down(0.45)
+    d += elm.Dot()
     d.pop()
     
     #Y-PHASE
