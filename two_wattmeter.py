@@ -29,7 +29,7 @@ def draw_textbook_circuit(ax):
     d += elm.Dot().label("R", 'left')
     d += (L1 := elm.Inductor(loops=3).label("CC1", 'bottom'))
     d += (P1 := elm.Line().right(2))
-     d += elm.Line().at(P1.end).up(2).label("PC1", 'right')
+    d += elm.Line().at(P1.end).up(2).label("PC1", 'right')
     d += elm.Resistor().label("Zr").down(2)
     d += elm.Line().left(2)
    
