@@ -60,7 +60,7 @@ def draw_textbook_circuit(ax):
     #d += elm.Resistor().label("PC2", 'right').up(1.5)
     #d += elm.Resistor().label("Zb").right().at(P2.end)
     
-    #d.draw()
+     d.draw()
 
 st.title("⚡ Two-Wattmeter Method Circuit")
 fig, ax = plt.subplots(figsize=(8, 4))
