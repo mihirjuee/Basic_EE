@@ -45,7 +45,7 @@ def draw_textbook_circuit(ax):
     d.pop()
     
     #Y-PHASE
-    d.move(0, -2)
+    d.move(0, -3)
     d.push()
     d += (Y_line := elm.Dot().label("Y", 'left'))
     d += elm.Line().right(3)
