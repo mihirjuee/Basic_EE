@@ -66,7 +66,7 @@ def draw_textbook_circuit(ax):
     d += elm.Resistor().label("PC2", 'right').left(1.5)
     d += elm.Line().up(2)
     d.pop()
-    d += elm.Line().right(3)
+    d += elm.Line().right(4)
     
 
     
