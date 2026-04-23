@@ -47,6 +47,7 @@ def draw_textbook_circuit(ax):
     d.pop()
     d.move(0, -2)
     d += (Y_line := elm.Dot().label("B", 'left'))
+    d += (CC2 := elm.Inductor(loops=3).label("CC1", 'top'))
     d += elm.Line().right(2)
     d += elm.Resistor().label("ZB").right()
     
