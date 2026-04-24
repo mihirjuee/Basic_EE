@@ -53,7 +53,8 @@ ax.grid()
 
 # ================= DIRECTION INDICATOR =================
 if I > 0:
-    direction = "Counterclockwise 🔄"
+    direction = "Counterclockwise 🔄 ax.scatter(0, 0, s=300, c='red')
+    ax.text(0, 0, "⊙", fontsize=20, ha='center', va='center') "
     rule = "Thumb → Current (out of page), Fingers → Field"
 else:
     direction = "Clockwise 🔁"
