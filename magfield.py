@@ -4,7 +4,17 @@ import matplotlib.pyplot as plt
 
 # ================= PAGE =================
 st.set_page_config(page_title="Magnetic Field Simulator", page_icon="logo.png", layout="centered")
-
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #0f172a;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 st.title("🧲 Magnetic Field Around a Current-Carrying Conductor")
 
 st.markdown("""
