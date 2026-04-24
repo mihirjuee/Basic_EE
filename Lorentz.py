@@ -1,79 +1,92 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 # ================= PAGE =================
-st.set_page_config(page_title="Lorentz Force Simulator", layout="centered")
+st.set_page_config(page_title="3D Lorentz Force", layout="centered")
 
-st.title("⚡ Force on Current-Carrying Conductor (Lorentz Force)")
+st.title("⚡ 3D Lorentz Force Visualization")
 
 st.markdown("""
-### 🔹 Concept
-A current-carrying conductor placed in a magnetic field experiences a force:
+### 🔹 Vector Relationship:
 """)
 
-st.latex(r"F = B I L \sin\theta")
+st.latex(r"\mathbf{F} = I \mathbf{L} \times \mathbf{B}")
 
 # ================= INPUT =================
 st.sidebar.header("🔧 Controls")
 
-I = st.sidebar.slider("Current (A)", 0.0, 10.0, 5.0, step=0.5)
-B = st.sidebar.slider("Magnetic Field (T)", 0.0, 5.0, 1.0, step=0.1)
-L = st.sidebar.slider("Length of Conductor (m)", 0.1, 5.0, 1.0, step=0.1)
-theta = st.sidebar.slider("Angle θ (degrees)", 0, 180, 90)
+I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
+B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
+theta = st.sidebar.slider("Angle between I and B (deg)", 0, 180, 90)
 
 theta_rad = np.radians(theta)
 
-# ================= FORCE =================
-F = B * I * L * np.sin(theta_rad)
+# ================= VECTOR SETUP =================
+# Current along x-axis
+I_vec = np.array([1, 0, 0]) * I
 
-# direction (simple sign logic)
-direction = "Upward ⬆️" if np.sin(theta_rad) >= 0 else "Downward ⬇️"
+# Magnetic field in xy-plane at angle θ
+B_vec = np.array([
+    np.cos(theta_rad),
+    np.sin(theta_rad),
+    0
+]) * B
+
+# Lorentz force (cross product)
+F_vec = np.cross(I_vec, B_vec)
+
+# ================= PLOTLY FIGURE =================
+fig = go.Figure()
+
+origin = [0, 0, 0]
+
+# Current vector
+fig.add_trace(go.Scatter3d(
+    x=[0, I_vec[0]],
+    y=[0, I_vec[1]],
+    z=[0, I_vec[2]],
+    mode='lines+markers',
+    name='Current (I)',
+    line=dict(width=6)
+))
+
+# Magnetic field vector
+fig.add_trace(go.Scatter3d(
+    x=[0, B_vec[0]],
+    y=[0, B_vec[1]],
+    z=[0, B_vec[2]],
+    mode='lines+markers',
+    name='Magnetic Field (B)',
+    line=dict(width=6)
+))
+
+# Force vector
+fig.add_trace(go.Scatter3d(
+    x=[0, F_vec[0]],
+    y=[0, F_vec[1]],
+    z=[0, F_vec[2]],
+    mode='lines+markers',
+    name='Force (F)',
+    line=dict(width=6)
+))
+
+# Layout
+fig.update_layout(
+    scene=dict(
+        xaxis_title='X',
+        yaxis_title='Y',
+        zaxis_title='Z'
+    ),
+    margin=dict(l=0, r=0, b=0, t=0)
+)
 
 # ================= DISPLAY =================
-st.subheader("📊 Results")
+st.plotly_chart(fig, use_container_width=True)
 
-col1, col2 = st.columns(2)
+# ================= INFO =================
+st.subheader("📘 Results")
 
-with col1:
-    st.metric("Force (N)", f"{F:.2f}")
+st.write("Force Vector:", np.round(F_vec, 2))
 
-with col2:
-    st.metric("Direction", direction)
-
-# ================= DIAGRAM =================
-st.subheader("📐 Visual Representation")
-
-fig, ax = plt.subplots(figsize=(6, 5))
-
-# conductor (wire)
-ax.plot([0, L], [0, 0], linewidth=5)
-
-# magnetic field (into page = ×)
-for x in np.linspace(0, L, 5):
-    ax.text(x, 1, "×", fontsize=20, ha='center')
-
-# force arrow
-ax.arrow(L/2, 0, 0, F*0.2, head_width=0.1, color='red')
-ax.text(L/2, F*0.2 + 0.1, "F", color='red')
-
-# labels
-ax.text(0, -0.2, "I →", fontsize=12)
-
-ax.set_title("Lorentz Force on Conductor")
-ax.set_xlim(-0.5, L+0.5)
-ax.set_ylim(-1, 2)
-ax.grid()
-
-st.pyplot(fig)
-
-# ================= INTERPRETATION =================
-st.subheader("📘 Interpretation")
-
-st.markdown("""
-- Force is maximum at 90°  
-- Force is zero at 0° or 180°  
-- Direction follows Fleming’s Left-Hand Rule  
-""")
-
-st.success("Lorentz Force Simulation Ready ⚡")
+st.success("3D Lorentz Force Visualization Ready ⚡")
