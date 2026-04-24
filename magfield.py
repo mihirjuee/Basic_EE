@@ -2,51 +2,69 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Rotating Magnetic Field", layout="centered")
+# ================= PAGE =================
+st.set_page_config(page_title="Magnetic Field Simulator", layout="centered")
 
-st.title("🧲 Rotating Magnetic Field (Visualization)")
+st.title("🧲 Magnetic Field Around a Current-Carrying Conductor")
 
 st.markdown("""
 ### 🔹 Concept
-A time-varying current creates a **rotating magnetic field effect** in simulation.
-Move the slider to see rotation.
+- A current-carrying conductor produces a **circular magnetic field**
+- Direction follows the **Right-Hand Rule**
 """)
 
-# ================= SLIDER =================
-theta = st.slider("Phase Angle (ωt)", 0, 360, 0)
+# ================= INPUT =================
+st.sidebar.header("🔧 Controls")
 
-theta = np.radians(theta)
+I = st.sidebar.slider("Current (A)", -10.0, 10.0, 5.0)
 
 # ================= GRID =================
-x = np.linspace(-5, 5, 20)
-y = np.linspace(-5, 5, 20)
+x = np.linspace(-5, 5, 25)
+y = np.linspace(-5, 5, 25)
 X, Y = np.meshgrid(x, y)
 
+# ================= FIELD CALC =================
 R = np.sqrt(X**2 + Y**2) + 1e-6
 
-# ================= ORIGINAL FIELD =================
-Bx = -Y / R**2
-By = X / R**2
-
-# ================= ROTATION MATRIX =================
-Bx_rot = Bx * np.cos(theta) - By * np.sin(theta)
-By_rot = Bx * np.sin(theta) + By * np.cos(theta)
+Bx = -I * Y / R**2
+By = I * X / R**2
 
 # ================= PLOT =================
 fig, ax = plt.subplots(figsize=(6, 6))
 
-ax.quiver(X, Y, Bx_rot, By_rot, color='blue')
+# Vector field
+ax.quiver(X, Y, Bx, By)
 
-# center conductor
-if np.sin(theta) >= 0:
-    ax.text(0, 0, "⊙", fontsize=30, ha='center', va='center', color='red')
-else:
-    ax.text(0, 0, "⊗", fontsize=30, ha='center', va='center', color='blue')
+# Conductor at center
+ax.plot(0, 0, 'ro', markersize=10)
 
-ax.set_title("Rotating Magnetic Field Visualization")
+# Labels
+ax.set_title("Magnetic Field Lines")
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+
 ax.set_aspect('equal')
 ax.grid()
 
+# ================= DIRECTION INDICATOR =================
+if I > 0:
+    direction = "Counterclockwise 🔄"
+    rule = "Thumb → Current (out of page), Fingers → Field"
+else:
+    direction = "Clockwise 🔁"
+    rule = "Thumb → Current (into page), Fingers → Field"
+
 st.pyplot(fig)
 
-st.success("Move slider → Field rotates 🔄")
+# ================= INFO =================
+st.subheader("📘 Interpretation")
+
+st.write(f"**Field Direction:** {direction}")
+st.write(f"**Right-Hand Rule:** {rule}")
+
+st.markdown("""
+👉 Increase current → Stronger magnetic field  
+👉 Reverse current → Field direction reverses  
+""")
+
+st.success("Interactive Visualization Ready ✅")
