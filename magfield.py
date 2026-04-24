@@ -16,7 +16,7 @@ st.markdown("""
 # ================= INPUT =================
 st.sidebar.header("🔧 Controls")
 
-I = st.sidebar.slider("Current (A)", -10.0, 10.0, 5.0)
+I = st.sidebar.slider("Current (A)", -10.0, 10.0, 5.0, step=0.5)
 
 # ================= GRID =================
 x = np.linspace(-5, 5, 25)
