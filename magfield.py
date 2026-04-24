@@ -36,7 +36,12 @@ fig, ax = plt.subplots(figsize=(6, 6))
 ax.quiver(X, Y, Bx, By)
 
 # Conductor at center
-ax.plot(0, 0, 'ro', markersize=10)
+if I > 0:
+    ax.scatter(0, 0, s=300, c='red')
+    ax.text(0, 0, "⊙", fontsize=20, ha='center', va='center')
+else:
+    ax.scatter(0, 0, s=300, c='blue')
+    ax.text(0, 0, "⊗", fontsize=20, ha='center', va='center')
 
 # Labels
 ax.set_title("Magnetic Field Lines")
