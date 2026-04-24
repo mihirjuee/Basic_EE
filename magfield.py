@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ================= PAGE =================
-st.set_page_config(page_title="Magnetic Field Simulator", layout="centered")
+st.set_page_config(page_title="Magnetic Field Simulator", page_icon="logo.png", layout="centered")
 
 st.title("🧲 Magnetic Field Around a Current-Carrying Conductor")
 
