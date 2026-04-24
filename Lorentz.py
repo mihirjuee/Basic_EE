@@ -78,4 +78,4 @@ with col2:
     """)
     
 
-[Image of the right-hand rule for magnetic force]
+#[Image of the right-hand rule for magnetic force]
