@@ -4,9 +4,9 @@ import plotly.graph_objects as go
 import time
 
 # ================= PAGE =================
-st.set_page_config(page_title="Lorentz Force Animation", layout="wide")
+st.set_page_config(page_title="Coil Lorentz Force", layout="wide")
 
-st.title("⚡ Animated Lorentz Force (Wire Motion)")
+st.title("⚡ Lorentz Force on Current-Carrying Coil")
 
 st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
 
@@ -14,95 +14,111 @@ st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
 st.sidebar.header("🔧 Controls")
 
 I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
-L = st.sidebar.slider("Wire Length (L)", 1.0, 5.0, 2.0)
 B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
-theta = st.sidebar.slider("Angle (deg)", 0, 180, 90)
+L = st.sidebar.slider("Coil Length", 1.0, 5.0, 2.0)
+W = st.sidebar.slider("Coil Width", 0.5, 3.0, 1.0)
+theta = st.sidebar.slider("Initial Angle (deg)", 0, 180, 90)
 
 theta = np.radians(theta)
 
-# ================= CONSTANT VECTORS =================
-L_vec = np.array([L, 0, 0])
+# ================= COIL POINTS =================
+def get_coil(angle):
+    # rotation matrix
+    R = np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle),  np.cos(angle)]
+    ])
 
-B_vec = np.array([
-    np.cos(theta),
-    np.sin(theta),
-    0
-]) * B
+    # rectangle coil (2D)
+    base = np.array([
+        [-L/2, -W/2],
+        [ L/2, -W/2],
+        [ L/2,  W/2],
+        [-L/2,  W/2],
+        [-L/2, -W/2]
+    ])
 
-F_vec = I * np.cross(L_vec, B_vec)
+    rotated = base @ R.T
+    return rotated
 
-# Normalize force for motion
-F_dir = F_vec / (np.linalg.norm(F_vec) + 1e-9)
+# ================= FORCE FUNCTION =================
+def force_on_side(direction):
+    # direction: +1 or -1 side
+    return np.array([
+        direction * I * B * W,
+        0,
+        0
+    ])
 
-# ================= ANIMATION SETUP =================
+# ================= ANIMATION =================
+start = st.button("▶ Start Coil Motion")
+
 placeholder = st.empty()
-start = st.button("▶ Start Animation")
 
-# wire initial position
-pos = np.array([0.0, 0.0, 0.0])
+angle = theta
+omega = 0.05  # angular speed
 
-dt = 0.1
-velocity = np.array([0.0, 0.0, 0.0])
-
-# ================= ANIMATION LOOP =================
 if start:
 
-    for t in range(40):
+    for t in range(50):
 
-        # simple motion model: a = F (scaled)
-        acceleration = 0.5 * F_dir
+        angle += omega
 
-        velocity += acceleration * dt
-        pos = pos + velocity * dt
+        coil = get_coil(angle)
+
+        # expand to 3D
+        x, y = coil[:, 0], coil[:, 1]
+        z = np.zeros_like(x)
 
         fig = go.Figure()
 
-        # wire (moving line)
-        wire_start = pos
-        wire_end = pos + L_vec
-
+        # coil wire
         fig.add_trace(go.Scatter3d(
-            x=[wire_start[0], wire_end[0]],
-            y=[wire_start[1], wire_end[1]],
-            z=[wire_start[2], wire_end[2]],
+            x=x, y=y, z=z,
             mode='lines',
-            line=dict(color='blue', width=8),
-            name="Wire"
+            line=dict(color='blue', width=6),
+            name="Coil"
         ))
 
-        # force vector
+        # forces on two sides (simplified)
+        F_left = force_on_side(-1)
+        F_right = force_on_side(1)
+
+        center = np.mean(coil[:-1], axis=0)
+
+        # left force
         fig.add_trace(go.Scatter3d(
-            x=[pos[0], pos[0] + F_dir[0]],
-            y=[pos[1], pos[1] + F_dir[1]],
-            z=[pos[2], pos[2] + F_dir[2]],
+            x=[center[0], center[0] + F_left[0]*0.2],
+            y=[center[1], center[1]],
+            z=[0, 0],
             mode='lines',
             line=dict(color='red', width=6),
-            name="Force"
+            name="Force L"
         ))
 
-        # magnetic field direction (fixed)
+        # right force
         fig.add_trace(go.Scatter3d(
-            x=[0, B_vec[0]],
-            y=[0, B_vec[1]],
-            z=[0, B_vec[2]],
+            x=[center[0], center[0] + F_right[0]*0.2],
+            y=[center[1], center[1]],
+            z=[0, 0],
             mode='lines',
             line=dict(color='green', width=6),
-            name="B Field"
+            name="Force R"
         ))
 
         fig.update_layout(
             scene=dict(
-                xaxis=dict(range=[-5, 5]),
-                yaxis=dict(range=[-5, 5]),
-                zaxis=dict(range=[-5, 5]),
+                xaxis=dict(range=[-4, 4]),
+                yaxis=dict(range=[-4, 4]),
+                zaxis=dict(range=[-2, 2]),
                 aspectmode="cube"
             ),
             margin=dict(l=0, r=0, b=0, t=0),
-            title=f"Time step: {t}"
+            title=f"Coil Rotation Angle: {np.degrees(angle):.1f}°"
         )
 
         placeholder.plotly_chart(fig, use_container_width=True)
 
-        time.sleep(0.1)
+        time.sleep(0.08)
 
-st.info("Click Start Animation to see wire motion 🔄")
+st.info("Click Start Animation to simulate coil motion 🔄")
