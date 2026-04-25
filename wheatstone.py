@@ -91,10 +91,17 @@ with col1:
     d += elm.SourceV().down().label(f"{Vs}V")
 
     # -------- Galvanometer branch --------
-    d.push()
-    d += elm.Line().at(top_left).to(top_right)
-    d += elm.Meter().label("G")
-    d.pop()
+# -------- Galvanometer branch --------
+d.push()
+
+d += elm.Line().at(top_left).to(top_right)
+d += elm.Dot()
+
+d += elm.Circle().radius(0.3).label("G")
+
+d += elm.Line().right()
+
+d.pop()
 
     st.pyplot(d.draw())
 # ================= GAUGE =================
