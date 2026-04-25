@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 is_mobile = st.sidebar.checkbox("📱 Mobile View", value=True)
 
 # ================= PAGE CONFIG =================
-st.set_page_config(page_title="Wheatstone Bridge Pro", layout="wide")
+st.set_page_config(page_title="Wheatstone Bridge Pro", page_icon="logo.png", layout="wide")
 
 # ================= DARK UI =================
 st.markdown("""
@@ -32,7 +32,14 @@ unknown = st.sidebar.selectbox(
 def get_input(name, default):
     if unknown == name:
         return None
-    return st.sidebar.slider(f"{name} (Ω)", 1.0, 1000.0, default)
+    return st.sidebar.number_input(
+    f"{name} (Ω)",
+    min_value=0.1,
+    max_value=1e6,
+    value=float(default),
+    step=1.0,
+    format="%.2f"
+)
 
 R1 = get_input("R1", 100.0)
 R2 = get_input("R2", 100.0)
