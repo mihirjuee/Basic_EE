@@ -57,10 +57,22 @@ if unknown != "None":
 
 # ================= SHOW VALUES =================
 st.sidebar.markdown("### 📌 Values")
-st.sidebar.write(f"R1 = {R1:.2f} Ω")
-st.sidebar.write(f"R2 = {R2:.2f} Ω")
-st.sidebar.write(f"R3 = {R3:.2f} Ω")
-st.sidebar.write(f"R4 = {R4:.2f} Ω")
+def show_value(name, value):
+    if unknown == name:
+        st.sidebar.markdown(
+            f"<span style='color:#ff4b4b; font-weight:bold'>{name} = {value:.2f} Ω</span>",
+            unsafe_allow_html=True
+        )
+    else:
+        st.sidebar.markdown(
+            f"<span style='color:#ffffff'>{name} = {value:.2f} Ω</span>",
+            unsafe_allow_html=True
+        )
+
+show_value("R1", R1)
+show_value("R2", R2)
+show_value("R3", R3)
+show_value("R4", R4)
 
 # ================= CALCULATIONS =================
 V_left = Vs * (R3 / (R1 + R3))
