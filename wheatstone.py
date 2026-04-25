@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+is_mobile = st.sidebar.checkbox("📱 Mobile View", value=True)
 
 # ================= PAGE CONFIG =================
 st.set_page_config(page_title="Wheatstone Bridge Pro", layout="wide")
