@@ -90,16 +90,11 @@ with col1:
     # Voltage source (left vertical)
     d += elm.SourceV().down().label(f"{Vs}V")
 
-    # -------- Galvanometer branch --------
 # -------- Galvanometer branch --------
 d.push()
 
 d += elm.Line().at(top_left).to(top_right)
-d += elm.Dot()
-
-d += elm.Circle().radius(0.3).label("G")
-
-d += elm.Line().right()
+d += elm.Resistor().label("G")
 
 d.pop()
 
