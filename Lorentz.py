@@ -4,121 +4,96 @@ import plotly.graph_objects as go
 import time
 
 # ================= PAGE =================
-st.set_page_config(page_title="Coil Lorentz Force", layout="wide")
+st.set_page_config(page_title="DC Motor Virtual Lab", layout="wide")
 
-st.title("⚡ Lorentz Force on Current-Carrying Coil")
+st.title("⚡ DC Motor Virtual Lab (Industry Level Simulation)")
 
-st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
+st.markdown("""
+### 🔹 Real DC Motor Model
+- Torque production
+- Back EMF effect
+- Speed dynamics
+- Load interaction
+""")
 
 # ================= INPUT =================
-st.sidebar.header("🔧 Controls")
+st.sidebar.header("🔧 Motor Parameters")
 
-I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
-B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
-L = st.sidebar.slider("Coil Length", 1.0, 5.0, 2.0)
-W = st.sidebar.slider("Coil Width", 0.5, 3.0, 1.0)
-theta = st.sidebar.slider("Initial Angle (deg)", 0, 180, 90)
+V = st.sidebar.slider("Supply Voltage (V)", 0.0, 240.0, 120.0)
+R = st.sidebar.slider("Armature Resistance (Ω)", 0.1, 5.0, 1.0)
+k = st.sidebar.slider("Motor Constant (kΦ)", 0.1, 2.0, 0.8)
+J = st.sidebar.slider("Inertia (J)", 0.1, 5.0, 1.0)
+Bf = st.sidebar.slider("Friction (B)", 0.0, 1.0, 0.1)
+TL = st.sidebar.slider("Load Torque (Nm)", 0.0, 10.0, 2.0)
 
-theta = np.radians(theta)
+# ================= INITIAL CONDITIONS =================
+dt = 0.05
+steps = 200
 
-# ================= COIL POINTS =================
-def get_coil(angle):
-    # rotation matrix
-    R = np.array([
-        [np.cos(angle), -np.sin(angle)],
-        [np.sin(angle),  np.cos(angle)]
-    ])
+omega = 0.0
+history_omega = []
+history_torque = []
+history_current = []
 
-    # rectangle coil (2D)
-    base = np.array([
-        [-L/2, -W/2],
-        [ L/2, -W/2],
-        [ L/2,  W/2],
-        [-L/2,  W/2],
-        [-L/2, -W/2]
-    ])
-
-    rotated = base @ R.T
-    return rotated
-
-# ================= FORCE FUNCTION =================
-def force_on_side(direction):
-    # direction: +1 or -1 side
-    return np.array([
-        direction * I * B * W,
-        0,
-        0
-    ])
-
-# ================= ANIMATION =================
-start = st.button("▶ Start Coil Motion")
-
+# ================= SIMULATION =================
 placeholder = st.empty()
 
-angle = theta
-omega = 0.05  # angular speed
+if st.button("▶ Start Motor Simulation"):
 
-if start:
+    for t in range(steps):
 
-    for t in range(50):
+        # Back EMF
+        Eb = k * omega
 
-        angle += omega
+        # Armature current
+        Ia = (V - Eb) / R
 
-        coil = get_coil(angle)
+        # Electromagnetic torque
+        Te = k * Ia
 
-        # expand to 3D
-        x, y = coil[:, 0], coil[:, 1]
-        z = np.zeros_like(x)
+        # Motion equation
+        domega = (Te - TL - Bf * omega) / J
 
+        omega += domega * dt
+
+        # store
+        history_omega.append(omega)
+        history_torque.append(Te)
+        history_current.append(Ia)
+
+        # ================= PLOT =================
         fig = go.Figure()
 
-        # coil wire
-        fig.add_trace(go.Scatter3d(
-            x=x, y=y, z=z,
-            mode='lines',
-            line=dict(color='blue', width=6),
-            name="Coil"
-        ))
-
-        # forces on two sides (simplified)
-        F_left = force_on_side(-1)
-        F_right = force_on_side(1)
-
-        center = np.mean(coil[:-1], axis=0)
-
-        # left force
-        fig.add_trace(go.Scatter3d(
-            x=[center[0], center[0] + F_left[0]*0.2],
-            y=[center[1], center[1]],
-            z=[0, 0],
-            mode='lines',
-            line=dict(color='red', width=6),
-            name="Force L"
-        ))
-
-        # right force
-        fig.add_trace(go.Scatter3d(
-            x=[center[0], center[0] + F_right[0]*0.2],
-            y=[center[1], center[1]],
-            z=[0, 0],
-            mode='lines',
-            line=dict(color='green', width=6),
-            name="Force R"
-        ))
+        fig.add_trace(go.Scatter(y=history_omega, name="Speed (ω)", line=dict(color="blue")))
+        fig.add_trace(go.Scatter(y=history_torque, name="Torque (Te)", line=dict(color="red")))
+        fig.add_trace(go.Scatter(y=history_current, name="Current (Ia)", line=dict(color="green")))
 
         fig.update_layout(
-            scene=dict(
-                xaxis=dict(range=[-4, 4]),
-                yaxis=dict(range=[-4, 4]),
-                zaxis=dict(range=[-2, 2]),
-                aspectmode="cube"
-            ),
-            margin=dict(l=0, r=0, b=0, t=0),
-            title=f"Coil Rotation Angle: {np.degrees(angle):.1f}°"
+            title="Motor Dynamic Response",
+            xaxis_title="Time Step",
+            yaxis_title="Value",
+            height=500
         )
 
         placeholder.plotly_chart(fig, use_container_width=True)
 
-        time.sleep(0.08)
+        time.sleep(0.03)
 
-st.info("Click Start Animation to simulate coil motion 🔄")
+# ================= STEADY STATE =================
+st.subheader("📊 Final Operating Point")
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Speed (ω)", f"{omega:.2f} rad/s")
+col2.metric("Current (Ia)", f"{Ia:.2f} A")
+col3.metric("Back EMF (Eb)", f"{Eb:.2f} V")
+
+# ================= PHYSICAL INSIGHT =================
+st.subheader("💡 Physical Insight")
+
+st.markdown("""
+- At start: ω = 0 → high current → high torque  
+- As speed increases → back EMF increases → current reduces  
+- Motor reaches equilibrium when:
+  - Torque = Load Torque + Losses
+""")
