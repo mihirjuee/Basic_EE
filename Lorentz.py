@@ -1,99 +1,106 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import time
 
 # ================= PAGE =================
-st.set_page_config(page_title="DC Motor Virtual Lab", layout="wide")
+st.set_page_config(page_title="3D Lorentz Force", layout="wide")
 
-st.title("⚡ DC Motor Virtual Lab (Industry Level Simulation)")
+st.title("⚡ 3D Lorentz Force Visualization")
 
-st.markdown("""
-### 🔹 Real DC Motor Model
-- Torque production
-- Back EMF effect
-- Speed dynamics
-- Load interaction
-""")
+st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
 
 # ================= INPUT =================
-st.sidebar.header("🔧 Motor Parameters")
+st.sidebar.header("🔧 Controls")
 
-V = st.sidebar.slider("Supply Voltage (V)", 0.0, 240.0, 120.0)
-R = st.sidebar.slider("Armature Resistance (Ω)", 0.1, 5.0, 1.0)
-k = st.sidebar.slider("Motor Constant (kΦ)", 0.1, 2.0, 0.8)
-J = st.sidebar.slider("Inertia (J)", 0.1, 5.0, 1.0)
-Bf = st.sidebar.slider("Friction (B)", 0.0, 1.0, 0.1)
-TL = st.sidebar.slider("Load Torque (Nm)", 0.0, 10.0, 2.0)
+I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
+L = st.sidebar.slider("Wire Length (L)", 0.1, 5.0, 2.0)
+B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
+theta = st.sidebar.slider("Angle between L and B (deg)", 0, 180, 90)
 
-# ================= INITIAL CONDITIONS =================
-dt = 0.05
-steps = 200
+theta_rad = np.radians(theta)
 
-omega = 0.0
-history_omega = []
-history_torque = []
-history_current = []
+# ================= PHYSICS =================
+L_vec = np.array([L, 0, 0])
 
-# ================= SIMULATION =================
-placeholder = st.empty()
+B_vec = np.array([
+    np.cos(theta_rad),
+    np.sin(theta_rad),
+    0
+]) * B
 
-if st.button("▶ Start Motor Simulation"):
+F_vec = I * np.cross(L_vec, B_vec)
 
-    for t in range(steps):
+# ================= NORMALIZATION FOR VISUAL =================
+scale = 2
+L_vis = L_vec * scale
+B_vis = B_vec * scale
+F_vis = F_vec * scale
 
-        # Back EMF
-        Eb = k * omega
+# ================= FIGURE =================
+fig = go.Figure()
 
-        # Armature current
-        Ia = (V - Eb) / R
+def add_vector(vec, name, color):
+    fig.add_trace(go.Scatter3d(
+        x=[0, vec[0]],
+        y=[0, vec[1]],
+        z=[0, vec[2]],
+        mode='lines',
+        name=name,
+        line=dict(color=color, width=8)
+    ))
 
-        # Electromagnetic torque
-        Te = k * Ia
+    # Proper arrow (direction only, not full magnitude again)
+    direction = vec / (np.linalg.norm(vec) + 1e-9)
 
-        # Motion equation
-        domega = (Te - TL - Bf * omega) / J
+    fig.add_trace(go.Cone(
+        x=[vec[0]],
+        y=[vec[1]],
+        z=[vec[2]],
+        u=[direction[0]],
+        v=[direction[1]],
+        w=[direction[2]],
+        sizemode="absolute",
+        sizeref=0.5,
+        anchor="tail",
+        colorscale=[[0, color], [1, color]],
+        showscale=False
+    ))
 
-        omega += domega * dt
+# Vectors
+add_vector(L_vis, "Current Length (L)", "blue")
+add_vector(B_vis, "Magnetic Field (B)", "green")
+add_vector(F_vis, "Force (F)", "red")
 
-        # store
-        history_omega.append(omega)
-        history_torque.append(Te)
-        history_current.append(Ia)
+# ================= LAYOUT =================
+limit = 8
 
-        # ================= PLOT =================
-        fig = go.Figure()
+fig.update_layout(
+    scene=dict(
+        xaxis=dict(range=[-limit, limit], title="X"),
+        yaxis=dict(range=[-limit, limit], title="Y"),
+        zaxis=dict(range=[-limit, limit], title="Z"),
+        aspectmode="cube"
+    ),
+    margin=dict(l=0, r=0, b=0, t=0),
+    legend=dict(x=0.8, y=0.9)
+)
 
-        fig.add_trace(go.Scatter(y=history_omega, name="Speed (ω)", line=dict(color="blue")))
-        fig.add_trace(go.Scatter(y=history_torque, name="Torque (Te)", line=dict(color="red")))
-        fig.add_trace(go.Scatter(y=history_current, name="Current (Ia)", line=dict(color="green")))
+st.plotly_chart(fig, use_container_width=True)
 
-        fig.update_layout(
-            title="Motor Dynamic Response",
-            xaxis_title="Time Step",
-            yaxis_title="Value",
-            height=500
-        )
+# ================= RESULTS =================
+col1, col2 = st.columns(2)
 
-        placeholder.plotly_chart(fig, use_container_width=True)
+with col1:
+    st.subheader("📘 Results")
+    st.write("Force Magnitude:", round(np.linalg.norm(F_vec), 3), "N")
+    st.write("Force Vector:", np.round(F_vec, 3))
 
-        time.sleep(0.03)
+with col2:
+    st.subheader("💡 Interpretation")
+    st.markdown("""
+- Blue → Current direction (L)  
+- Green → Magnetic field (B)  
+- Red → Force (F = I × L × B)  
 
-# ================= STEADY STATE =================
-st.subheader("📊 Final Operating Point")
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Speed (ω)", f"{omega:.2f} rad/s")
-col2.metric("Current (Ia)", f"{Ia:.2f} A")
-col3.metric("Back EMF (Eb)", f"{Eb:.2f} V")
-
-# ================= PHYSICAL INSIGHT =================
-st.subheader("💡 Physical Insight")
-
-st.markdown("""
-- At start: ω = 0 → high current → high torque  
-- As speed increases → back EMF increases → current reduces  
-- Motor reaches equilibrium when:
-  - Torque = Load Torque + Losses
+👉 Force is always perpendicular to both L and B
 """)
