@@ -3,11 +3,18 @@ import numpy as np
 import plotly.graph_objects as go
 
 # ================= PAGE =================
-st.set_page_config(page_title="3D Lorentz Force", layout="wide")
+st.set_page_config(page_title="Lorentz Force + Right Hand Rule", layout="wide")
 
-st.title("⚡ 3D Lorentz Force Visualization")
+st.title("⚡ 3D Lorentz Force with Right-Hand Rule")
 
 st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
+
+st.markdown("""
+### 🧠 Right-Hand Rule:
+- 👉 Index finger → **Current (L)**
+- 👉 Middle finger → **Magnetic Field (B)**
+- 👉 Thumb → **Force (F)**
+""")
 
 # ================= INPUT =================
 st.sidebar.header("🔧 Controls")
@@ -15,28 +22,26 @@ st.sidebar.header("🔧 Controls")
 I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
 L = st.sidebar.slider("Wire Length (L)", 0.1, 5.0, 2.0)
 B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
-theta = st.sidebar.slider("Angle between L and B (deg)", 0, 180, 90)
+theta = st.sidebar.slider("Angle of Wire (deg)", 0, 180, 60)
 
 theta_rad = np.radians(theta)
 
-# ================= PHYSICS =================
-L_vec = np.array([L, 0, 0])
+# ================= PHYSICS (CORRECT MODEL) =================
 
-B_vec = np.array([
-    np.cos(theta_rad),
-    np.sin(theta_rad),
-    0
-]) * B
+# Wire direction (rotated in X–Z plane)
+L_vec = np.array([
+    L * np.cos(theta_rad),
+    0,
+    L * np.sin(theta_rad)
+])
 
+# Magnetic field fixed along Y-axis (standard textbook setup)
+B_vec = np.array([0, B, 0])
+
+# Lorentz force
 F_vec = I * np.cross(L_vec, B_vec)
 
-# ================= NORMALIZATION FOR VISUAL =================
-scale = 2
-L_vis = L_vec * scale
-B_vis = B_vec * scale
-F_vis = F_vec * scale
-
-# ================= FIGURE =================
+# ================= PLOT FUNCTION =================
 fig = go.Figure()
 
 def add_vector(vec, name, color):
@@ -44,13 +49,14 @@ def add_vector(vec, name, color):
         x=[0, vec[0]],
         y=[0, vec[1]],
         z=[0, vec[2]],
-        mode='lines',
+        mode='lines+markers',
         name=name,
         line=dict(color=color, width=8)
     ))
 
-    # Proper arrow (direction only, not full magnitude again)
-    direction = vec / (np.linalg.norm(vec) + 1e-9)
+    # Arrow head (direction only)
+    norm = np.linalg.norm(vec) + 1e-9
+    direction = vec / norm
 
     fig.add_trace(go.Cone(
         x=[vec[0]],
@@ -62,17 +68,17 @@ def add_vector(vec, name, color):
         sizemode="absolute",
         sizeref=0.5,
         anchor="tail",
-        colorscale=[[0, color], [1, color]],
-        showscale=False
+        showscale=False,
+        colorscale=[[0, color], [1, color]]
     ))
 
-# Vectors
-add_vector(L_vis, "Current Length (L)", "blue")
-add_vector(B_vis, "Magnetic Field (B)", "green")
-add_vector(F_vis, "Force (F)", "red")
+# ================= DRAW VECTORS =================
+add_vector(L_vec, "Current Direction (L)", "blue")
+add_vector(B_vec, "Magnetic Field (B)", "green")
+add_vector(F_vec, "Force (F)", "red")
 
-# ================= LAYOUT =================
-limit = 8
+# ================= AXIS =================
+limit = 6
 
 fig.update_layout(
     scene=dict(
@@ -82,25 +88,40 @@ fig.update_layout(
         aspectmode="cube"
     ),
     margin=dict(l=0, r=0, b=0, t=0),
-    legend=dict(x=0.8, y=0.9)
+    legend=dict(x=0.75, y=0.9)
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
 # ================= RESULTS =================
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.subheader("📘 Results")
-    st.write("Force Magnitude:", round(np.linalg.norm(F_vec), 3), "N")
-    st.write("Force Vector:", np.round(F_vec, 3))
+    st.metric("Force Magnitude (N)", f"{np.linalg.norm(F_vec):.3f}")
 
 with col2:
-    st.subheader("💡 Interpretation")
-    st.markdown("""
-- Blue → Current direction (L)  
-- Green → Magnetic field (B)  
-- Red → Force (F = I × L × B)  
+    st.metric("Force X", f"{F_vec[0]:.3f}")
+    st.metric("Force Y", f"{F_vec[1]:.3f}")
 
-👉 Force is always perpendicular to both L and B
+with col3:
+    st.metric("Force Z", f"{F_vec[2]:.3f}")
+
+# ================= EXPLANATION =================
+st.subheader("💡 Physics Explanation")
+
+st.markdown("""
+✔ Current (L) is along the wire direction  
+✔ Magnetic field (B) is perpendicular (Y-axis)  
+✔ Force (F) is perpendicular to both  
+
+👉 This follows the **Right-Hand Rule** exactly:
+- Index → L  
+- Middle → B  
+- Thumb → F  
 """)
+
+# ================= EXTRA INSIGHT =================
+if np.linalg.norm(F_vec) < 1e-3:
+    st.warning("Force is nearly zero → L is parallel to B")
+else:
+    st.success("Non-zero force → mechanical motion possible ⚡")
