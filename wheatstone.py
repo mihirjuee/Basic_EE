@@ -181,4 +181,4 @@ st.plotly_chart(fig2, use_container_width=True)
 
 # ================= FOOTER =================
 st.markdown("---")
-st.markdown("⚡ Virtual Electrical Lab | Streamlit App")
+st.markdown("⚡ Virtual Electrical Lab")
