@@ -1,21 +1,12 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import schemdraw
+import schemdraw.elements as elm
 
-# ================= PAGE CONFIG =================
+# ================= PAGE =================
 st.set_page_config(page_title="Wheatstone Bridge Pro", layout="wide")
 
-# ================= DARK UI =================
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(135deg, #0e1117, #1c1f26);
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ================= TITLE =================
 st.title("⚡ Wheatstone Bridge – Virtual Lab")
 
 st.latex(r"\frac{R_1}{R_2} = \frac{R_3}{R_4}")
@@ -54,21 +45,12 @@ if unknown != "None":
     except:
         st.error("Invalid values!")
 
-# ================= SHOW VALUES =================
-st.sidebar.markdown("### 📌 Values")
-st.sidebar.write(f"R1 = {R1:.2f} Ω")
-st.sidebar.write(f"R2 = {R2:.2f} Ω")
-st.sidebar.write(f"R3 = {R3:.2f} Ω")
-st.sidebar.write(f"R4 = {R4:.2f} Ω")
-
 # ================= CALCULATIONS =================
 V_left = Vs * (R3 / (R1 + R3))
 V_right = Vs * (R4 / (R2 + R4))
-
 Vg = V_left - V_right
 balanced = np.isclose(Vg, 0, atol=1e-4)
 
-# Normalize for gauge
 def normalize(v):
     return max(min(v / 5, 1), -1)
 
@@ -77,8 +59,48 @@ needle = normalize(Vg)
 # ================= LAYOUT =================
 col1, col2 = st.columns([1, 1])
 
-# ================= GAUGE =================
+# ================= CIRCUIT =================
 with col1:
+    st.subheader("🔌 Bridge Circuit")
+
+    d = schemdraw.Drawing()
+
+    # Top branch
+    d += elm.Resistor().right().label(f"R1\n{R1:.1f}Ω")
+    d += elm.Dot()
+    top_right = d.here
+
+    d.push()
+    d += elm.Resistor().down().label(f"R2\n{R2:.1f}Ω")
+    d += elm.Dot()
+    bottom_right = d.here
+    d.pop()
+
+    # Left branch
+    d += elm.Line().left(3)
+    d += elm.Dot()
+    top_left = d.here
+
+    d.push()
+    d += elm.Resistor().down().label(f"R3\n{R3:.1f}Ω")
+    d += elm.Dot()
+    bottom_left = d.here
+    d.pop()
+
+    # Bottom branch
+    d += elm.Line().right(3)
+
+    # Voltage Source
+    d += elm.SourceV().up().label(f"{Vs} V")
+
+    # Galvanometer (bridge)
+    d += elm.Line().at(top_left).to(top_right)
+    d += elm.Meter().at((top_left[0]+1.5, top_left[1])).label("G")
+
+    st.pyplot(d.draw())
+
+# ================= GAUGE =================
+with col2:
     st.subheader("🎥 Galvanometer")
 
     fig = go.Figure(go.Indicator(
@@ -87,7 +109,6 @@ with col1:
         title={'text': "Needle Deflection"},
         gauge={
             'axis': {'range': [-1, 1]},
-            'bar': {'thickness': 0.3},
             'steps': [
                 {'range': [-1, -0.2], 'color': "#ff4b4b"},
                 {'range': [-0.2, 0.2], 'color': "#00ffcc"},
@@ -100,19 +121,20 @@ with col1:
     st.plotly_chart(fig, use_container_width=True)
 
 # ================= RESULTS =================
-with col2:
-    st.subheader("📊 Results")
+st.subheader("📊 Results")
 
+col3, col4 = st.columns(2)
+
+with col3:
     st.metric("Galvanometer Voltage (V)", f"{Vg:.6f}")
 
+with col4:
     if balanced:
-        st.success("Balanced ✅ (Null Deflection)")
+        st.success("Balanced ✅")
     else:
         st.error("Unbalanced ❌")
 
-    st.metric("Error", f"{abs(Vg):.6f} V")
-
-# ================= BALANCE CURVE =================
+# ================= GRAPH =================
 st.subheader("📈 Balance Curve")
 
 R4_range = np.linspace(1, max(2*R4, 200), 200)
@@ -127,14 +149,10 @@ fig2.add_trace(go.Scatter(
 ))
 
 fig2.add_hline(y=0, line_dash="dash")
-fig2.update_layout(
-    template="plotly_dark",
-    xaxis_title="R4 (Ω)",
-    yaxis_title="Galvanometer Voltage (V)"
-)
+fig2.update_layout(template="plotly_dark")
 
 st.plotly_chart(fig2, use_container_width=True)
 
 # ================= FOOTER =================
 st.markdown("---")
-st.markdown("⚡ Virtual Electrical Lab | Streamlit App")
+st.markdown("⚡ Virtual Electrical Lab")
