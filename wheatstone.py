@@ -65,40 +65,24 @@ with col1:
     st.subheader("🔌 Bridge Circuit")
 
     d = schemdraw.Drawing()
-
-    # Top left node
-    d += elm.Dot()
     
-    # R1 (top left to top right)
-    d += elm.Resistor().right().label(f"R1\n{R1:.1f}Ω")
-    d += elm.Dot()
-    top_right = d.here
+    # Define bridge nodes
+    # A (top), B (middle left), C (middle right), D (bottom)
+    d += (R1 := elm.Resistor().label(f"R1\n{R1:.1f}Ω"))
+    d += (R2 := elm.Resistor().down().label(f"R2\n{R2:.1f}Ω"))
+    d += (R4 := elm.Resistor().left().label(f"R4\n{R4:.1f}Ω"))
+    d += (R3 := elm.Resistor().left().label(f"R3\n{R3:.1f}Ω"))
+    
+    # Galvanometer branch
+    d += elm.Line().at(R1.end).to(R2.start) # This is a placeholder for bridge center
+    d += elm.Resistor().at(R1.end).to(R4.start).label("G")
 
-    # R2 (top right to bottom right)
-    d += elm.Resistor().down().label(f"R2\n{R2:.1f}Ω")
-    d += elm.Dot()
-    bottom_right = d.here
+    # Add voltage source (Vs) across the bridge
+    d += elm.SourceV().at(R3.end).to(R1.start).label(f"{Vs}V")
 
-    # Bottom wire (right to left)
-    d += elm.Line().left(3)
-
-    # R3 (bottom left to top left)
-    d += elm.Resistor().up().label(f"R3\n{R3:.1f}Ω")
-    d += elm.Dot()
-    top_left = d.here
-
-    # Voltage source (left vertical)
-    d += elm.SourceV().down().label(f"{Vs}V")
-
-# -------- Galvanometer branch --------
-d.push()
-
-d += elm.Line().at(top_left).to(top_right)
-d += elm.Resistor().label("G")
-
-d.pop()
-
-st.pyplot(d.draw())
+    # Render to Streamlit
+    fig = d.draw()
+    st.pyplot(fig)
 # ================= GAUGE =================
 with col2:
     st.subheader("🎥 Galvanometer")
