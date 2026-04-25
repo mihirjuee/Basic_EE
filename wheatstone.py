@@ -60,45 +60,43 @@ needle = normalize(Vg)
 col1, col2 = st.columns([1, 1])
 
 # ================= CIRCUIT =================
+# ================= CIRCUIT =================
 with col1:
     st.subheader("🔌 Bridge Circuit")
 
     d = schemdraw.Drawing()
 
-    # Top branch
+    # Top left node
+    d += elm.Dot()
+    
+    # R1 (top left to top right)
     d += elm.Resistor().right().label(f"R1\n{R1:.1f}Ω")
     d += elm.Dot()
     top_right = d.here
 
-    d.push()
+    # R2 (top right to bottom right)
     d += elm.Resistor().down().label(f"R2\n{R2:.1f}Ω")
     d += elm.Dot()
     bottom_right = d.here
-    d.pop()
 
-    # Left branch
+    # Bottom wire (right to left)
     d += elm.Line().left(3)
+
+    # R3 (bottom left to top left)
+    d += elm.Resistor().up().label(f"R3\n{R3:.1f}Ω")
     d += elm.Dot()
     top_left = d.here
 
+    # Voltage source (left vertical)
+    d += elm.SourceV().down().label(f"{Vs}V")
+
+    # -------- Galvanometer branch --------
     d.push()
-    d += elm.Resistor().down().label(f"R3\n{R3:.1f}Ω")
-    d += elm.Dot()
-    bottom_left = d.here
+    d += elm.Line().at(top_left).to(top_right)
+    d += elm.Meter().label("G")
     d.pop()
 
-    # Bottom branch
-    d += elm.Line().right(3)
-
-    # Voltage Source
-    d += elm.SourceV().up().label(f"{Vs} V")
-
-    # Galvanometer (bridge)
-    d += elm.Line().at(top_left).to(top_right)
-    d += elm.Meter().at((top_left[0]+1.5, top_left[1])).label("G")
-
     st.pyplot(d.draw())
-
 # ================= GAUGE =================
 with col2:
     st.subheader("🎥 Galvanometer")
