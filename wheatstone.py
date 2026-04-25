@@ -115,7 +115,11 @@ with col2:
 # ================= BALANCE CURVE =================
 st.subheader("📈 Balance Curve")
 
-R4_range = np.linspace(1, max(2*R4, 200), 200)
+# Safe range (avoid flat-looking graph)
+R4_bal = (R2 * R3) / R1 if R1 != 0 else 100
+
+R4_range = np.linspace(0.5*R4_bal, 1.5*R4_bal, 300)
+
 Vg_curve = Vs*(R3/(R1+R3)) - Vs*(R4_range/(R2+R4_range))
 
 fig2 = go.Figure()
@@ -123,15 +127,35 @@ fig2 = go.Figure()
 fig2.add_trace(go.Scatter(
     x=R4_range,
     y=Vg_curve,
-    name="Vg"
+    name="Vg",
+    line=dict(width=3)
 ))
 
-fig2.add_hline(y=0, line_dash="dash")
+# Zero line
+fig2.add_hline(y=0, line_dash="dash", line_width=2)
+
+# Balance point marker
+fig2.add_trace(go.Scatter(
+    x=[R4_bal],
+    y=[0],
+    mode="markers+text",
+    text=["Balance"],
+    textposition="top center",
+    marker=dict(size=10)
+))
+
+# Improve layout
 fig2.update_layout(
     template="plotly_dark",
+    height=350 if is_mobile else 450,   # 🔥 IMPORTANT
+    margin=dict(l=20, r=20, t=40, b=40),
     xaxis_title="R4 (Ω)",
-    yaxis_title="Galvanometer Voltage (V)"
+    yaxis_title="Vg (V)",
 )
+
+# Better axis readability
+fig2.update_xaxes(showgrid=True)
+fig2.update_yaxes(showgrid=True)
 
 st.plotly_chart(fig2, use_container_width=True)
 
