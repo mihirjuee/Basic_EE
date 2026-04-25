@@ -1,81 +1,108 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import time
 
-# ================= PAGE CONFIG =================
-st.set_page_config(page_title="3D Lorentz Force", layout="wide")
+# ================= PAGE =================
+st.set_page_config(page_title="Lorentz Force Animation", layout="wide")
 
-st.title("⚡ 3D Lorentz Force Visualization")
+st.title("⚡ Animated Lorentz Force (Wire Motion)")
+
 st.latex(r"\mathbf{F} = I (\mathbf{L} \times \mathbf{B})")
 
 # ================= INPUT =================
 st.sidebar.header("🔧 Controls")
+
 I = st.sidebar.slider("Current (I)", 0.0, 10.0, 5.0)
-L = st.sidebar.slider("Wire Length (L)", 0.1, 5.0, 1.0)
+L = st.sidebar.slider("Wire Length (L)", 1.0, 5.0, 2.0)
 B = st.sidebar.slider("Magnetic Field (B)", 0.0, 5.0, 2.0)
-theta = st.sidebar.slider("Angle between L and B (deg)", 0, 180, 90)
+theta = st.sidebar.slider("Angle (deg)", 0, 180, 90)
 
-theta_rad = np.radians(theta)
+theta = np.radians(theta)
 
-# ================= PHYSICS CALCULATION =================
-# L along x-axis
+# ================= CONSTANT VECTORS =================
 L_vec = np.array([L, 0, 0])
-# B in xy-plane
-B_vec = np.array([np.cos(theta_rad), np.sin(theta_rad), 0]) * B
-# F = I * (L x B)
+
+B_vec = np.array([
+    np.cos(theta),
+    np.sin(theta),
+    0
+]) * B
+
 F_vec = I * np.cross(L_vec, B_vec)
 
-# ================= PLOTLY FIGURE =================
-fig = go.Figure()
+# Normalize force for motion
+F_dir = F_vec / (np.linalg.norm(F_vec) + 1e-9)
 
-def add_vector(fig, vec, name, color):
-    # Line
-    fig.add_trace(go.Scatter3d(
-        x=[0, vec[0]], y=[0, vec[1]], z=[0, vec[2]],
-        mode='lines', name=name,
-        line=dict(color=color, width=6)
-    ))
-    # Arrow head
-    fig.add_trace(go.Cone(
-        x=[vec[0]], y=[vec[1]], z=[vec[2]],
-        u=[vec[0]], v=[vec[1]], w=[vec[2]],
-        sizemode="absolute", sizeref=0.5,
-        colorscale=[[0, color], [1, color]], showscale=False
-    ))
+# ================= ANIMATION SETUP =================
+placeholder = st.empty()
+start = st.button("▶ Start Animation")
 
-add_vector(fig, L_vec, 'Wire Length (L)', 'blue')
-add_vector(fig, B_vec, 'Magnetic Field (B)', 'green')
-add_vector(fig, F_vec, 'Force (F)', 'red')
+# wire initial position
+pos = np.array([0.0, 0.0, 0.0])
 
-# Fixed Axis for stability
-limit = 10
-fig.update_layout(
-    scene=dict(
-        xaxis=dict(range=[-limit, limit]),
-        yaxis=dict(range=[-limit, limit]),
-        zaxis=dict(range=[-limit, limit]),
-        aspectmode='cube'
-    ),
-    margin=dict(l=0, r=0, b=0, t=0)
-)
+dt = 0.1
+velocity = np.array([0.0, 0.0, 0.0])
 
-st.plotly_chart(fig, use_container_width=True)
+# ================= ANIMATION LOOP =================
+if start:
 
-# ================= INFO =================
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("📘 Calculations")
-    st.write(f"**Calculated Force Magnitude:** {np.linalg.norm(F_vec):.2f} N")
-    st.write(f"**Force Vector (x, y, z):** {np.round(F_vec, 2)}")
+    for t in range(40):
 
-with col2:
-    st.subheader("💡 Physics Note")
-    st.markdown("""
-    The direction of the force is determined by the **Right-Hand Rule**:
-    1. Point fingers in direction of **L**.
-    2. Curl fingers toward **B**.
-    3. The thumb points in the direction of **F**.
-    """)
-    
+        # simple motion model: a = F (scaled)
+        acceleration = 0.5 * F_dir
 
-#[Image of the right-hand rule for magnetic force]
+        velocity += acceleration * dt
+        pos = pos + velocity * dt
+
+        fig = go.Figure()
+
+        # wire (moving line)
+        wire_start = pos
+        wire_end = pos + L_vec
+
+        fig.add_trace(go.Scatter3d(
+            x=[wire_start[0], wire_end[0]],
+            y=[wire_start[1], wire_end[1]],
+            z=[wire_start[2], wire_end[2]],
+            mode='lines',
+            line=dict(color='blue', width=8),
+            name="Wire"
+        ))
+
+        # force vector
+        fig.add_trace(go.Scatter3d(
+            x=[pos[0], pos[0] + F_dir[0]],
+            y=[pos[1], pos[1] + F_dir[1]],
+            z=[pos[2], pos[2] + F_dir[2]],
+            mode='lines',
+            line=dict(color='red', width=6),
+            name="Force"
+        ))
+
+        # magnetic field direction (fixed)
+        fig.add_trace(go.Scatter3d(
+            x=[0, B_vec[0]],
+            y=[0, B_vec[1]],
+            z=[0, B_vec[2]],
+            mode='lines',
+            line=dict(color='green', width=6),
+            name="B Field"
+        ))
+
+        fig.update_layout(
+            scene=dict(
+                xaxis=dict(range=[-5, 5]),
+                yaxis=dict(range=[-5, 5]),
+                zaxis=dict(range=[-5, 5]),
+                aspectmode="cube"
+            ),
+            margin=dict(l=0, r=0, b=0, t=0),
+            title=f"Time step: {t}"
+        )
+
+        placeholder.plotly_chart(fig, use_container_width=True)
+
+        time.sleep(0.1)
+
+st.info("Click Start Animation to see wire motion 🔄")
