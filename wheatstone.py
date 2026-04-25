@@ -103,7 +103,7 @@ d += elm.Line().right()
 
 d.pop()
 
-    st.pyplot(d.draw())
+st.pyplot(d.draw())
 # ================= GAUGE =================
 with col2:
     st.subheader("🎥 Galvanometer")
