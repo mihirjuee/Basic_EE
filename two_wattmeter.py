@@ -23,7 +23,6 @@ W2 = (V_supply * I_actual) * np.cos(np.radians(30) + phi)
 
 # --- TEXTBOOK CIRCUIT DIAGRAM ---
 
-
 import schemdraw
 import schemdraw.elements as elm
 
@@ -54,6 +53,7 @@ def draw_textbook_circuit(ax):
     d += elm.Line().right(2)
     d += elm.Resistor().label("ZY")
     d.push()
+    d += elm.Box(w=2, h=1).label("Z")
     d += elm.Resistor().label("ZR").theta(60)
     d.pop()
     d += elm.Resistor().label("ZB").theta(-60)
