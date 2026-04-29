@@ -142,7 +142,7 @@ with col2:
 
     st.metric("Coercive Force", f"{coercivity:.2f}")
 
-    loop_area = np.trapz(np.abs(B_up), H_up) + np.trapz(np.abs(B_down), H_down)
+    loop_area = np.trapezoid(np.abs(B_up), H_up) + np.trapezoid(np.abs(B_down), H_down)
     st.metric("Approx. Hysteresis Loss", f"{loop_area:.2f}")
 
     # Material interpretation
