@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="3D Electromagnetism Sim", layout="wide")
+st.set_page_config(page_title="3D Electromagnetism Sim", page_icon="logo.png", layout="wide")
 
-st.title("⚡ 3D Parallel Conductors: Magnetic Flux & Force")
+st.title("⚡ Parallel Conductors: Magnetic Flux & Force")
 st.markdown("""
 This simulation visualizes the magnetic field lines (flux) around two parallel conductors. 
 **Right-Hand Rule:** Wrap your right hand around the wire with your thumb in the direction of the current; your fingers curl in the direction of the magnetic field.
