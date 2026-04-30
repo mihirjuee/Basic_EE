@@ -130,3 +130,4 @@ with col2:
     st.subheader("📖 According to Ampere's Law")
     st.latex(r"\frac{F}{L} = \frac{\mu_0 \cdot I_1 \cdot I_2}{2\pi \cdot d}")
     st.caption("Where μ₀ = 4π × 10⁻⁷ T·m/A")
+    st.caption("L>>d")
