@@ -1,9 +1,9 @@
 # ==========================================================
 # 3D VISUALIZATION: TWO PARALLEL CURRENT-CARRYING CONDUCTORS
-# UPDATED:
-# ✅ Circular magnetic flux lines now include direction arrows
-# ✅ Right-hand rule visualization
-# ✅ Same / Opposite current direction
+# FINAL IMPROVEMENT:
+# ✅ Large visible arrows on dotted magnetic flux circles
+# ✅ Clearer right-hand rule direction
+# ✅ Better educational visualization
 # ==========================================================
 
 import streamlit as st
@@ -31,7 +31,7 @@ direction = st.sidebar.radio(
 interaction = "Attraction" if direction == "Same Direction" else "Repulsion"
 
 # ---------------- FIGURE ----------------
-fig = plt.figure(figsize=(12, 8))
+fig = plt.figure(figsize=(14, 9))
 ax = fig.add_subplot(111, projection='3d')
 
 # Wire positions
@@ -41,73 +41,75 @@ x2, y2 = d/2, 0
 # Wire length
 z = np.linspace(-5, 5, 100)
 
-# Draw wires
-ax.plot([x1]*len(z), [y1]*len(z), z, linewidth=4)
-ax.plot([x2]*len(z), [y2]*len(z), z, linewidth=4)
+# Draw conductors
+ax.plot([x1]*len(z), [y1]*len(z), z, linewidth=5)
+ax.plot([x2]*len(z), [y2]*len(z), z, linewidth=5)
 
-# Current arrows
+# Current directions
 if direction == "Same Direction":
     dir1, dir2 = 1, 1
 else:
     dir1, dir2 = 1, -1
 
-ax.quiver(x1, y1, -4, 0, 0, 3*dir1, arrow_length_ratio=0.2)
-ax.quiver(x2, y2, -4 if dir2 == 1 else 4, 0, 0, 3*dir2, arrow_length_ratio=0.2)
+# Current arrows
+ax.quiver(x1, y1, -4, 0, 0, 3*dir1, arrow_length_ratio=0.25, linewidth=2)
+ax.quiver(x2, y2, -4 if dir2 == 1 else 4, 0, 0, 3*dir2, arrow_length_ratio=0.25, linewidth=2)
 
-# ---------------- FUNCTION TO DRAW MAGNETIC FIELD ----------------
+# ---------------- FUNCTION TO DRAW FLUX LINES ----------------
 def draw_flux_loops(xc, yc, current_dir):
-    theta = np.linspace(0, 2*np.pi, 200)
+    theta = np.linspace(0, 2*np.pi, 300)
 
-    # Right-hand rule:
-    # Up current => CCW viewed from top
-    # Down current => CW viewed from top
-    if current_dir == 1:
-        theta_plot = theta
-    else:
-        theta_plot = -theta
+    # Right-hand rule
+    theta_plot = theta if current_dir == 1 else -theta
 
     for zpos in [-3, 0, 3]:
-        r = 0.6
+        r = 0.7
 
         x_circle = xc + r * np.cos(theta_plot)
         y_circle = yc + r * np.sin(theta_plot)
         z_circle = np.ones_like(theta_plot) * zpos
 
-        # Plot circular field
-        ax.plot(x_circle, y_circle, z_circle, linestyle='dashed')
+        # Dotted circular magnetic field
+        ax.plot(x_circle, y_circle, z_circle, linestyle='dashed', linewidth=1.8)
 
-        # Add directional arrows at intervals
-        for t in np.linspace(0, len(theta_plot)-2, 8, dtype=int):
-            dx = x_circle[t+1] - x_circle[t]
-            dy = y_circle[t+1] - y_circle[t]
-            dz = 0
+        # ---------------- BIG CLEAR ARROWS ----------------
+        arrow_positions = [40, 120, 200]  # three clear arrows
+
+        for idx in arrow_positions:
+            dx = x_circle[idx + 3] - x_circle[idx]
+            dy = y_circle[idx + 3] - y_circle[idx]
 
             ax.quiver(
-                x_circle[t], y_circle[t], z_circle[t],
-                dx, dy, dz,
-                length=1,
+                x_circle[idx],
+                y_circle[idx],
+                z_circle[idx],
+                dx,
+                dy,
+                0,
+                length=1.2,
                 normalize=True,
-                arrow_length_ratio=0.4
+                arrow_length_ratio=0.9,  # BIG arrow head
+                linewidth=2.5
             )
 
-# Draw flux for both wires
+# Draw magnetic fields
 draw_flux_loops(x1, y1, dir1)
 draw_flux_loops(x2, y2, dir2)
 
 # ---------------- FORCE ARROWS ----------------
 if interaction == "Attraction":
-    ax.quiver(x1, 1.5, 0, 1, 0, 0, arrow_length_ratio=0.2)
-    ax.quiver(x2, 1.5, 0, -1, 0, 0, arrow_length_ratio=0.2)
+    ax.quiver(x1, 1.8, 0, 1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
+    ax.quiver(x2, 1.8, 0, -1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
 else:
-    ax.quiver(x1, 1.5, 0, -1, 0, 0, arrow_length_ratio=0.2)
-    ax.quiver(x2, 1.5, 0, 1, 0, 0, arrow_length_ratio=0.2)
+    ax.quiver(x1, 1.8, 0, -1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
+    ax.quiver(x2, 1.8, 0, 1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
 
-# Labels
-ax.text(x1, 0, 5.5, f"I₁ = {I1} A")
-ax.text(x2, 0, 5.5, f"I₂ = {I2} A")
+# ---------------- LABELS ----------------
+ax.text(x1, 0, 5.7, f"I₁ = {I1} A", fontsize=12)
+ax.text(x2, 0, 5.7, f"I₂ = {I2} A", fontsize=12)
 
 # ---------------- STYLING ----------------
-ax.set_title(f"{interaction} Between Conductors with Magnetic Flux Direction")
+ax.set_title(f"{interaction} Between Conductors with Clear Magnetic Flux Direction", pad=20)
 ax.set_xlabel("X-axis")
 ax.set_ylabel("Y-axis")
 ax.set_zlabel("Length")
@@ -115,6 +117,9 @@ ax.set_zlabel("Length")
 ax.set_xlim(-4, 4)
 ax.set_ylim(-3, 3)
 ax.set_zlim(-5, 5)
+
+# Better viewing angle
+ax.view_init(elev=25, azim=45)
 
 st.pyplot(fig)
 
@@ -128,4 +133,4 @@ st.write(f"### Force per unit length: **{F_per_length:.6e} N/m**")
 
 st.latex(r"\frac{F}{L}=\frac{\mu_0 I_1 I_2}{2\pi d}")
 
-st.info("Flux direction follows Right-Hand Thumb Rule")
+st.success("Large arrows added to dotted circles for clearer magnetic field direction.")
