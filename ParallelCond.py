@@ -127,6 +127,6 @@ with col1:
     st.code(f"{force_m:.4e} N/m")
 
 with col2:
-    st.subheader("📖 The Formula")
-    st.latex(r"F = \frac{\mu_0 \cdot I_1 \cdot I_2 \cdot L}{2\pi \cdot d}")
+    st.subheader("📖 According to Ampere's Law")
+    st.latex(r"\frac{F}{L} = \frac{\mu_0 \cdot I_1 \cdot I_2}{2\pi \cdot d}")
     st.caption("Where μ₀ = 4π × 10⁻⁷ T·m/A")
