@@ -128,5 +128,5 @@ with col1:
 
 with col2:
     st.subheader("📖 The Formula")
-    st.latex(r"\frac{F}{L} = \frac{\mu_0 \cdot I_1 \cdot I_2}{2\pi \cdot d}")
+    st.latex(r"F = \frac{\mu_0 \cdot I_1 \cdot I_2 \cdot L}{2\pi \cdot d}")
     st.caption("Where μ₀ = 4π × 10⁻⁷ T·m/A")
