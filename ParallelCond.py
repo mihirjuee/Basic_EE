@@ -1,157 +1,132 @@
-# ==========================================================
-# CLEAN 3D VISUALIZATION: TWO PARALLEL CURRENT-CARRYING CONDUCTORS
-# IMPROVED:
-# ✅ Arrowheads embedded INTO dotted circular flux path
-# ✅ No separate clumsy arrows
-# ✅ Smooth directional magnetic field loops
-# ==========================================================
-
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="Clean 3D Parallel Conductors", layout="wide")
+st.set_page_config(page_title="3D Electromagnetism Sim", layout="wide")
 
-st.title("⚡ Clean 3D Diagram: Two Parallel Current-Carrying Conductors")
+st.title("⚡ 3D Parallel Conductors: Magnetic Flux & Force")
+st.markdown("""
+This simulation visualizes the magnetic field lines (flux) around two parallel conductors. 
+**Right-Hand Rule:** Wrap your right hand around the wire with your thumb in the direction of the current; your fingers curl in the direction of the magnetic field.
+""")
 
 # ---------------- INPUTS ----------------
-st.sidebar.header("Input Parameters")
+st.sidebar.header("Physical Parameters")
 
-I1 = st.sidebar.slider("Current in Conductor 1 (A)", 1.0, 100.0, 10.0)
-I2 = st.sidebar.slider("Current in Conductor 2 (A)", 1.0, 100.0, 10.0)
-d = st.sidebar.slider("Distance Between Conductors (m)", 0.5, 5.0, 2.0)
+I1 = st.sidebar.slider("Current I₁ (Amperes)", 1.0, 100.0, 20.0)
+I2 = st.sidebar.slider("Current I₂ (Amperes)", 1.0, 100.0, 20.0)
+d = st.sidebar.slider("Distance 'd' (meters)", 0.5, 5.0, 2.0)
 
 direction = st.sidebar.radio(
     "Current Direction",
-    ["Same Direction", "Opposite Direction"]
+    ["Same Direction (Attract)", "Opposite Direction (Repel)"]
 )
 
-interaction = "Attraction" if direction == "Same Direction" else "Repulsion"
+interaction = "Attraction" if "Same" in direction else "Repulsion"
 
-# ---------------- FIGURE ----------------
-fig = plt.figure(figsize=(14, 9))
+# ---------------- FIGURE SETUP ----------------
+fig = plt.figure(figsize=(14, 10))
 ax = fig.add_subplot(111, projection='3d')
 
-# Wire positions
+# Wire positions (centered on origin)
 x1, y1 = -d/2, 0
 x2, y2 = d/2, 0
+z_range = np.linspace(-5, 5, 100)
 
-# Wire length
-z = np.linspace(-5, 5, 100)
+# Draw Conductors (Silver/Grey cylinders)
+ax.plot([x1]*100, [y1]*100, z_range, color='gray', linewidth=6, alpha=0.7, label="Conductor 1")
+ax.plot([x2]*100, [y2]*100, z_range, color='darkgray', linewidth=6, alpha=0.7, label="Conductor 2")
 
-# Draw conductors
-ax.plot([x1]*len(z), [y1]*len(z), z, linewidth=5)
-ax.plot([x2]*len(z), [y2]*len(z), z, linewidth=5)
+# Determine directions
+dir1 = 1
+dir2 = 1 if interaction == "Attraction" else -1
 
-# Current direction
-if direction == "Same Direction":
-    dir1, dir2 = 1, 1
-else:
-    dir1, dir2 = 1, -1
+# Main Current Arrows (Vertical)
+ax.quiver(x1, y1, -2, 0, 0, 4*dir1, color='black', arrow_length_ratio=0.15, linewidth=3)
+ax.quiver(x2, y2, -2*dir2, 0, 0, 4*dir2, color='black', arrow_length_ratio=0.15, linewidth=3)
 
-# Current arrows
-ax.quiver(x1, y1, -4, 0, 0, 3*dir1, arrow_length_ratio=0.25, linewidth=2)
-ax.quiver(x2, y2, -4 if dir2 == 1 else 4, 0, 0, 3*dir2, arrow_length_ratio=0.25, linewidth=2)
+# ---------------- FUNCTION: EMBEDDED FLUX LOOPS ----------------
+def draw_flux_loops(xc, yc, current_dir, color, label_prefix):
+    # Create circular path
+    theta = np.linspace(0, 2*np.pi, 200)
+    
+    # Flip rotation based on current direction (Right Hand Rule)
+    if current_dir == -1:
+        theta = np.flip(theta)
 
-# ---------------- FUNCTION TO DRAW CLEAN FLUX LOOPS ----------------
-def draw_flux_loops(xc, yc, current_dir):
-    theta = np.linspace(0, 2*np.pi, 400)
+    for i, zpos in enumerate([-3, 0, 3]):
+        r = 0.8  # Radius of flux loop
+        
+        x_c = xc + r * np.cos(theta)
+        y_c = yc + r * np.sin(theta)
+        z_c = np.ones_like(theta) * zpos
 
-    # Right-hand rule
-    theta_plot = theta if current_dir == 1 else -theta
+        # 1. Draw the dashed loop
+        ax.plot(x_c, y_c, z_c, linestyle='--', color=color, linewidth=1.5, alpha=0.6)
 
-    for zpos in [-3, 0, 3]:
-        r = 0.75
-
-        x_circle = xc + r * np.cos(theta_plot)
-        y_circle = yc + r * np.sin(theta_plot)
-        z_circle = np.ones_like(theta_plot) * zpos
-
-        # Main dotted loop
-        ax.plot(
-            x_circle,
-            y_circle,
-            z_circle,
-            linestyle='dashed',
-            linewidth=2
-        )
-
-        # Embedded arrowhead by replacing small section with thick arrow-like segment
-        arrow_idx = 80
-
-        # Short directional segment
-        ax.plot(
-            x_circle[arrow_idx:arrow_idx+8],
-            y_circle[arrow_idx:arrow_idx+8],
-            z_circle[arrow_idx:arrow_idx+8],
-            linewidth=4
-        )
-
-        # Arrowhead wings
-        px = x_circle[arrow_idx+7]
-        py = y_circle[arrow_idx+7]
-        pz = z_circle[arrow_idx+7]
-
-        dx = x_circle[arrow_idx+7] - x_circle[arrow_idx+4]
-        dy = y_circle[arrow_idx+7] - y_circle[arrow_idx+4]
-
+        # 2. Calculate Arrowhead Position (at 90 degrees / index 50)
+        idx = 50 
+        px, py, pz = x_c[idx], y_c[idx], z_c[idx]
+        
+        # Tangent vector for arrowhead orientation
+        dx = x_c[idx+1] - x_c[idx]
+        dy = y_c[idx+1] - y_c[idx]
+        
+        # Normalize and scale tangent
         mag = np.sqrt(dx**2 + dy**2)
-        dx /= mag
-        dy /= mag
+        dx, dy = (dx/mag)*0.3, (dy/mag)*0.3
 
-        # Perpendicular vectors for arrowhead
-        wing = 0.12
+        # 3. Draw the integrated arrowhead
+        ax.quiver(px, py, pz, dx, dy, 0, color=color, pivot='tip', 
+                  arrow_length_ratio=0.5, linewidth=2.5)
 
-        left_x = px - 0.25*dx + wing*dy
-        left_y = py - 0.25*dy - wing*dx
+# Draw Magnetic Fields
+draw_flux_loops(x1, y1, dir1, "royalblue", "B1")
+draw_flux_loops(x2, y2, dir2, "crimson", "B2")
 
-        right_x = px - 0.25*dx - wing*dy
-        right_y = py - 0.25*dy + wing*dx
-
-        ax.plot([left_x, px], [left_y, py], [pz, pz], linewidth=3)
-        ax.plot([right_x, px], [right_y, py], [pz, pz], linewidth=3)
-
-# Draw magnetic fields
-draw_flux_loops(x1, y1, dir1)
-draw_flux_loops(x2, y2, dir2)
-
-# ---------------- FORCE ARROWS ----------------
+# ---------------- FORCE VECTORS ----------------
+# Force is applied at the center of the wires
+f_len = 1.5
 if interaction == "Attraction":
-    ax.quiver(x1, 1.8, 0, 1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
-    ax.quiver(x2, 1.8, 0, -1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
+    # Arrows pointing inward
+    ax.quiver(x1, 0, 0, f_len, 0, 0, color='green', linewidth=4, label="Force (F)")
+    ax.quiver(x2, 0, 0, -f_len, 0, 0, color='green', linewidth=4)
 else:
-    ax.quiver(x1, 1.8, 0, -1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
-    ax.quiver(x2, 1.8, 0, 1.2, 0, 0, arrow_length_ratio=0.25, linewidth=3)
+    # Arrows pointing outward
+    ax.quiver(x1, 0, 0, -f_len, 0, 0, color='green', linewidth=4, label="Force (F)")
+    ax.quiver(x2, 0, 0, f_len, 0, 0, color='green', linewidth=4)
 
-# ---------------- LABELS ----------------
-ax.text(x1, 0, 5.7, f"I₁ = {I1} A", fontsize=12)
-ax.text(x2, 0, 5.7, f"I₂ = {I2} A", fontsize=12)
-
-# ---------------- STYLING ----------------
-ax.set_title(f"{interaction} Between Conductors with Embedded Flux Direction", pad=20)
-ax.set_xlabel("X-axis")
-ax.set_ylabel("Y-axis")
-ax.set_zlabel("Length")
-
+# ---------------- PLOT STYLING ----------------
 ax.set_xlim(-4, 4)
-ax.set_ylim(-3, 3)
+ax.set_ylim(-4, 4)
 ax.set_zlim(-5, 5)
+ax.set_xlabel("X (m)")
+ax.set_ylabel("Y (m)")
+ax.set_zlabel("Wire Length")
+ax.set_title(f"Magnetic Field Interaction: {interaction}", fontsize=16)
 
-# Cleaner perspective
-ax.view_init(elev=25, azim=45)
+# Labels for currents
+ax.text(x1, 0, 5.5, f"I₁ = {I1}A", color='blue', fontweight='bold')
+ax.text(x2, 0, 5.5, f"I₂ = {I2}A", color='red', fontweight='bold')
 
+# Better viewing angle
+ax.view_init(elev=20, azim=30)
 st.pyplot(fig)
 
 # ---------------- CALCULATIONS ----------------
 mu0 = 4 * np.pi * 1e-7
-F_per_length = (mu0 * I1 * I2) / (2 * np.pi * d)
+force_m = (mu0 * I1 * I2) / (2 * np.pi * d)
 
-st.subheader("📘 Results")
-st.write(f"### Interaction: **{interaction}**")
-st.write(f"### Force per unit length: **{F_per_length:.6e} N/m**")
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("📊 Physics Data")
+    st.write(f"**Interaction Type:** {interaction}")
+    st.write(f"**Force per unit length (F/L):**")
+    st.code(f"{force_m:.4e} N/m")
 
-st.latex(r"\frac{F}{L}=\frac{\mu_0 I_1 I_2}{2\pi d}")
-
-st.success("Arrowheads are now integrated into the dotted flux path for a cleaner diagram.")
+with col2:
+    st.subheader("📖 The Formula")
+    st.latex(r"\frac{F}{L} = \frac{\mu_0 \cdot I_1 \cdot I_2}{2\pi \cdot d}")
+    st.caption("Where μ₀ = 4π × 10⁻⁷ T·m/A")
