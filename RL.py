@@ -86,7 +86,7 @@ f_in = st.sidebar.number_input("Frequency (Hz)", min_value=1, value=50)
 Z, I, PF, Phase, XL, P, Q = calculate_rl(V_in, R_in, L_in, f_in)
 
 # ================= 6. HEADER =================
-st.markdown("<h1 style='text-align:center;'>⚡ RL Circuit </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>⚡ Series RL Circuit </h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Interactive Learning Dashboard </p>", unsafe_allow_html=True)
 
 # ================= 7. KPI DASHBOARD =================
