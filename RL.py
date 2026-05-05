@@ -301,8 +301,8 @@ with tab4:
 
         # Current Arrow
         d.add(elm.Line().right().length(1))
-        d.add(elm.Arrow().right().label("I", loc="right"))
-
+        d.add(elm.Arrow().right().length(1).label("I", loc="right"))
+        d.add(elm.Line().right().length(1))
         # Return Path
         d.add(elm.Line().down().length(2.5))
         d.add(elm.Line().left().length(7))
