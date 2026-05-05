@@ -148,34 +148,103 @@ with tab1:
 with tab2:
     fig_ph = go.Figure()
 
-    # Voltage
+    # Voltage phasor endpoint
+    Vx, Vy = V_in, 0
+
+    # Current phasor endpoint (lagging)
+    Ix = V_in * np.cos(np.radians(-Phase))
+    Iy = V_in * np.sin(np.radians(-Phase))
+
+    # Voltage Phasor Line
     fig_ph.add_trace(go.Scatter(
-        x=[0, V_in], y=[0, 0],
-        mode="lines+markers+text",
+        x=[0, Vx],
+        y=[0, Vy],
+        mode="lines+text",
         text=["", "V"],
         textposition="top center",
-        name="Voltage",
+        name="Voltage Phasor",
         line=dict(width=4)
     ))
 
-    # Current
-    x_i = V_in * np.cos(np.radians(-Phase))
-    y_i = V_in * np.sin(np.radians(-Phase))
-
+    # Current Phasor Line
     fig_ph.add_trace(go.Scatter(
-        x=[0, x_i], y=[0, y_i],
-        mode="lines+markers+text",
+        x=[0, Ix],
+        y=[0, Iy],
+        mode="lines+text",
         text=["", "I"],
         textposition="top center",
-        name="Current",
+        name="Current Phasor",
         line=dict(width=4)
     ))
 
+    # Add Arrow for Voltage
+    fig_ph.add_annotation(
+        x=Vx,
+        y=Vy,
+        ax=0,
+        ay=0,
+        xref="x",
+        yref="y",
+        axref="x",
+        ayref="y",
+        showarrow=True,
+        arrowhead=3,
+        arrowsize=1.8,
+        arrowwidth=3
+    )
+
+    # Add Arrow for Current
+    fig_ph.add_annotation(
+        x=Ix,
+        y=Iy,
+        ax=0,
+        ay=0,
+        xref="x",
+        yref="y",
+        axref="x",
+        ayref="y",
+        showarrow=True,
+        arrowhead=3,
+        arrowsize=1.8,
+        arrowwidth=3
+    )
+
+    # Optional Phase Angle Arc
+    theta = np.linspace(0, np.radians(-Phase), 50)
+    arc_x = 0.25 * V_in * np.cos(theta)
+    arc_y = 0.25 * V_in * np.sin(theta)
+
+    fig_ph.add_trace(go.Scatter(
+        x=arc_x,
+        y=arc_y,
+        mode="lines",
+        name="Phase Angle",
+        line=dict(dash="dot")
+    ))
+
+    # Phase Label
+    fig_ph.add_annotation(
+        x=0.3 * V_in * np.cos(np.radians(-Phase / 2)),
+        y=0.3 * V_in * np.sin(np.radians(-Phase / 2)),
+        text=f"φ = {Phase:.1f}°",
+        showarrow=False
+    )
+
     fig_ph.update_layout(
-        title="Phasor Diagram",
+        title="Phasor Diagram with Direction Arrows",
         template="plotly_dark",
-        xaxis=dict(range=[-V_in, V_in*1.2]),
-        yaxis=dict(range=[-V_in, V_in]),
+        xaxis=dict(
+            title="Real Axis",
+            range=[-V_in * 0.2, V_in * 1.2],
+            zeroline=True
+        ),
+        yaxis=dict(
+            title="Imaginary Axis",
+            range=[-V_in, V_in * 0.5],
+            zeroline=True,
+            scaleanchor="x",
+            scaleratio=1
+        ),
         showlegend=True
     )
 
