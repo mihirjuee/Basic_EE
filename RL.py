@@ -301,15 +301,14 @@ with tab4:
 
         # Current Arrow
         d.add(elm.Line().right().length(1))
-        d.add(elm.Arrow().right().length(1).label("I", loc="right"))
+        d.add(elm.Arrow().right().length(1).label("I", loc="up"))
         d.add(elm.Line().right().length(1))
         # Return Path
-        d.add(elm.Line().down().length(3.5))
+        d.add(elm.Line().down().length(3.4))
         d.add(elm.Line().left().length(8))
       
 
-        # Ground (optional)
-        d.add(elm.Dot())
+
 
         # Save image
         d.save("rl_circuit.png")
