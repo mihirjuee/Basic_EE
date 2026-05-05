@@ -13,57 +13,46 @@ import numpy as np
 import plotly.graph_objects as go
 
 # ================= 3. RESPONSIVE CSS =================
+# ================= 2. LIGHT MODE CSS =================
 st.markdown("""
 <style>
-    html, body, [class*="css"] {
-        font-family: 'Segoe UI', sans-serif;
+    /* Main background and font */
+    .stApp {
+        background-color: #f8f9fa;
     }
-
-    .block-container {
-        padding: 1rem 2rem;
+    html, body, [class*="css"] { 
+        font-family: 'Inter', 'Segoe UI', sans-serif; 
+        color: #212529;
     }
-
-    /* KPI Cards */
+    .block-container { padding: 1rem 2rem; }
+    
+    /* KPI cards styling - Light Mode */
     .kpi-card {
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        background: #ffffff;
         padding: 20px;
-        border-radius: 14px;
+        border-radius: 12px;
         text-align: center;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
         margin-bottom: 15px;
     }
-
-    .kpi-title {
-        font-size: 0.9rem;
-        color: #cfd8dc;
+    .kpi-title { 
+        font-size: 0.85rem; 
+        color: #6c757d; 
+        font-weight: 600; 
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-value { 
+        font-size: 1.8rem; 
+        font-weight: 800; 
+        color: #0d6efd; /* Electric Blue */
     }
 
-    .kpi-value {
-        font-size: 1.6rem;
-        font-weight: bold;
-        color: #00e5ff;
-    }
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #102027, #203a43);
-    }
-
-    /* Mobile */
+    /* Mobile adjustments */
     @media (max-width: 768px) {
-        .kpi-value {
-            font-size: 1.2rem;
-        }
-
-        h1 {
-            font-size: 1.8rem !important;
-            text-align: center;
-        }
-
-        div[data-testid="column"] {
-            width: 100% !important;
-            flex: 1 1 100% !important;
-        }
+        .kpi-value { font-size: 1.4rem; }
+        h1 { font-size: 1.6rem !important; }
     }
 </style>
 """, unsafe_allow_html=True)
