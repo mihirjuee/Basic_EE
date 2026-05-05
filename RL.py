@@ -320,9 +320,11 @@ with tab4:
 st.markdown("## 📘 Key RL Circuit Formulas")
 st.markdown("**Inductive Reactance:**")
 st.latex(r"X_L = 2\pi f L")
-st.latex(r"X_L = 2\pi f L")
+st.markdown("**Impedance:**")
 st.latex(r"Z = \sqrt{R^2 + X_L^2}")
+st.markdown("**Current:**")
 st.latex(r"I = \frac{V}{Z}")
+st.markdown("**Power factor:**")
 st.latex(r"\cos\phi = \frac{R}{Z}")
 
 # ================= 10. FOOTER =================
