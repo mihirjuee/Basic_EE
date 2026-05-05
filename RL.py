@@ -284,7 +284,7 @@ with tab3:
 
 # ================= TAB 4 : SCHEMDRAW CIRCUIT =================
 with tab4:
-    st.subheader("🔌 Series RL Circuit (Schemdraw)")
+    st.subheader("🔌 Series RL Circuit")
 
     # Create RL Circuit Diagram
     with schemdraw.Drawing() as d:
@@ -301,7 +301,7 @@ with tab4:
 
         # Current Arrow
         d.add(elm.Line().right().length(1))
-        d.add(elm.Arrow().up().label("I", loc="right"))
+        d.add(elm.Arrow().right().label("I", loc="right"))
 
         # Return Path
         d.add(elm.Line().down().length(2.5))
