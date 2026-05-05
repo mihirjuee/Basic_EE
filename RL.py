@@ -12,7 +12,7 @@ st.set_page_config(
 import numpy as np
 import plotly.graph_objects as go
 
-# ================= 3. RESPONSIVE CSS =================
+
 # ================= 2. LIGHT MODE CSS =================
 st.markdown("""
 <style>
@@ -231,7 +231,7 @@ with tab2:
     )
 
     fig_ph.update_layout(
-        title="Phasor Diagram with Direction Arrows",
+        title="Phasor Diagram ",
         template="plotly_dark",
         xaxis=dict(
             title="Real Axis",
