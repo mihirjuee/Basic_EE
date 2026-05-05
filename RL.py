@@ -2,7 +2,7 @@ import streamlit as st
 
 # ================= 1. PAGE CONFIG MUST BE FIRST =================
 st.set_page_config(
-    page_title="⚡ RL Circuit Master Pro",
+    page_title=" RL Circuit ",
     page_icon="logo.png",
     layout="wide",
     initial_sidebar_state="expanded"
