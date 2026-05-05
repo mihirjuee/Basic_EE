@@ -282,7 +282,6 @@ with tab3:
 
     st.plotly_chart(power_triangle, use_container_width=True)
 
-----
 # ================= TAB 4 : SCHEMDRAW CIRCUIT =================
 with tab4:
     st.subheader("🔌 Series RL Circuit (Schemdraw)")
