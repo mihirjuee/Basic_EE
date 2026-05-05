@@ -291,6 +291,6 @@ st.latex(r"\cos\phi = \frac{R}{Z}")
 st.markdown("""
 <hr>
 <div style='text-align:center; font-size:14px;'>
-⚡ Designed for Learn EE Interactive • Mobile Responsive • InfoTeck Analytics
+⚡ Developed for Learn EE Interactive 
 </div>
 """, unsafe_allow_html=True)
