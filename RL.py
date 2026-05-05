@@ -318,6 +318,8 @@ with tab4:
     st.image(img, caption="Series RL Circuit Diagram", use_container_width=True)
 # ================= 9. KEY FORMULAS =================
 st.markdown("## 📘 Key RL Circuit Formulas")
+st.markdown("**Inductive Reactance:**")
+st.latex(r"X_L = 2\pi f L")
 st.latex(r"X_L = 2\pi f L")
 st.latex(r"Z = \sqrt{R^2 + X_L^2}")
 st.latex(r"I = \frac{V}{Z}")
