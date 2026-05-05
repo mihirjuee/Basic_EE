@@ -300,13 +300,13 @@ with tab4:
         d.add(elm.Inductor().right().label(f'L = {L_in} mH'))
 
         # Current Arrow
-        d.add(elm.Line().right().length(1))
+        d.add(elm.Line().right().length(0.5))
         d.add(elm.Arrow().right().length(1).label("I", loc="top"))
         d.add(elm.Line().right().length(1))
         # Return Path
         d.add(elm.Line().down().length(3.3))
         d.add(elm.Line().left().length(8.5))
-      
+        d.add(elm.Line().up().length(0.5))
 
 
 
