@@ -291,7 +291,7 @@ with tab4:
         d.config(unit=3)
 
         # AC Source
-        source = d.add(elm.SourceSin().label(f'{V_in} Vrms', loc='left'))
+        source = d.add(elm.SourceSin().label(f'{V_in} Vrms', loc='top'))
 
         # Resistor
         d.add(elm.Resistor().right().label(f'R = {R_in} Ω'))
@@ -304,8 +304,8 @@ with tab4:
         d.add(elm.Arrow().right().length(1).label("I", loc="top"))
         d.add(elm.Line().right().length(1))
         # Return Path
-        d.add(elm.Line().down().length(3.4))
-        d.add(elm.Line().left().length(8))
+        d.add(elm.Line().down().length(3.3))
+        d.add(elm.Line().left().length(8.5))
       
 
 
