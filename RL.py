@@ -1,5 +1,7 @@
 import streamlit as st
-
+import schemdraw
+import schemdraw.elements as elm
+from PIL import Image
 # ================= 1. PAGE CONFIG MUST BE FIRST =================
 st.set_page_config(
     page_title=" RL Circuit ",
@@ -280,113 +282,42 @@ with tab3:
 
     st.plotly_chart(power_triangle, use_container_width=True)
 
-# ---------- TAB 4 : RL CIRCUIT DIAGRAM ----------
+----
+# ================= TAB 4 : SCHEMDRAW CIRCUIT =================
 with tab4:
-    st.subheader("Series RL Circuit")
+    st.subheader("🔌 Series RL Circuit (Schemdraw)")
 
-    fig_circuit = go.Figure()
+    # Create RL Circuit Diagram
+    with schemdraw.Drawing() as d:
+        d.config(unit=3)
 
-    # AC Source (Circle)
-    theta = np.linspace(0, 2*np.pi, 100)
-    r = 0.5
-    x0, y0 = 1, 2
-    fig_circuit.add_trace(go.Scatter(
-        x=x0 + r*np.cos(theta),
-        y=y0 + r*np.sin(theta),
-        mode='lines',
-        name="AC Source"
-    ))
+        # AC Source
+        source = d.add(elm.SourceSin().label(f'{V_in} Vrms', loc='left'))
 
-    # Sine wave inside source
-    xs = np.linspace(-0.3, 0.3, 50)
-    ys = 0.15 * np.sin(10 * xs)
-    fig_circuit.add_trace(go.Scatter(
-        x=x0 + xs,
-        y=y0 + ys,
-        mode='lines',
-        showlegend=False
-    ))
+        # Resistor
+        d.add(elm.Resistor().right().label(f'R = {R_in} Ω'))
 
-    # Wire from source to resistor
-    fig_circuit.add_trace(go.Scatter(
-        x=[1.5, 3],
-        y=[2, 2],
-        mode='lines',
-        line=dict(width=3),
-        name="Wire"
-    ))
+        # Inductor
+        d.add(elm.Inductor().right().label(f'L = {L_in} mH'))
 
-    # Resistor (zig-zag)
-    rx = [3, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2]
-    ry = [2, 2.2, 1.8, 2.2, 1.8, 2.2, 2]
-    fig_circuit.add_trace(go.Scatter(
-        x=rx,
-        y=ry,
-        mode='lines',
-        line=dict(width=3),
-        name="Resistor"
-    ))
+        # Current Arrow
+        d.add(elm.Line().right().length(1))
+        d.add(elm.Arrow().up().label("I", loc="right"))
 
-    # Wire to Inductor
-    fig_circuit.add_trace(go.Scatter(
-        x=[4.2, 5],
-        y=[2, 2],
-        mode='lines',
-        line=dict(width=3),
-        showlegend=False
-    ))
+        # Return Path
+        d.add(elm.Line().down().length(2.5))
+        d.add(elm.Line().left().length(7))
+        d.add(elm.Line().up().length(2.5))
 
-    # Inductor (coil loops)
-    coil_x = np.linspace(5, 7, 200)
-    coil_y = 2 + 0.3*np.sin(4*np.pi*(coil_x-5))
-    fig_circuit.add_trace(go.Scatter(
-        x=coil_x,
-        y=coil_y,
-        mode='lines',
-        line=dict(width=3),
-        name="Inductor"
-    ))
+        # Ground (optional)
+        d.add(elm.Dot())
 
-    # Return wire
-    fig_circuit.add_trace(go.Scatter(
-        x=[7, 7, 1, 1],
-        y=[2, 0.5, 0.5, 1.5],
-        mode='lines',
-        line=dict(width=3),
-        showlegend=False
-    ))
+        # Save image
+        d.save("rl_circuit.png")
 
-    # Labels
-    fig_circuit.add_annotation(x=3.6, y=2.5, text=f"R = {R_in} Ω", showarrow=False)
-    fig_circuit.add_annotation(x=6, y=2.6, text=f"L = {L_in} mH", showarrow=False)
-    fig_circuit.add_annotation(x=1, y=2.8, text=f"~ {V_in} V", showarrow=False)
-
-    # Current Arrow
-    fig_circuit.add_annotation(
-        x=4.8, y=2.8,
-        ax=2.2, ay=2.8,
-        xref="x", yref="y",
-        axref="x", ayref="y",
-        showarrow=True,
-        arrowhead=3,
-        arrowwidth=3
-    )
-    fig_circuit.add_annotation(
-        x=3.5, y=3.0,
-        text="I",
-        showarrow=False
-    )
-
-    fig_circuit.update_layout(
-        title="Series RL Circuit Diagram",
-        template="plotly_dark",
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        showlegend=False,
-        height=500
-    )
-
-    st.plotly_chart(fig_circuit, use_container_width=True)
+    # Display Circuit
+    img = Image.open("rl_circuit.png")
+    st.image(img, caption="Series RL Circuit Diagram", use_container_width=True)
 # ================= 9. KEY FORMULAS =================
 st.markdown("## 📘 Key RL Circuit Formulas")
 st.latex(r"X_L = 2\pi f L")
