@@ -201,6 +201,4 @@ if st.button("Submit Answer"):
         st.error(f"❌ Incorrect! Correct Answer = {correct_answer} A")
 
 # ---------------- FOOTER ----------------
-st.markdown("---")
-st.markdown("### 🎓 Designed for Basic Electrical Engineering Students")
 st.markdown("Explore • Learn • Visualize ⚡")
