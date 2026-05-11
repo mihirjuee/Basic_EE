@@ -103,6 +103,8 @@ with col1:
         st.success("✅ Safe Operating Range")
 
 # -------- RIGHT PANEL --------
+# Replace your existing bulb_fig section with this larger bulb indicator
+
 with col2:
     st.subheader("💡 Bulb Brightness Indicator")
 
@@ -110,19 +112,36 @@ with col2:
 
     bulb_fig = go.Figure()
 
+    # Larger bulb circle
     bulb_fig.add_shape(
         type="circle",
-        x0=0.35, y0=0.35,
-        x1=0.65, y1=0.65,
+        x0=0.15, y0=0.15,
+        x1=0.85, y1=0.85,
         fillcolor=bulb_color,
+        line_color="black",
+        line_width=4
+    )
+
+    # Bulb base
+    bulb_fig.add_shape(
+        type="rect",
+        x0=0.42, y0=0.02,
+        x1=0.58, y1=0.18,
+        fillcolor="gray",
         line_color="black"
     )
 
     bulb_fig.update_layout(
-        width=350,
-        height=350,
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
+        width=550,   # Increased width
+        height=550,  # Increased height
+        xaxis=dict(
+            visible=False,
+            range=[0, 1]
+        ),
+        yaxis=dict(
+            visible=False,
+            range=[0, 1]
+        ),
         margin=dict(l=10, r=10, t=10, b=10),
         plot_bgcolor="white"
     )
