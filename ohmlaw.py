@@ -11,7 +11,7 @@ import pandas as pd
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Ohm's Law Interactive Simulator",
-    page_icon="⚡",
+    page_icon="logo.png",
     layout="wide"
 )
 
